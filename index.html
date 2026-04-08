@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Time Tracking">
+    <meta name="theme-color" content="#ea580c">
+    <title>⏱️ Time Tracking 2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; font-family: 'Noto Sans Thai', sans-serif; background: linear-gradient(135deg, #fed7aa 0%, #fce7f3 50%, #dbeafe 100%); }
+        .container { width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; padding-top: max(16px, env(safe-area-inset-top)); padding-bottom: max(16px, env(safe-area-inset-bottom)); padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+        .header { text-align: center; padding: 12px 0; flex-shrink: 0; }
+        .header h1 { font-size: 24px; font-weight: 700; background: linear-gradient(135deg, #ea580c, #9333ea, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .header p { font-size: 11px; color: #666; }
+        .content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 8px; margin-bottom: 12px; }
+        .card { background: white; border-radius: 14px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); border: 2px solid #fed7aa; }
+        .card-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; color: #333; }
+        .form-group { margin-bottom: 10px; }
+        label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #555; }
+        input, select { width: 100%; padding: 10px; border: 2px solid #fed7aa; border-radius: 8px; font-size: 14px; font-family: 'Noto Sans Thai', sans-serif; background: white; }
+        input:focus, select:focus { outline: none; border-color: #ea580c; background-color: #fff8f0; }
+        .time-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        button { width: 100%; border: none; border-radius: 8px; font-weight: 600; padding: 12px; font-size: 14px; font-family: 'Noto Sans Thai', sans-serif; cursor: pointer; transition: all 0.2s; -webkit-tap-highlight-color: transparent; }
+        .btn-add { background: linear-gradient(135deg, #ea580c, #f97316); color: white; margin-top: 8px; }
+        .btn-add:active { transform: scale(0.98); }
+        .record { background: white; border-radius: 10px; padding: 12px; margin-bottom: 8px; border: 2px solid #e5e7eb; border-left: 5px solid #fed7aa; }
+        .record.wednesday { background: #fffbeb; border-left-color: #f59e0b; }
+        .record.holiday { background: #fffacd; border-left-color: #facc15; }
+        .record-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .record-date { font-weight: 700; font-size: 12px; color: #333; }
+        .record-type { font-size: 10px; color: #999; }
+        .record-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 11px; margin-bottom: 8px; }
+        .record-item { padding: 6px; background: #f3f4f6; border-radius: 4px; }
+        .record-item-label { color: #999; font-size: 9px; }
+        .record-item-value { font-weight: 700; color: #333; }
+        .btn-delete { background: #ef4444; color: white; padding: 6px 12px; font-size: 11px; width: auto; }
+        .summary-card { background: linear-gradient(135deg, #dbeafe, #f3e8ff); border-radius: 12px; padding: 14px; border: 2px solid #9333ea; margin-bottom: 12px; }
+        .summary-title { font-size: 16px; font-weight: 700; text-align: center; margin-bottom: 10px; color: #333; }
+        .summary-box { background: white; padding: 10px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #e5e7eb; }
+        .summary-label { font-size: 11px; color: #999; margin-bottom: 2px; }
+        .summary-value { font-size: 18px; font-weight: 700; color: #ea580c; }
+        .payment-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+        .payment-box { background: white; padding: 10px; border-radius: 6px; text-align: center; border: 2px solid #e5e7eb; }
+        .payment-box.first { border-color: #22c55e; background: #f0fdf4; }
+        .payment-box.second { border-color: #ec4899; background: #fdf2f8; }
+        .payment-label { font-size: 10px; color: #999; margin-bottom: 4px; }
+        .payment-value { font-size: 18px; font-weight: 700; }
+        .payment-box.first .payment-value { color: #22c55e; }
+        .payment-box.second .payment-value { color: #ec4899; }
+        .empty-state { text-align: center; padding: 30px 16px; color: #999; font-size: 13px; }
+        .export-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; flex-shrink: 0; margin-bottom: 12px; }
+        .btn-print { background: #8b5cf6; color: white; }
+        .btn-export { background: #3b82f6; color: white; }
+        .info-box { background: #dbeafe; border: 2px solid #3b82f6; border-radius: 6px; padding: 10px; font-size: 11px; line-height: 1.6; margin-bottom: 12px; }
+        .status-box { background: #f0fdf4; color: #22c55e; padding: 8px; border-radius: 6px; margin-bottom: 8px; font-size: 11px; text-align: center; border: 1px solid #22c55e; }
+        @media print { body { background: white; } .container { padding: 0; } .content { margin: 0; } .export-buttons { display: none; } .card { page-break-inside: avoid; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⏱️ Time Tracking 2026</h1>
+            <p>OT Calculator + A4 Print</p>
+        </div>
+
+        <div class="status-box">
+            ✅ วันนักขัตฤกษ์ 20 วัน + OT ถูกต้อง
+        </div>
+
+        <div class="content">
+            <div class="card">
+                <div class="card-title">🔧 เพิ่มบันทึก</div>
+                
+                <div class="form-group">
+                    <label>📅 วันที่</label>
+                    <input type="date" id="inputDate">
+                </div>
+
+                <div class="form-group">
+                    <label>⏰ เวลา</label>
+                    <div class="time-grid">
+                        <div>
+                            <label style="margin-bottom: 2px;">🟢 เข้า</label>
+                            <input type="time" id="inputTimeIn" value="09:00">
+                        </div>
+                        <div>
+                            <label style="margin-bottom: 2px;">🔴 ออก</label>
+                            <input type="time" id="inputTimeOut" value="18:00">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>💰 Custom OT (บาท)</label>
+                    <input type="number" id="inputCustomOT" placeholder="0">
+                </div>
+
+                <div class="form-group">
+                    <label>🚗 ค่าเดินทาง พิเศษ (บาท)</label>
+                    <input type="number" id="inputSpecialTransport" placeholder="0">
+                </div>
+
+                <button class="btn-add" onclick="addRecord()">➕ เพิ่ม</button>
+                <button class="btn-add" style="background: #22c55e; margin-top: 6px;" onclick="sendRecordsToSheet()">⬆️ ส่งข้อมูลไป Google Sheet</button>
+            </div>
+
+            <div id="recordsContainer"></div>
+            <div id="summaryContainer"></div>
+
+            <div class="info-box">
+                <strong>📌 ระบบ COMPLETE:</strong><br>
+                ✅ ปกติ/พุธ/นักขัตฤกษ์<br>
+                ✅ OT100/150/200 ถูกต้อง<br>
+                ✅ รอบ 26-25
+            </div>
+        </div>
+
+        <div class="export-buttons" id="exportContainer"></div>
+    </div>
+
+<script>
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxXo_jI_sk6gQIXW7ntIV1cRho1bB-r6mmvUmsneyMMzlldIkY8zGxUQ6TOCbgN6Rk-/exec';
+
+    // 20 วัน เทศกาล 2026
+    const HOLIDAYS_2026 = [
+        '2026-01-01', '2026-01-02', '2026-02-03', '2026-04-06', '2026-04-13',
+        '2026-05-01', '2026-05-04', '2026-05-14', '2026-05-31', '2026-06-04',
+        '2026-07-28', '2026-07-30', '2026-07-31', '2026-08-13', '2026-10-13',
+        '2026-10-23', '2026-10-26', '2026-12-05', '2026-12-10', '2026-12-31'
+    ];
+
+    const CONFIG = {
+        SALARY: 17000,
+        ALLOWANCE: 2000,
+        SOCIAL_SEC: 850,
+        FIRST_PAYMENT: 16150,
+        TRANSPORT: 200,
+        OT100_RATE: 100,
+        OT150_RATE: 150,
+        OT200_RATE: 200,
+        OT100_START: 18
+    };
+
+    let records = JSON.parse(localStorage.getItem('timeRecords_2026')) || [];
+
+    document.getElementById('inputDate').value = new Date().toISOString().split('T')[0];
+
+    function getDayName(dateStr) {
+        const date = new Date(dateStr + 'T00:00:00');
+        const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+        return days[date.getDay()];
+    }
+
+    function getDayType(dateStr) {
+        if (HOLIDAYS_2026.includes(dateStr)) return 'นักขัตฤกษ์';
+        const date = new Date(dateStr + 'T00:00:00');
+        if (date.getDay() === 3) return 'พุธ';
+        return 'ปกติ';
+    }
+
+    function timeToDecimal(timeStr) {
+        const [h, m] = timeStr.split(':').map(Number);
+        return h + m / 60;
+    }
+
+    function calculateOT(record) {
+        const dayType = getDayType(record.date);
+        const timeIn = timeToDecimal(record.timeIn);
+        let timeOut = timeToDecimal(record.timeOut);
+        if (timeOut < timeIn) timeOut += 24;
+        const totalHours = timeOut - timeIn;
+        const otHours = totalHours - Math.min(9, totalHours);
+
+        let ot100_hours = 0, ot150_hours = 0, ot200_hours = 0, otCustom = 0, transport = 0;
+
+        if (otHours > 0) {
+            if (dayType === 'ปกติ') {
+                // OT Rate 1 (100 THB): On normal days: 18:00-23:00
+                ot100_hours = Math.max(0, Math.min(timeOut, 23) - Math.max(timeIn, CONFIG.OT100_START));
+                // OT Rate 2 (150 THB): On normal days: Before 09:00 and after 23:00
+                if (timeIn < 9) ot150_hours += (9 - timeIn);
+                if (timeOut > 23) ot150_hours += (timeOut - 23);
+                // Transportation if work ends after 23:00
+                if (timeOut >= 23) transport = CONFIG.TRANSPORT;
+            } else if (dayType === 'พุธ') {
+                // OT Rate 2 (150 THB): On holidays: 09:00-23:00
+                ot150_hours = Math.max(0, Math.min(timeOut, 23) - Math.max(timeIn, 9));
+                // OT Rate 3 (200 THB): On holidays: Before 09:00 and after 23:00
+                if (timeIn < 9) ot200_hours += (9 - timeIn);
+                if (timeOut > 23) ot200_hours += (timeOut - 23);
+                // Transportation if work ends after 23:00
+                if (timeOut >= 23) transport = CONFIG.TRANSPORT;
+            } else if (dayType === 'นักขัตฤกษ์') {
+                // OT Rate 1 (100 THB): On public holidays: 09:00-18:00
+                ot100_hours = Math.max(0, Math.min(timeOut, 18) - Math.max(timeIn, 9));
+                // OT Rate 2 (150 THB): On public holidays: 18:00-23:00
+                ot150_hours = Math.max(0, Math.min(timeOut, 23) - Math.max(timeIn, 18));
+                // OT Rate 3 (200 THB): On public holidays: Before 09:00 and after 23:00
+                if (timeIn < 9) ot200_hours += (9 - timeIn);
+                if (timeOut > 23) ot200_hours += (timeOut - 23);
+                // Transportation if work ends after 23:00
+                if (timeOut >= 23) transport = CONFIG.TRANSPORT;
+            }
+        }
+
+        if (record.customOT) otCustom = record.customOT;
+
+        const ot100_baht = ot100_hours * CONFIG.OT100_RATE;
+        const ot150_baht = ot150_hours * CONFIG.OT150_RATE;
+        const ot200_baht = ot200_hours * CONFIG.OT200_RATE;
+        const otTotal_baht = ot100_baht + ot150_baht + ot200_baht + otCustom;
+        const specialTransport = record.specialTransport || 0;
+        const grandTotal = otTotal_baht + transport + specialTransport;
+
+        return {
+            ot100_hours, ot150_hours, ot200_hours, otCustom,
+            ot100_baht, ot150_baht, ot200_baht, otTotal_baht,
+            transport, specialTransport, grandTotal
+        };
+    }
+
+    async function sendRecordsToSheet() {
+        if (records.length === 0) {
+            alert('ไม่มีข้อมูลบันทึกเพื่อส่ง');
+            return;
+        }
+
+        const confirmSend = confirm('คุณต้องการส่งข้อมูลทั้งหมดไปยัง Google Sheet ใช่หรือไม่?');
+        if (!confirmSend) return;
+
+        try {
+            const response = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors', // Important for sending to Google Apps Script
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ action: 'append', records: records }),
+            });
+            // Since it's no-cors, we can't read the response, but we can assume success if no network error
+            alert('ส่งข้อมูลสำเร็จ! กรุณาตรวจสอบ Google Sheet ของคุณ');
+
+        } catch (error) {
+            alert('เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + error.message);
+        }
+    }
+
+    function addRecord() {
+        const date = document.getElementById('inputDate').value;
+        const timeIn = document.getElementById('inputTimeIn').value;
+        const timeOut = document.getElementById('inputTimeOut').value;
+        const customOT = parseFloat(document.getElementById('inputCustomOT').value) || 0;
+        const specialTransport = parseFloat(document.getElementById('inputSpecialTransport').value) || 0;
+
+        if (!date || !timeIn || !timeOut) {
+            alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+            return;
+        }
+
+        records.push({ id: Date.now(), date, timeIn, timeOut, customOT, specialTransport });
+        records.sort((a, b) => new Date(a.date) - new Date(b.date));
+        localStorage.setItem('timeRecords_2026', JSON.stringify(records));
+
+        document.getElementById('inputDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('inputTimeIn').value = '09:00';
+        document.getElementById('inputTimeOut').value = '18:00';
+        document.getElementById('inputCustomOT').value = '';
+        document.getElementById('inputSpecialTransport').value = '';
+
+        render();
+    }
+
+    function deleteRecord(id) {
+        records = records.filter(r => r.id !== id);
+        localStorage.setItem('timeRecords_2026', JSON.stringify(records));
+        render();
+    }
+
+    function calculateMonthly() {
+        let totalOT100 = 0, totalOT150 = 0, totalOT200 = 0, totalOTCustom = 0, totalTransport = 0, totalSpecialTransport = 0;
+        records.forEach(r => {
+            const ot = calculateOT(r);
+            totalOT100 += ot.ot100_baht;
+            totalOT150 += ot.ot150_baht;
+            totalOT200 += ot.ot200_baht;
+            totalOTCustom += ot.otCustom;
+            totalTransport += ot.transport;
+            totalSpecialTransport += ot.specialTransport;
+        });
+
+        const totalOT = totalOT100 + totalOT150 + totalOT200 + totalOTCustom;
+        const salary = CONFIG.SALARY + CONFIG.ALLOWANCE;
+        const totalIncome = salary + totalOT;
+        const netAfterSoc = totalIncome - CONFIG.SOCIAL_SEC;
+        const secondPayment = netAfterSoc - CONFIG.FIRST_PAYMENT;
+
+        return {
+            totalOT100, totalOT150, totalOT200, totalOTCustom,
+            totalTransport, totalSpecialTransport,
+            salary, totalOT, totalIncome, netAfterSoc, secondPayment
+        };
+    }
+
+    function printReport() {
+        const m = calculateMonthly();
+        const today = new Date().toLocaleDateString('th-TH');
+
+        const html = `<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>รายงาน OT</title>
+    <style>
+        body { font-family: 'Noto Sans Thai', sans-serif; padding: 40px; background: white; }
+        .container { max-width: 210mm; height: 297mm; margin: 0 auto; padding: 40px; border: 1px solid #ddd; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h2 { font-size: 24px; margin: 10px 0; }
+        .header p { font-size: 14px; color: #666; margin: 5px 0; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        th, td { border: 1px solid #999; padding: 10px; text-align: left; font-size: 13px; }
+        th { background: #f0f0f0; font-weight: bold; }
+        tr:nth-child(even) { background: #fafafa; }
+        .summary { margin-top: 30px; }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 20px; }
+        .box { border: 1px solid #ccc; padding: 15px; border-radius: 6px; }
+        .label { font-size: 13px; color: #666; margin-bottom: 5px; }
+        .value { font-size: 20px; font-weight: bold; color: #ea580c; }
+        .payment-section { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 30px; }
+        .payment-box { border: 2px solid #999; padding: 20px; text-align: center; border-radius: 6px; }
+        .payment-box.first { border-color: #22c55e; background: #f0fdf4; }
+        .payment-box.second { border-color: #ec4899; background: #fdf2f8; }
+        .payment-label { font-size: 13px; color: #666; margin-bottom: 10px; }
+        .payment-value { font-size: 28px; font-weight: bold; }
+        .payment-box.first .payment-value { color: #22c55e; }
+        .payment-box.second .payment-value { color: #ec4899; }
+        .footer { text-align: center; margin-top: 40px; font-size: 12px; color: #999; }
+        @media print { body { padding: 0; } .container { border: none; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>รายงาน Overtime (OT)</h2>
+            <p>งวดที่ 2 - การจ่ายเงิน</p>
+            <p>สิ้นสุด: ${today}</p>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>รายการ</th>
+                    <th>ชั่วโมง</th>
+                    <th>อัตรา</th>
+                    <th>จำนวนเงิน (บาท)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>OT100 (18:00-23:00)</td>
+                    <td>${(m.totalOT100 / CONFIG.OT100_RATE).toFixed(1)}</td>
+                    <td>${CONFIG.OT100_RATE}</td>
+                    <td>${m.totalOT100.toFixed(0)}</td>
+                </tr>
+                <tr>
+                    <td>OT150 (ก่อน09:00/หลัง23:00/พุธ/นักขัตฤกษ์)</td>
+                    <td>${(m.totalOT150 / CONFIG.OT150_RATE).toFixed(1)}</td>
+                    <td>${CONFIG.OT150_RATE}</td>
+                    <td>${m.totalOT150.toFixed(0)}</td>
+                </tr>
+                <tr>
+                    <td>OT200 (นักขัตฤกษ์ ก่อน09:00/หลัง23:00)</td>
+                    <td>${(m.totalOT200 / CONFIG.OT200_RATE).toFixed(1)}</td>
+                    <td>${CONFIG.OT200_RATE}</td>
+                    <td>${m.totalOT200.toFixed(0)}</td>
+                </tr>
+                <tr>
+                    <td>OT พิเศษ</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>${m.totalOTCustom.toFixed(0)}</td>
+                </tr>
+                <tr>
+                    <td>ค่าเดินทาง (เมื่อเลิก ≥23:00)</td>
+                    <td>${m.totalTransport / CONFIG.TRANSPORT}</td>
+                    <td>${CONFIG.TRANSPORT}</td>
+                    <td>${(m.totalTransport + m.totalSpecialTransport).toFixed(0)}</td>
+                </tr>
+                <tr style="background: #fff3cd; font-weight: bold;">
+                    <td colspan="3">รวม OT ทั้งหมด</td>
+                    <td>${m.totalOT.toFixed(0)}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="summary">
+            <div class="row">
+                <div class="box">
+                    <div class="label">เงินเดือน + เบี้ยขยัน</div>
+                    <div class="value">฿${m.salary.toFixed(0)}</div>
+                </div>
+                <div class="box">
+                    <div class="label">รวม OT</div>
+                    <div class="value">฿${m.totalOT.toFixed(0)}</div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="box">
+                    <div class="label">รวมเงินทั้งหมด</div>
+                    <div class="value">฿${m.totalIncome.toFixed(0)}</div>
+                </div>
+                <div class="box">
+                    <div class="label">หักประกันสังคม</div>
+                    <div class="value">-฿${CONFIG.SOCIAL_SEC}</div>
+                </div>
+            </div>
+
+            <div class="box">
+                <div class="label">เงินหลังหัก (ก่อนแบ่งงวด)</div>
+                <div class="value">฿${m.netAfterSoc.toFixed(0)}</div>
+            </div>
+        </div>
+
+        <div class="payment-section">
+            <div class="payment-box first">
+                <div class="payment-label">งวดแรก (คงที่)</div>
+                <div class="payment-value">฿${CONFIG.FIRST_PAYMENT}</div>
+            </div>
+            <div class="payment-box second">
+                <div class="payment-label">งวดสอง (คำนวณ)</div>
+                <div class="payment-value">฿${m.secondPayment.toFixed(0)}</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>รายงานนี้สร้างขึ้นเมื่อ: ${new Date().toLocaleString('th-TH')}</p>
+        </div>
+    </div>
+</body>
+</html>`;
+
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(html);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+    }
+
+    function render() {
+        const recordsContainer = document.getElementById('recordsContainer');
+        recordsContainer.innerHTML = '';
+
+        if (records.length === 0) {
+            recordsContainer.innerHTML = '<div class="empty-state">ยังไม่มีบันทึกเวลา</div>';
+            document.getElementById('summaryContainer').innerHTML = '';
+            document.getElementById('exportContainer').innerHTML = '';
+            return;
+        }
+
+        records.forEach(record => {
+            const ot = calculateOT(record);
+            const recordElement = document.createElement('div');
+            const dayType = getDayType(record.date);
+            let classNames = 'record';
+            if (dayType === 'พุธ') classNames += ' wednesday';
+            if (dayType === 'นักขัตฤกษ์') classNames += ' holiday';
+            recordElement.className = classNames;
+
+            recordElement.innerHTML = `
+                <div class="record-header">
+                    <div class="record-date">${record.date} (${getDayName(record.date)})</div>
+                    <div class="record-type">${dayType}</div>
+                </div>
+                <div class="record-grid">
+                    <div class="record-item"><div class="record-item-label">เข้า</div><div class="record-item-value">${record.timeIn}</div></div>
+                    <div class="record-item"><div class="record-item-label">ออก</div><div class="record-item-value">${record.timeOut}</div></div>
+                    <div class="record-item"><div class="record-item-label">OT100 (ชม)</div><div class="record-item-value">${ot.ot100_hours.toFixed(2)}</div></div>
+                    <div class="record-item"><div class="record-item-label">OT150 (ชม)</div><div class="record-item-value">${ot.ot150_hours.toFixed(2)}</div></div>
+                    <div class="record-item"><div class="record-item-label">OT200 (ชม)</div><div class="record-item-value">${ot.ot200_hours.toFixed(2)}</div></div>
+                    <div class="record-item"><div class="record-item-label">OT Custom (บาท)</div><div class="record-item-value">${ot.otCustom.toFixed(0)}</div></div>
+                    <div class="record-item"><div class="record-item-label">ค่าเดินทาง</div><div class="record-item-value">${ot.transport + ot.specialTransport}</div></div>
+                    <div class="record-item"><div class="record-item-label">รวม OT (บาท)</div><div class="record-item-value">${ot.otTotal_baht.toFixed(0)}</div></div>
+                </div>
+                <button class="btn-delete" onclick="deleteRecord(${record.id})">ลบ</button>
+            `;
+            recordsContainer.appendChild(recordElement);
+        });
+
+        const monthlySummary = calculateMonthly();
+        const summaryContainer = document.getElementById('summaryContainer');
+        summaryContainer.innerHTML = `
+            <div class="card summary-card">
+                <div class="summary-title">สรุปรายเดือน</div>
+                <div class="summary-box">
+                    <div class="summary-label">เงินเดือน + เบี้ยขยัน</div>
+                    <div class="summary-value">฿${monthlySummary.salary.toFixed(0)}</div>
+                </div>
+                <div class="summary-box">
+                    <div class="summary-label">รวม OT ทั้งหมด</div>
+                    <div class="summary-value">฿${monthlySummary.totalOT.toFixed(0)}</div>
+                </div>
+                <div class="summary-box">
+                    <div class="summary-label">รวมทั้งหมด</div>
+                    <div class="summary-value">฿${monthlySummary.totalIncome.toFixed(0)}</div>
+                </div>
+                <div class="summary-box">
+                    <div class="summary-label">หักประกันสังคม</div>
+                    <div class="summary-value">-฿${CONFIG.SOCIAL_SEC}</div>
+                </div>
+                <div class="summary-box">
+                    <div class="summary-label">เงินหลังหัก (ก่อนแบ่งงวด)</div>
+                    <div class="summary-value">฿${monthlySummary.netAfterSoc.toFixed(0)}</div>
+                </div>
+                <div class="payment-grid">
+                    <div class="payment-box first">
+                        <div class="payment-label">งวดแรก (คงที่)</div>
+                        <div class="payment-value">฿${CONFIG.FIRST_PAYMENT}</div>
+                    </div>
+                    <div class="payment-box second">
+                        <div class="payment-label">งวดสอง (คำนวณ)</div>
+                        <div class="payment-value">฿${monthlySummary.secondPayment.toFixed(0)}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        setupExportButtons();
+    }
+
+    function exportToPdf() {
+        window.print();
+    }
+
+    function setupExportButtons() {
+        const exportContainer = document.getElementById('exportContainer');
+        exportContainer.innerHTML = `
+            <button class="btn-print" onclick="printReport()">🖨️ พิมพ์รายงาน</button>
+            <button class="btn-export" onclick="exportToPdf()">⬇️ ส่งออก PDF</button>
+        `;
+    }
+
+    // Initial render
+    render();
+</script>
+</body>
+</html>

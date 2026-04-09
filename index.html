@@ -68,12 +68,12 @@
         </div>
 
         <div class="status-box">
-            ✅ วันนักขัตฤกษ์ 20 วัน + OT ถูกต้อง
+            ✅ Lastup-Date 9/4/26
         </div>
 
         <div class="content">
             <div class="card">
-                <div class="card-title">🔧 เพิ่มบันทึก</div>
+                <div class="card-title">🔧 ลงเวลาทำงาน</div>
                 
                 <div class="form-group">
                     <label>📅 วันที่</label>
@@ -84,11 +84,11 @@
                     <label>⏰ เวลา</label>
                     <div class="time-grid">
                         <div>
-                            <label style="margin-bottom: 2px;">🟢 เข้า</label>
+                            <label style="margin-bottom: 2px;">🟢 Check-in</label>
                             <input type="time" id="inputTimeIn" value="09:00">
                         </div>
                         <div>
-                            <label style="margin-bottom: 2px;">🔴 ออก</label>
+                            <label style="margin-bottom: 2px;">🔴 Check-out</label>
                             <input type="time" id="inputTimeOut" value="18:00">
                         </div>
                     </div>
@@ -100,12 +100,12 @@
                 </div>
 
                 <div class="form-group">
-                    <label>🚗 ค่าเดินทาง พิเศษ (บาท)</label>
+                    <label>🚗 เบี้ยเลี้ยงตจว. (บาท)</label>
                     <input type="number" id="inputSpecialTransport" placeholder="0">
                 </div>
 
                 <button class="btn-add" onclick="addRecord()">➕ เพิ่ม</button>
-                <button class="btn-add" style="background: #22c55e; margin-top: 6px;" onclick="sendRecordsToSheet()">⬆️ ส่งข้อมูลไป Google Sheet</button>
+                <button class="btn-add" style="background: #22c55e; margin-top: 6px;" onclick="sendRecordsToSheet()">⬆️ Save Google Sheet</button>
             </div>
 
             <div id="recordsContainer"></div>
@@ -114,8 +114,8 @@
             <div class="info-box">
                 <strong>📌 ระบบ COMPLETE:</strong><br>
                 ✅ ปกติ/พุธ/นักขัตฤกษ์<br>
-                ✅ OT100/150/200 ถูกต้อง<br>
-                ✅ รอบ 26-25
+                ✅ OT100/OT150/OT200/Custom OT/เบี้ยเลี้ยงตจว. ยืนยัน<br>
+                ✅ หมดอายุ 31/12/2026
             </div>
         </div>
 
@@ -123,14 +123,14 @@
     </div>
 
 <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxXo_jI_sk6gQIXW7ntIV1cRho1bB-r6mmvUmsneyMMzlldIkY8zGxUQ6TOCbgN6Rk-/exec';
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxq2Rd3oPL7UEW8Pe4b1sS0zSxvm8b_vcnZ32-MyaZN2kt8D01Q4qajzjLkXvjB2Tgc/exec';
 
-    // 20 วัน เทศกาล 2026
+    // 18 วัน เทศกาล 2026
     const HOLIDAYS_2026 = [
         '2026-01-01', '2026-01-02', '2026-02-03', '2026-04-06', '2026-04-13',
-        '2026-05-01', '2026-05-04', '2026-05-14', '2026-05-31', '2026-06-04',
+        '2026-05-01', '2026-05-04', '2026-05-31', '2026-06-04',
         '2026-07-28', '2026-07-30', '2026-07-31', '2026-08-13', '2026-10-13',
-        '2026-10-23', '2026-10-26', '2026-12-05', '2026-12-10', '2026-12-31'
+        '2026-10-23', '2026-12-05', '2026-12-10', '2026-12-31'
     ];
 
     const CONFIG = {
@@ -168,61 +168,69 @@
     }
 
     function calculateOT(record) {
-        const dayType = getDayType(record.date);
-        const timeIn = timeToDecimal(record.timeIn);
-        let timeOut = timeToDecimal(record.timeOut);
-        if (timeOut < timeIn) timeOut += 24;
-        const totalHours = timeOut - timeIn;
-        const otHours = totalHours - Math.min(9, totalHours);
+    const dayType = getDayType(record.date);
+    const timeIn = timeToDecimal(record.timeIn);
+    let timeOut = timeToDecimal(record.timeOut);
 
-        let ot100_hours = 0, ot150_hours = 0, ot200_hours = 0, otCustom = 0, transport = 0;
+    if (timeOut < timeIn) timeOut += 24;
 
-        if (otHours > 0) {
-            if (dayType === 'ปกติ') {
-                // OT Rate 1 (100 THB): On normal days: 18:00-23:00
-                ot100_hours = Math.max(0, Math.min(timeOut, 23) - Math.max(timeIn, CONFIG.OT100_START));
-                // OT Rate 2 (150 THB): On normal days: Before 09:00 and after 23:00
-                if (timeIn < 9) ot150_hours += (9 - timeIn);
-                if (timeOut > 23) ot150_hours += (timeOut - 23);
-                // Transportation if work ends after 23:00
-                if (timeOut >= 23) transport = CONFIG.TRANSPORT;
-            } else if (dayType === 'พุธ') {
-                // OT Rate 2 (150 THB): On holidays: 09:00-23:00
-                ot150_hours = Math.max(0, Math.min(timeOut, 23) - Math.max(timeIn, 9));
-                // OT Rate 3 (200 THB): On holidays: Before 09:00 and after 23:00
-                if (timeIn < 9) ot200_hours += (9 - timeIn);
-                if (timeOut > 23) ot200_hours += (timeOut - 23);
-                // Transportation if work ends after 23:00
-                if (timeOut >= 23) transport = CONFIG.TRANSPORT;
-            } else if (dayType === 'นักขัตฤกษ์') {
-                // OT Rate 1 (100 THB): On public holidays: 09:00-18:00
-                ot100_hours = Math.max(0, Math.min(timeOut, 18) - Math.max(timeIn, 9));
-                // OT Rate 2 (150 THB): On public holidays: 18:00-23:00
-                ot150_hours = Math.max(0, Math.min(timeOut, 23) - Math.max(timeIn, 18));
-                // OT Rate 3 (200 THB): On public holidays: Before 09:00 and after 23:00
-                if (timeIn < 9) ot200_hours += (9 - timeIn);
-                if (timeOut > 23) ot200_hours += (timeOut - 23);
-                // Transportation if work ends after 23:00
-                if (timeOut >= 23) transport = CONFIG.TRANSPORT;
-            }
-        }
+    let ot100_hours = 0, ot150_hours = 0, ot200_hours = 0;
+    let otCustom = 0, transport = 0;
 
-        if (record.customOT) otCustom = record.customOT;
+    // =========================
+    // 🔥 LOGIC ใหม่
+    // =========================
 
-        const ot100_baht = ot100_hours * CONFIG.OT100_RATE;
-        const ot150_baht = ot150_hours * CONFIG.OT150_RATE;
-        const ot200_baht = ot200_hours * CONFIG.OT200_RATE;
-        const otTotal_baht = ot100_baht + ot150_baht + ot200_baht + otCustom;
-        const specialTransport = record.specialTransport || 0;
-        const grandTotal = otTotal_baht + transport + specialTransport;
+    if (dayType === 'ปกติ') {
 
-        return {
-            ot100_hours, ot150_hours, ot200_hours, otCustom,
-            ot100_baht, ot150_baht, ot200_baht, otTotal_baht,
-            transport, specialTransport, grandTotal
-        };
+        // OT100: 18:00-23:00
+        ot100_hours = Math.max(0, Math.min(timeOut, 23) - Math.max(timeIn, CONFIG.OT100_START));
+
+        // OT150: ก่อน 09:00 / หลัง 23:00
+        if (timeIn < 9) ot150_hours += (9 - timeIn);
+        if (timeOut > 23) ot150_hours += (timeOut - 23);
+
+        if (timeOut >= 23) transport = CONFIG.TRANSPORT;
+
+    } else if (dayType === 'พุธ') {
+
+        // OT150 ทั้งวัน
+        ot150_hours = Math.max(0, Math.min(timeOut, 23) - Math.max(timeIn, 9));
+
+        // OT200 ก่อน/หลัง
+        if (timeIn < 9) ot200_hours += (9 - timeIn);
+        if (timeOut > 23) ot200_hours += (timeOut - 23);
+
+        if (timeOut >= 23) transport = CONFIG.TRANSPORT;
+
+    } else if (dayType === 'นักขัตฤกษ์') {
+
+        // 🔥 สำคัญ: OT150 ล้วน
+        ot150_hours = Math.max(0, Math.min(timeOut, 23) - Math.max(timeIn, 9));
+
+        // OT200 ก่อน/หลัง
+        if (timeIn < 9) ot200_hours += (9 - timeIn);
+        if (timeOut > 23) ot200_hours += (timeOut - 23);
+
+        if (timeOut >= 23) transport = CONFIG.TRANSPORT;
     }
 
+    if (record.customOT) otCustom = record.customOT;
+
+    const ot100_baht = ot100_hours * CONFIG.OT100_RATE;
+    const ot150_baht = ot150_hours * CONFIG.OT150_RATE;
+    const ot200_baht = ot200_hours * CONFIG.OT200_RATE;
+
+    const otTotal_baht = ot100_baht + ot150_baht + ot200_baht + otCustom;
+    const specialTransport = record.specialTransport || 0;
+    const grandTotal = otTotal_baht + transport + specialTransport;
+
+    return {
+        ot100_hours, ot150_hours, ot200_hours, otCustom,
+        ot100_baht, ot150_baht, ot200_baht, otTotal_baht,
+        transport, specialTransport, grandTotal
+    };
+}
     async function sendRecordsToSheet() {
         if (records.length === 0) {
             alert('ไม่มีข้อมูลบันทึกเพื่อส่ง');
@@ -537,8 +545,8 @@
     function setupExportButtons() {
         const exportContainer = document.getElementById('exportContainer');
         exportContainer.innerHTML = `
-            <button class="btn-print" onclick="printReport()">🖨️ พิมพ์รายงาน</button>
-            <button class="btn-export" onclick="exportToPdf()">⬇️ ส่งออก PDF</button>
+            <button class="btn-print" onclick="printReport()">🖨️ Print</button>
+            <button class="btn-export" onclick="exportToPdf()">⬇️ PDF</button>
         `;
     }
 

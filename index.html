@@ -1,224 +1,212 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Time Tracking 2026</title>
+
+<style>
+body {
+    font-family: sans-serif;
+    background: linear-gradient(135deg,#fed7aa,#fce7f3,#dbeafe);
+    margin:0;
+    padding:10px;
+}
+
+/* HEADER */
+.header{
+    text-align:center;
+    margin-bottom:10px;
+}
+.header h1{
+    background: linear-gradient(135deg,#ea580c,#9333ea,#ec4899);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+}
+
+/* STATUS */
+.status-box{
+    background:#dcfce7;
+    border:2px solid #22c55e;
+    padding:10px;
+    border-radius:10px;
+    text-align:center;
+    margin-bottom:10px;
+}
+
+/* CARD */
+.card{
+    background:#fff7ed;
+    border:2px solid #fed7aa;
+    border-radius:14px;
+    padding:12px;
+    margin-bottom:10px;
+}
+
+/* RECORD */
+.record{
+    background:#fffef2;
+    border-left:6px solid #facc15;
+    border:2px solid #fde68a;
+    border-radius:10px;
+    padding:10px;
+    margin-bottom:8px;
+}
+
+/* GRID */
+.grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:6px;
+}
+
+/* ITEM */
+.item{
+    background:#fef9c3;
+    padding:6px;
+    border-radius:6px;
+    font-size:12px;
+}
+
+/* BUTTON */
+button{
+    width:100%;
+    padding:10px;
+    border:none;
+    border-radius:8px;
+    margin-top:6px;
+    font-weight:bold;
+}
+
+.btn-add{ background:#ea580c;color:#fff; }
+.btn-save{ background:#22c55e;color:#fff; }
+.btn-del{ background:#ef4444;color:#fff; }
+
+/* SUMMARY */
+.summary{
+    background:linear-gradient(135deg,#dbeafe,#f3e8ff);
+    border:2px solid #9333ea;
+    border-radius:14px;
+    padding:12px;
+    margin-top:10px;
+}
+
+.box{
+    background:#fff;
+    padding:8px;
+    border-radius:8px;
+    margin-bottom:6px;
+}
+
+.value{
+    font-weight:bold;
+    color:#ea580c;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <h1>⏱️ Time Tracking 2026</h1>
+</div>
+
+<div class="status-box">✅ Sync Google Sheet</div>
+
+<div class="card">
+    <input type="date" id="date">
+    <input type="time" id="in" value="09:00">
+    <input type="time" id="out" value="18:00">
+    <input type="number" id="ot" placeholder="OT เพิ่ม">
+    <button class="btn-add" onclick="add()">➕ เพิ่ม</button>
+    <button class="btn-save" onclick="sync()">⬆️ Sync</button>
+</div>
+
+<div id="list"></div>
+<div id="sum"></div>
+
 <script>
+const API = "https://script.google.com/macros/s/AKfycbxq2Rd3oPL7UEW8Pe4b1sS0zSxvm8b_vcnZ32-MyaZN2kt8D01Q4qajzjLkXvjB2Tgc/exec";
 
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxq2Rd3oPL7UEW8Pe4b1sS0zSxvm8b_vcnZ32-MyaZN2kt8D01Q4qajzjLkXvjB2Tgc/exec';
+let data = JSON.parse(localStorage.getItem("rec")||"[]");
 
-const CONFIG = {
-    SALARY: 17000,
-    ALLOWANCE: 2000,
-    SOCIAL_SEC: 850,
-    FIRST_PAYMENT: 16150,
-    TRANSPORT: 200,
-    OT100_RATE: 100,
-    OT150_RATE: 150,
-    OT200_RATE: 200,
-    OT100_START: 18
-};
+/* ADD */
+function add(){
+    let r={
+        id:Date.now(),
+        date:date.value,
+        in:in.value,
+        out:out.value,
+        ot:Number(ot.value)||0
+    };
+    data.push(r);
+    save();
+}
 
-let records = [];
-
-// =========================
-// 📥 LOAD FROM SHEET
-// =========================
-async function loadFromSheet() {
-    try {
-        const res = await fetch(WEB_APP_URL);
-
-        if (!res.ok) throw new Error("API ERROR");
-
-        const data = await res.json();
-
-        if (!Array.isArray(data)) throw new Error("DATA ไม่ใช่ ARRAY");
-
-        records = data.map(r => ({
-            id: Date.now() + Math.random(),
-            date: formatDate(r.date),
-            timeIn: formatTime(r.timeIn),
-            timeOut: formatTime(r.timeOut),
-            customOT: Number(r.customOT) || 0,
-            specialTransport: Number(r.specialTransport) || 0
-        }));
-
-        localStorage.setItem('timeRecords_2026', JSON.stringify(records));
-
-    } catch (err) {
-        console.log("🔥 fallback local:", err);
-        records = JSON.parse(localStorage.getItem('timeRecords_2026')) || [];
-    }
-
+/* SAVE */
+function save(){
+    localStorage.setItem("rec",JSON.stringify(data));
     render();
 }
 
-// =========================
-// 🔧 FORMAT DATE
-// =========================
-function formatDate(dateStr) {
-    if (!dateStr) return '';
-    const d = new Date(dateStr);
-    return d.toISOString().split('T')[0];
+/* DELETE */
+function del(id){
+    data=data.filter(x=>x.id!=id);
+    save();
 }
 
-// =========================
-// 🔧 FORMAT TIME (กันพัง)
-// =========================
-function formatTime(timeStr) {
-    if (!timeStr) return '00:00';
+/* CALC */
+function calc(r){
+    let h1=Number(r.in.split(":")[0]);
+    let h2=Number(r.out.split(":")[0]);
 
-    if (timeStr.includes('T')) {
-        const d = new Date(timeStr);
-        return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-    }
-
-    return timeStr;
+    let ot = Math.max(0,h2-18)*100;
+    return ot + r.ot;
 }
 
-// =========================
-// ⏱ TIME → DECIMAL
-// =========================
-function timeToDecimal(timeStr) {
-    if (!timeStr) return 0;
+/* RENDER */
+function render(){
+    list.innerHTML="";
+    let total=0;
 
-    const [h, m] = timeStr.split(':').map(Number);
-    return h + m / 60;
-}
+    data.forEach(r=>{
+        let money=calc(r);
+        total+=money;
 
-// =========================
-// 📅 DAY TYPE
-// =========================
-function getDayType(dateStr) {
-    const d = new Date(dateStr);
-    if (d.getDay() === 3) return 'พุธ';
-    return 'ปกติ';
-}
-
-// =========================
-// 💰 OT CALC
-// =========================
-function calculateOT(record) {
-
-    const timeIn = timeToDecimal(record.timeIn);
-    let timeOut = timeToDecimal(record.timeOut);
-
-    if (timeOut < timeIn) timeOut += 24;
-
-    let ot100 = 0, ot150 = 0, transport = 0;
-
-    if (getDayType(record.date) === 'ปกติ') {
-
-        ot100 = Math.max(0, Math.min(timeOut, 23) - Math.max(timeIn, 18));
-
-        if (timeIn < 9) ot150 += (9 - timeIn);
-        if (timeOut > 23) ot150 += (timeOut - 23);
-
-    } else {
-        ot150 = Math.max(0, Math.min(timeOut, 23) - Math.max(timeIn, 9));
-    }
-
-    if (timeOut >= 23) transport = CONFIG.TRANSPORT;
-
-    const otTotal =
-        ot100 * CONFIG.OT100_RATE +
-        ot150 * CONFIG.OT150_RATE +
-        (record.customOT || 0);
-
-    return {
-        total: otTotal + transport + (record.specialTransport || 0),
-        otOnly: otTotal,
-        transport: transport + (record.specialTransport || 0)
-    };
-}
-
-// =========================
-// ➕ ADD RECORD
-// =========================
-function addRecord() {
-
-    const record = {
-        id: Date.now(),
-        date: document.getElementById('inputDate').value,
-        timeIn: document.getElementById('inputTimeIn').value,
-        timeOut: document.getElementById('inputTimeOut').value,
-        customOT: Number(document.getElementById('inputCustomOT').value) || 0,
-        specialTransport: Number(document.getElementById('inputSpecialTransport').value) || 0
-    };
-
-    records.push(record);
-
-    localStorage.setItem('timeRecords_2026', JSON.stringify(records));
-
-    render();
-
-    // 🔥 ส่งเฉพาะรายการเดียว
-    sendRecordsToSheet(record);
-}
-
-// =========================
-// 📤 SEND SHEET
-// =========================
-async function sendRecordsToSheet(record) {
-    try {
-        await fetch(WEB_APP_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                action: 'append',
-                records: [record]
-            })
-        });
-    } catch (err) {
-        console.log("ส่งไม่สำเร็จ", err);
-    }
-}
-
-// =========================
-// 📊 SUMMARY
-// =========================
-function calculateMonthly() {
-
-    let otOnly = 0, transport = 0, total = 0;
-
-    records.forEach(r => {
-        const ot = calculateOT(r);
-        otOnly += ot.otOnly;
-        transport += ot.transport;
-        total += ot.total;
+        list.innerHTML+=`
+        <div class="record">
+            ${r.date}
+            <div class="grid">
+                <div class="item">เข้า ${r.in}</div>
+                <div class="item">ออก ${r.out}</div>
+                <div class="item">OT ${money}</div>
+            </div>
+            <button class="btn-del" onclick="del(${r.id})">ลบ</button>
+        </div>
+        `;
     });
 
-    const salary = CONFIG.SALARY + CONFIG.ALLOWANCE;
-
-    return {
-        otOnly,
-        transport,
-        total,
-        income: salary + total
-    };
-}
-
-// =========================
-// 🎨 RENDER (กันพัง)
-// =========================
-function render() {
-
-    const el = document.getElementById('summaryContainer');
-
-    if (!el) {
-        console.log("❌ ไม่มี summaryContainer");
-        return;
-    }
-
-    const m = calculateMonthly();
-
-    el.innerHTML = `
-        <div>OT ล้วน: ฿${m.otOnly}</div>
-        <div>ค่าเดินทาง: ฿${m.transport}</div>
-        <div>รวม OT: ฿${m.total}</div>
-        <div>เงินรวม: ฿${m.income}</div>
+    sum.innerHTML=`
+    <div class="summary">
+        <div class="box">เงินเดือน <span class="value">19000</span></div>
+        <div class="box">รวม OT <span class="value">${total}</span></div>
+        <div class="box">รวมทั้งหมด <span class="value">${19000+total}</span></div>
+    </div>
     `;
 }
 
-// =========================
-// 🚀 START
-// =========================
-loadFromSheet();
+/* SYNC */
+async function sync(){
+    await fetch(API,{
+        method:"POST",
+        mode:"no-cors",
+        body:JSON.stringify({action:"append",records:data})
+    });
+    alert("ส่งแล้ว");
+}
 
+render();
 </script>
+
+</body>
+</html>

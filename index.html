@@ -3,81 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⏱️ Time Tracking PRO</title>
+<title>⏱️ Time Tracking PRO MAX</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;}
-body{
-font-family:'Noto Sans Thai',sans-serif;
-background:linear-gradient(135deg,#fed7aa,#fce7f3,#dbeafe);
-}
-
-.container{padding:16px;max-width:500px;margin:auto;}
-
-.header{text-align:center;margin-bottom:12px;}
+body{font-family:'Noto Sans Thai';background:linear-gradient(135deg,#fed7aa,#fce7f3,#dbeafe);}
+.container{max-width:500px;margin:auto;padding:16px;}
+.header{text-align:center;margin-bottom:10px;}
 .header h1{
-font-size:22px;
-font-weight:700;
 background:linear-gradient(135deg,#ea580c,#9333ea,#ec4899);
 -webkit-background-clip:text;
 -webkit-text-fill-color:transparent;
 }
 
-.card{
-background:#fff;
-border-radius:14px;
-padding:14px;
-margin-bottom:12px;
-}
+.card{background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;}
+input{width:100%;padding:10px;margin:6px 0;border:2px solid #fed7aa;border-radius:8px;}
 
-label{font-size:12px;font-weight:600;}
+button{width:100%;padding:12px;border:none;border-radius:10px;background:#ea580c;color:#fff;font-weight:700;margin-top:5px;}
 
-input,select{
-width:100%;
-padding:10px;
-margin-top:6px;
-margin-bottom:10px;
-border:2px solid #fed7aa;
-border-radius:8px;
-}
+.record{background:#fff;padding:10px;border-radius:10px;margin-top:8px;border-left:6px solid #ccc;}
+.ot100{border-left-color:#3b82f6;}
+.ot150{border-left-color:#f59e0b;}
+.ot200{border-left-color:#ef4444;}
 
-button{
-width:100%;
-padding:12px;
-border:none;
-border-radius:10px;
-font-weight:700;
-background:linear-gradient(135deg,#ea580c,#f97316);
-color:#fff;
-}
-
-.sync{background:#22c55e;margin-top:6px;}
-
-.record{
-background:#fff;
-border-radius:10px;
-padding:10px;
-margin-top:8px;
-border-left:6px solid #fed7aa;
-}
-
-.record.wednesday{
-background:#fffbeb;
-border-left-color:#f59e0b;
-}
-
-.record.holiday{
-background:#fffacd;
-border-left-color:#facc15;
-}
-
-.total{
-text-align:center;
-font-weight:700;
-margin-top:12px;
-}
+.summary{background:#f3e8ff;padding:10px;border-radius:10px;margin-top:8px;font-weight:700;}
 </style>
 </head>
 
@@ -86,181 +37,213 @@ margin-top:12px;
 <div class="container">
 
 <div class="header">
-<h1>⏱️ Time Tracking PRO</h1>
+<h1>⏱️ Time Tracking PRO MAX</h1>
 </div>
 
 <div class="card">
-
-<label>วันที่</label>
 <input type="date" id="date">
-
-<label>เวลาเข้า</label>
 <input type="time" id="in" value="09:00">
-
-<label>เวลาออก</label>
 <input type="time" id="out" value="18:00">
-
-<label>OT พิเศษ (บาท)</label>
-<input type="number" id="custom">
-
-<label>ประเภทวัน</label>
-<select id="type">
-<option value="normal">วันปกติ</option>
-<option value="holiday">นักขัตฤกษ์</option>
-</select>
-
+<input type="number" id="custom" placeholder="OT พิเศษ">
+<input type="number" id="extra" placeholder="ค่าเดินทางพิเศษ">
 <button onclick="save()">💾 บันทึก</button>
-<button class="sync" onclick="sync()">⬆ Sync Google Sheet</button>
-
+<button onclick="printSlip()">🖨️ ออกสลิป</button>
 </div>
 
+<canvas id="chart"></canvas>
 <div id="list"></div>
-<div class="total" id="total"></div>
 
 </div>
 
 <script>
 
-const WEB_APP_URL = "https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnSSViGx2eyVhpJ8P1NIR2klblIWlknHTRdp6k5G8ZIT89L0mszGLEPp56tjB_85ky88aw9HCJYdpDszJzhr_JqE4E5BYI-l62cyjXkeZtUbte3zANm34QjP9of0yyiV9GUX7SMikhO8RuiG2kjHNCiJS3bAFQV7YJP8ImkPj2Rj5aatMXSPeTlEd5zVxi6p2Or-xv4HoUHqbASeZ8yp2PjnoEJzm-gzSDiv2OBM_S2tTyUgpLkfQMHbsLXUsqPb9BXlY_WihbbFwsa4EkRAdYk9GMRZ-g&lib=MwBYzrbIWzcA96h9sUegyF9szXJcOglkN";
+const HOLIDAY_API = "https://docs.google.com/spreadsheets/d/1-siPR8NwN3wqatR3y6w8IJ-PtepFJnTzDFtjDsrJ8sg/gviz/tq?tqx=out:csv&sheet=Holidays";
 
-function t(time){
-let [h,m]=time.split(":").map(Number);
-return h+m/60;
+let holidays=[];
+
+// โหลดวันหยุด
+async function loadHoliday(){
+  try{
+    let res=await fetch(HOLIDAY_API);
+    let txt=await res.text();
+    holidays=txt.split("\n").map(d=>d.trim());
+  }catch(e){}
 }
 
-// 🔥 OT คิดแบบจริง
-function calcOT(inTime,outTime,type,date){
+// แปลงเวลา
+function t(v){let[h,m]=v.split(":").map(Number);return h+m/60;}
 
-let inT=t(inTime);
-let outT=t(outTime);
-if(outT<inT) outT+=24;
-
-let day=new Date(date).getDay();
-let isWed=(day===3);
-
-let ot100=0,ot150=0,ot200=0;
-
-// ปกติ
-if(type==="normal" && !isWed){
-
-ot100=Math.max(0,Math.min(outT,23)-Math.max(inT,18));
-
-if(inT<9) ot150+=9-inT;
-if(outT>23) ot150+=outT-23;
-
+// รอบเดือน 26-25
+function getPeriod(d){
+  let x=new Date(d);
+  let y=x.getFullYear();
+  let m=x.getMonth();
+  if(x.getDate()<26){m--;if(m<0){m=11;y--;}}
+  return `${y}-${m+1}`;
 }
 
-// พุธ
-if(isWed){
-ot150=Math.max(0,outT-inT);
+// คำนวณ
+function calc(r){
+
+  let inT=t(r.in);
+  let outT=t(r.out);
+  if(outT<inT) outT+=24;
+
+  let isHoliday=holidays.includes(r.date);
+  let day=new Date(r.date).getDay();
+  let isWed=(day===3);
+
+  let ot100=0,ot150=0,ot200=0,transport=0;
+
+  if(!isHoliday && !isWed){
+    ot100=Math.max(0,Math.min(outT,23)-Math.max(inT,18));
+    if(inT<9) ot150+=9-inT;
+    if(outT>23) ot150+=outT-23;
+  }else{
+    ot150=Math.max(0,outT-inT);
+  }
+
+  if(outT>=23) transport=200;
+
+  let total=
+    ot100*100 +
+    ot150*150 +
+    ot200*200 +
+    transport +
+    (r.custom||0) +
+    (r.extra||0);
+
+  return {total,transport,otOnly:total-transport};
 }
 
-// นักขัตฤกษ์
-if(type==="holiday"){
-ot150=Math.max(0,outT-inT);
-}
-
-return {
-total: ot100*100 + ot150*150 + ot200*200,
-ot100,ot150,ot200
-};
-}
-
-// 💾 save
+// save
 function save(){
 
-let date=dateInput.value;
-let inTime=inInput.value;
-let outTime=outInput.value;
-let custom=+customInput.value||0;
-let type=typeInput.value;
+  let r={
+    date:date.value,
+    in:in.value,
+    out:out.value,
+    custom:+custom.value||0,
+    extra:+extra.value||0
+  };
 
-if(!date||!outTime){
-alert("กรอกให้ครบ");
-return;
+  let data=JSON.parse(localStorage.getItem("data"))||[];
+  data.push(r);
+  localStorage.setItem("data",JSON.stringify(data));
+
+  render();
 }
 
-let calc=calcOT(inTime,outTime,type,date);
-
-let data=JSON.parse(localStorage.getItem("ot_data"))||[];
-
-data.push({
-date,inTime,outTime,
-...calc,
-custom,
-total:calc.total+custom,
-type
-});
-
-localStorage.setItem("ot_data",JSON.stringify(data));
-
-render();
-}
-
-// 📊 render
+// render
 function render(){
 
-let data=JSON.parse(localStorage.getItem("ot_data"))||[];
-let html="";
-let total=0;
+  let data=JSON.parse(localStorage.getItem("data"))||[];
+  let groups={};
 
-data.forEach(d=>{
+  data.forEach(d=>{
+    let p=getPeriod(d.date);
+    if(!groups[p]) groups[p]=[];
+    groups[p].push(d);
+  });
 
-total+=d.total;
+  let html="";
 
-let cls="record";
-let day=new Date(d.date).getDay();
-if(day===3) cls+=" wednesday";
-if(d.type==="holiday") cls+=" holiday";
+  Object.keys(groups).sort().reverse().forEach(p=>{
 
-html+=`
-<div class="${cls}">
-📅 ${d.date}<br>
-⏰ ${d.inTime} - ${d.outTime}<br>
-OT100: ${d.ot100.toFixed(2)}<br>
-OT150: ${d.ot150.toFixed(2)}<br>
-💰 รวม: ${d.total}
-</div>`;
-});
+    let total=0,transport=0,ot=0;
 
-list.innerHTML=html||"ไม่มีข้อมูล";
-totalDiv.innerHTML="💵 รวมทั้งหมด: "+total+" บาท";
+    groups[p].forEach(d=>{
+      let c=calc(d);
+      total+=c.total;
+      transport+=c.transport;
+      ot+=c.otOnly;
+    });
+
+    html+=`<div class="card">
+    <div class="summary">📊 รอบ ${p} รวม ${total} บาท</div>`;
+
+    groups[p].forEach(d=>{
+      let c=calc(d);
+      html+=`
+      <div class="record">
+      📅 ${d.date}<br>
+      ⏰ ${d.in}-${d.out}<br>
+      💰 ${c.total} บาท
+      </div>`;
+    });
+
+    html+=`</div>`;
+  });
+
+  document.getElementById("list").innerHTML=html||"ไม่มีข้อมูล";
+
+  drawChart();
 }
 
-// 📡 sync
-async function sync(){
-let data=JSON.parse(localStorage.getItem("ot_data"))||[];
+// กราฟ
+function drawChart(){
 
-if(data.length===0){
-alert("ไม่มีข้อมูล");
-return;
+  let data=JSON.parse(localStorage.getItem("data"))||[];
+  let g={};
+
+  data.forEach(d=>{
+    let p=getPeriod(d.date);
+    if(!g[p]) g[p]=0;
+    g[p]+=calc(d).total;
+  });
+
+  let ctx=document.getElementById("chart");
+
+  new Chart(ctx,{
+    type:"bar",
+    data:{
+      labels:Object.keys(g),
+      datasets:[{label:"รายได้",data:Object.values(g)}]
+    }
+  });
 }
 
-try{
-await fetch(WEB_APP_URL,{
-method:"POST",
-mode:"no-cors",
-body:JSON.stringify({records:data})
-});
-alert("ส่งแล้ว");
-}catch(e){
-alert("error");
+// สลิป
+function printSlip(){
+
+  let data=JSON.parse(localStorage.getItem("data"))||[];
+  if(data.length===0) return alert("ไม่มีข้อมูล");
+
+  let p=getPeriod(data[data.length-1].date);
+  let list=data.filter(d=>getPeriod(d.date)===p);
+
+  let total=0,transport=0;
+
+  list.forEach(d=>{
+    let c=calc(d);
+    total+=c.total;
+    transport+=c.transport;
+  });
+
+  let salary=19000;
+  let social=850;
+
+  let html=`
+  <html><body style="font-family:sans-serif;padding:20px">
+  <h2>สลิปเงินเดือน</h2>
+  <p>รอบ ${p}</p>
+  เงินเดือน ${salary}<br>
+  OT ${total-transport}<br>
+  ค่าเดินทาง ${transport}<br>
+  <hr>
+  รวม ${salary+total}<br>
+  หัก ${social}<br>
+  <b>สุทธิ ${(salary+total-social)}</b>
+  </body></html>`;
+
+  let w=window.open();
+  w.document.write(html);
+  w.print();
 }
-}
 
-// refs
-const dateInput=document.getElementById("date");
-const inInput=document.getElementById("in");
-const outInput=document.getElementById("out");
-const customInput=document.getElementById("custom");
-const typeInput=document.getElementById("type");
-
-const list=document.getElementById("list");
-const totalDiv=document.getElementById("total");
-
-// init
-dateInput.value=new Date().toISOString().split("T")[0];
-render();
+// start
+date.value=new Date().toISOString().split("T")[0];
+loadHoliday().then(render);
 
 </script>
 

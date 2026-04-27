@@ -3,256 +3,201 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Time Tracking PRO</title>
+<title>Time Tracking PRO+</title>
 
 <style>
 body{
-    font-family: 'Noto Sans Thai', sans-serif;
-    background: linear-gradient(135deg,#fed7aa,#fbcfe8,#bfdbfe);
-    margin:0;padding:12px;
+margin:0;
+font-family:sans-serif;
+background:linear-gradient(135deg,#fed7aa,#fce7f3,#dbeafe);
 }
 
-/* HEADER */
-.header{text-align:center;margin-bottom:10px;}
-.header h1{
-    font-size:26px;font-weight:700;
-    background: linear-gradient(135deg,#ea580c,#9333ea,#ec4899);
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
-}
-.header p{font-size:12px;color:#666}
+.container{padding:16px}
 
-/* STATUS */
+h1{
+text-align:center;
+background:linear-gradient(90deg,#ea580c,#9333ea,#ec4899);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+}
+
 .status{
-    background:#dcfce7;border:2px solid #22c55e;
-    padding:10px;border-radius:12px;
-    text-align:center;margin-bottom:12px;
+background:#dcfce7;
+border:2px solid #22c55e;
+padding:10px;
+border-radius:10px;
+text-align:center;
+margin-bottom:15px;
 }
 
-/* CARD */
 .card{
-    background:#fff7ed;
-    border:2px solid #fed7aa;
-    border-radius:16px;padding:14px;margin-bottom:12px;
+background:white;
+padding:15px;
+border-radius:14px;
+margin-bottom:12px;
+border:2px solid #fed7aa;
 }
 
 input{
-    width:100%;padding:12px;border-radius:12px;
-    border:2px solid #fdba74;margin-bottom:8px;
+width:100%;
+padding:10px;
+margin-bottom:8px;
+border-radius:8px;
+border:2px solid #fed7aa;
 }
 
-/* BUTTON */
-.btn{
-    width:100%;padding:14px;border:none;
-    border-radius:12px;font-weight:700;margin-top:6px;
+button{
+width:100%;
+padding:12px;
+border:none;
+border-radius:10px;
+font-weight:bold;
 }
-.add{background:#f97316;color:#fff;}
-.sync{background:#22c55e;color:#fff;}
 
-/* RECORD */
+.add{background:#f97316;color:white;}
+.sync{background:#22c55e;color:white;margin-top:6px;}
+
 .record{
-    background:#fefce8;
-    border-left:6px solid #facc15;
-    border-radius:16px;padding:12px;margin-bottom:10px;
-}
-.normal{background:#f3f4f6;border-left:6px solid #fdba74;}
-
-/* GRID */
-.grid{
-    display:grid;grid-template-columns:1fr 1fr;
-    gap:8px;margin-top:6px;
-}
-.item{
-    background:#e5e7eb;padding:10px;
-    border-radius:10px;font-size:13px;
+background:white;
+padding:10px;
+border-radius:10px;
+margin-bottom:8px;
+border-left:5px solid #f59e0b;
 }
 
-/* DELETE */
-.del{
-    background:#ef4444;color:#fff;
-    border:none;padding:8px 12px;
-    border-radius:10px;margin-top:6px;
-}
-
-/* SUMMARY */
 .summary{
-    background:linear-gradient(135deg,#c7d2fe,#e9d5ff);
-    border-left:5px solid #9333ea;
-    border-radius:20px;padding:14px;
+background:linear-gradient(135deg,#dbeafe,#f3e8ff);
+border:2px solid #9333ea;
+padding:12px;
+border-radius:12px;
 }
+
 .box{
-    background:#e5e7eb;padding:12px;
-    border-radius:12px;margin-bottom:8px;
-}
-.val{font-size:20px;font-weight:700;color:#ea580c;}
-
-/* PAYMENT */
-.pay{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.first{
-    border:2px solid #22c55e;background:#dcfce7;
-    padding:10px;border-radius:12px;text-align:center;
-}
-.second{
-    border:2px solid #ec4899;background:#fce7f3;
-    padding:10px;border-radius:12px;text-align:center;
+background:white;
+padding:10px;
+border-radius:8px;
+margin-bottom:8px;
 }
 
-/* EXPORT */
-.export{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
-.print{background:#8b5cf6;color:#fff;}
-.pdf{background:#3b82f6;color:#fff;}
+.big{font-size:20px;font-weight:bold;color:#ea580c}
 </style>
 </head>
 
 <body>
 
-<div class="header">
-<h1>⏱️ Time Tracking PRO</h1>
-<p>OT + Google Sheet Sync</p>
-</div>
+<div class="container">
 
-<div class="status">✅ เวอร์โปร พร้อมใช้งาน</div>
+<h1>⏱️ Time Tracking PRO+</h1>
+
+<div class="status">✅ เวอร์เทพ พร้อมใช้</div>
 
 <div class="card">
 <input type="date" id="date">
 <input type="time" id="in" value="09:00">
 <input type="time" id="out" value="18:00">
-<input type="number" id="ot" placeholder="Custom OT">
-<input type="number" id="travel" placeholder="ค่าเดินทาง">
+<input type="number" id="custom" placeholder="Custom OT">
+<input type="number" id="extra" placeholder="ค่าเดินทาง">
 
-<button class="btn add" onclick="add()">+ เพิ่ม</button>
-<button class="btn sync" onclick="sync()">⬆️ Sync Sheet</button>
+<button class="add" onclick="add()">+ เพิ่ม</button>
+<button class="sync" onclick="sync()">⬆ Sync Sheet</button>
 </div>
 
 <div id="list"></div>
 <div id="sum"></div>
 
+</div>
+
 <script>
-const WEB_APP = "https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnSSViGx2eyVhpJ8P1NIR2klblIWlknHTRdp6k5G8ZIT89L0mszGLEPp56tjB_85ky88aw9HCJYdpDszJzhr_JqE4E5BYI-l62cyjXkeZtUbte3zANm34QjP9of0yyiV9GUX7SMikhO8RuiG2kjHNCiJS3bAFQV7YJP8ImkPj2Rj5aatMXSPeTlEd5zVxi6p2Or-xv4HoUHqbASeZ8yp2PjnoEJzm-gzSDiv2OBM_S2tTyUgpLkfQMHbsLXUsqPb9BXlY_WihbbFwsa4EkRAdYk9GMRZ-g&lib=MwBYzrbIWzcA96h9sUegyF9szXJcOglkN";
 
-let data = JSON.parse(localStorage.getItem("rec")||"[]");
+const WEB_APP_URL = "https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnSSViGx2eyVhpJ8P1NIR2klblIWlknHTRdp6k5G8ZIT89L0mszGLEPp56tjB_85ky88aw9HCJYdpDszJzhr_JqE4E5BYI-l62cyjXkeZtUbte3zANm34QjP9of0yyiV9GUX7SMikhO8RuiG2kjHNCiJS3bAFQV7YJP8ImkPj2Rj5aatMXSPeTlEd5zVxi6p2Or-xv4HoUHqbASeZ8yp2PjnoEJzm-gzSDiv2OBM_S2tTyUgpLkfQMHbsLXUsqPb9BXlY_WihbbFwsa4EkRAdYk9GMRZ-g&lib=MwBYzrbIWzcA96h9sUegyF9szXJcOglkN";
 
-window.onload=()=>{
-    date.value=new Date().toISOString().split('T')[0];
-    loadSheet();
-    render();
-};
+let records = JSON.parse(localStorage.getItem("rec")) || [];
 
-function timeToDec(t){
-    let [h,m]=t.split(":").map(Number);
-    return h+m/60;
+function t(time){
+let [h,m]=time.split(":").map(Number);
+return h+m/60;
 }
 
 function calc(r){
-    let tin=timeToDec(r.in);
-    let tout=timeToDec(r.out);
-    if(tout<tin) tout+=24;
+let inT=t(r.in);
+let outT=t(r.out);
+if(outT<inT) outT+=24;
 
-    let ot100=Math.max(0,Math.min(tout,23)-Math.max(tin,18));
-    let ot150=0,ot200=0;
+let ot100=0,ot150=0,ot200=0;
 
-    if(tin<9) ot150+=9-tin;
-    if(tout>23) ot150+=tout-23;
+ot100=Math.max(0,Math.min(outT,23)-Math.max(inT,18));
 
-    let total=
-        ot100*100 +
-        ot150*150 +
-        ot200*200 +
-        r.ot + r.travel;
+if(inT<9) ot150+=9-inT;
+if(outT>23) ot150+=outT-23;
 
-    return total;
+let total=ot100*100+ot150*150+ot200*200;
+total+=r.custom+r.extra;
+
+return {total,ot100,ot150,ot200};
 }
 
 function add(){
-    let r={
-        id:Date.now(),
-        date:date.value,
-        in:in.value,
-        out:out.value,
-        ot:+ot.value||0,
-        travel:+travel.value||0
-    };
-
-    data.push(r);
-    save();
-    render();
-}
-
-function del(id){
-    data=data.filter(x=>x.id!=id);
-    save();
-    render();
+const r={
+date:date.value,
+in:in.value,
+out:out.value,
+custom:+custom.value||0,
+extra:+extra.value||0
+};
+records.push(r);
+save();
 }
 
 function save(){
-    localStorage.setItem("rec",JSON.stringify(data));
+localStorage.setItem("rec",JSON.stringify(records));
+render();
 }
 
 function render(){
-    list.innerHTML="";
-    let total=0;
+try{
+let html="";
+let total=0;
 
-    data.forEach(r=>{
-        let money=calc(r);
-        total+=money;
+records.forEach(r=>{
+let c=calc(r);
+total+=c.total;
 
-        list.innerHTML+=`
-        <div class="record ${money==0?'normal':''}">
-        ${r.date}
-        <div class="grid">
-        <div class="item">เข้า ${r.in}</div>
-        <div class="item">ออก ${r.out}</div>
-        <div class="item">OT ${money}</div>
-        <div class="item">เดินทาง ${r.travel}</div>
-        </div>
-        <button class="del" onclick="del(${r.id})">ลบ</button>
-        </div>`;
-    });
+html+=`
+<div class="record">
+${r.date} | ${r.in}-${r.out}<br>
+OT100:${c.ot100.toFixed(2)} | OT150:${c.ot150.toFixed(2)}<br>
+รวม: ${c.total}
+</div>`;
+});
 
-    sum.innerHTML=`
-    <div class="summary">
-        <div class="box">เงินเดือน <div class="val">19000</div></div>
-        <div class="box">รวม OT <div class="val">${total}</div></div>
-        <div class="box">รวมทั้งหมด <div class="val">${19000+total}</div></div>
+list.innerHTML=html||"ไม่มีข้อมูล";
 
-        <div class="pay">
-            <div class="first">งวดแรก<br><b>16150</b></div>
-            <div class="second">งวดสอง<br><b>${19000+total-16150}</b></div>
-        </div>
-    </div>
+sum.innerHTML=`
+<div class="summary">
+<div class="box">เงินเดือน<div class="big">19000</div></div>
+<div class="box">รวม OT<div class="big">${total}</div></div>
+<div class="box">รวมทั้งหมด<div class="big">${19000+total}</div></div>
+</div>`;
 
-    <div class="export">
-        <button class="btn print" onclick="window.print()">🖨️ Print</button>
-        <button class="btn pdf" onclick="window.print()">⬇️ PDF</button>
-    </div>
-    `;
+}catch(e){
+document.body.innerHTML="ERROR: "+e.message;
+}
 }
 
-/* ===== GOOGLE SHEET ===== */
 async function sync(){
-    try{
-        await fetch(WEB_APP,{
-            method:"POST",
-            mode:"no-cors",
-            body:JSON.stringify({action:"append",records:data})
-        });
-        alert("ส่งสำเร็จ");
-    }catch(e){
-        alert("error "+e);
-    }
+try{
+await fetch(WEB_APP_URL,{
+method:"POST",
+mode:"no-cors",
+body:JSON.stringify({records})
+});
+alert("ส่งแล้ว");
+}catch{
+alert("ส่งไม่สำเร็จ");
+}
 }
 
-async function loadSheet(){
-    try{
-        let res=await fetch(WEB_APP);
-        let d=await res.json();
-        if(Array.isArray(d)){
-            data=d;
-            save();
-            render();
-        }
-    }catch{}
-}
+render();
 </script>
 
 </body>

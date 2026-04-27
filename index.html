@@ -22,31 +22,61 @@ let records = [];
 async function loadFromSheet() {
     try {
         const res = await fetch(WEB_APP_URL);
+
+        if (!res.ok) throw new Error("API ERROR");
+
         const data = await res.json();
+
+        if (!Array.isArray(data)) throw new Error("DATA ไม่ใช่ ARRAY");
 
         records = data.map(r => ({
             id: Date.now() + Math.random(),
-            date: r.date,
-            timeIn: r.timeIn,
-            timeOut: r.timeOut,
+            date: formatDate(r.date),
+            timeIn: formatTime(r.timeIn),
+            timeOut: formatTime(r.timeOut),
             customOT: Number(r.customOT) || 0,
             specialTransport: Number(r.specialTransport) || 0
         }));
 
         localStorage.setItem('timeRecords_2026', JSON.stringify(records));
-        render();
 
     } catch (err) {
-        console.log("fallback local");
+        console.log("🔥 fallback local:", err);
         records = JSON.parse(localStorage.getItem('timeRecords_2026')) || [];
-        render();
     }
+
+    render();
 }
 
 // =========================
-// ⏱ TIME
+// 🔧 FORMAT DATE
+// =========================
+function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return d.toISOString().split('T')[0];
+}
+
+// =========================
+// 🔧 FORMAT TIME (กันพัง)
+// =========================
+function formatTime(timeStr) {
+    if (!timeStr) return '00:00';
+
+    if (timeStr.includes('T')) {
+        const d = new Date(timeStr);
+        return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    }
+
+    return timeStr;
+}
+
+// =========================
+// ⏱ TIME → DECIMAL
 // =========================
 function timeToDecimal(timeStr) {
+    if (!timeStr) return 0;
+
     const [h, m] = timeStr.split(':').map(Number);
     return h + m / 60;
 }
@@ -55,8 +85,8 @@ function timeToDecimal(timeStr) {
 // 📅 DAY TYPE
 // =========================
 function getDayType(dateStr) {
-    const date = new Date(dateStr);
-    if (date.getDay() === 3) return 'พุธ';
+    const d = new Date(dateStr);
+    if (d.getDay() === 3) return 'พุธ';
     return 'ปกติ';
 }
 
@@ -65,7 +95,6 @@ function getDayType(dateStr) {
 // =========================
 function calculateOT(record) {
 
-    const dayType = getDayType(record.date);
     const timeIn = timeToDecimal(record.timeIn);
     let timeOut = timeToDecimal(record.timeOut);
 
@@ -73,11 +102,13 @@ function calculateOT(record) {
 
     let ot100 = 0, ot150 = 0, transport = 0;
 
-    if (dayType === 'ปกติ') {
+    if (getDayType(record.date) === 'ปกติ') {
+
         ot100 = Math.max(0, Math.min(timeOut, 23) - Math.max(timeIn, 18));
 
         if (timeIn < 9) ot150 += (9 - timeIn);
         if (timeOut > 23) ot150 += (timeOut - 23);
+
     } else {
         ot150 = Math.max(0, Math.min(timeOut, 23) - Math.max(timeIn, 9));
     }
@@ -97,31 +128,26 @@ function calculateOT(record) {
 }
 
 // =========================
-// ➕ ADD
+// ➕ ADD RECORD
 // =========================
 function addRecord() {
 
-    const date = document.getElementById('inputDate').value;
-    const timeIn = document.getElementById('inputTimeIn').value;
-    const timeOut = document.getElementById('inputTimeOut').value;
-    const customOT = Number(document.getElementById('inputCustomOT').value) || 0;
-    const specialTransport = Number(document.getElementById('inputSpecialTransport').value) || 0;
-
     const record = {
         id: Date.now(),
-        date,
-        timeIn,
-        timeOut,
-        customOT,
-        specialTransport
+        date: document.getElementById('inputDate').value,
+        timeIn: document.getElementById('inputTimeIn').value,
+        timeOut: document.getElementById('inputTimeOut').value,
+        customOT: Number(document.getElementById('inputCustomOT').value) || 0,
+        specialTransport: Number(document.getElementById('inputSpecialTransport').value) || 0
     };
 
     records.push(record);
+
     localStorage.setItem('timeRecords_2026', JSON.stringify(records));
 
     render();
 
-    // 🔥 FIX สำคัญ
+    // 🔥 ส่งเฉพาะรายการเดียว
     sendRecordsToSheet(record);
 }
 
@@ -129,15 +155,19 @@ function addRecord() {
 // 📤 SEND SHEET
 // =========================
 async function sendRecordsToSheet(record) {
-    await fetch(WEB_APP_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            action: 'append',
-            records: [record]
-        })
-    });
+    try {
+        await fetch(WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'append',
+                records: [record]
+            })
+        });
+    } catch (err) {
+        console.log("ส่งไม่สำเร็จ", err);
+    }
 }
 
 // =========================
@@ -145,9 +175,7 @@ async function sendRecordsToSheet(record) {
 // =========================
 function calculateMonthly() {
 
-    let otOnly = 0;
-    let transport = 0;
-    let total = 0;
+    let otOnly = 0, transport = 0, total = 0;
 
     records.forEach(r => {
         const ot = calculateOT(r);
@@ -167,13 +195,20 @@ function calculateMonthly() {
 }
 
 // =========================
-// 🎨 RENDER
+// 🎨 RENDER (กันพัง)
 // =========================
 function render() {
 
+    const el = document.getElementById('summaryContainer');
+
+    if (!el) {
+        console.log("❌ ไม่มี summaryContainer");
+        return;
+    }
+
     const m = calculateMonthly();
 
-    document.getElementById('summaryContainer').innerHTML = `
+    el.innerHTML = `
         <div>OT ล้วน: ฿${m.otOnly}</div>
         <div>ค่าเดินทาง: ฿${m.transport}</div>
         <div>รวม OT: ฿${m.total}</div>

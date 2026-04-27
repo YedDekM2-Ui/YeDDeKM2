@@ -3,47 +3,44 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Time Tracking PRO+</title>
+<title>⏱️ Time Tracking PRO</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
+*{margin:0;padding:0;box-sizing:border-box;}
 body{
-margin:0;
-font-family:sans-serif;
+font-family:'Noto Sans Thai',sans-serif;
 background:linear-gradient(135deg,#fed7aa,#fce7f3,#dbeafe);
 }
 
-.container{padding:16px}
+.container{padding:16px;max-width:500px;margin:auto;}
 
-h1{
-text-align:center;
-background:linear-gradient(90deg,#ea580c,#9333ea,#ec4899);
+.header{text-align:center;margin-bottom:12px;}
+.header h1{
+font-size:22px;
+font-weight:700;
+background:linear-gradient(135deg,#ea580c,#9333ea,#ec4899);
 -webkit-background-clip:text;
 -webkit-text-fill-color:transparent;
 }
 
-.status{
-background:#dcfce7;
-border:2px solid #22c55e;
-padding:10px;
-border-radius:10px;
-text-align:center;
-margin-bottom:15px;
-}
-
 .card{
-background:white;
-padding:15px;
+background:#fff;
 border-radius:14px;
+padding:14px;
 margin-bottom:12px;
-border:2px solid #fed7aa;
 }
 
-input{
+label{font-size:12px;font-weight:600;}
+
+input,select{
 width:100%;
 padding:10px;
-margin-bottom:8px;
-border-radius:8px;
+margin-top:6px;
+margin-bottom:10px;
 border:2px solid #fed7aa;
+border-radius:8px;
 }
 
 button{
@@ -51,35 +48,36 @@ width:100%;
 padding:12px;
 border:none;
 border-radius:10px;
-font-weight:bold;
+font-weight:700;
+background:linear-gradient(135deg,#ea580c,#f97316);
+color:#fff;
 }
 
-.add{background:#f97316;color:white;}
-.sync{background:#22c55e;color:white;margin-top:6px;}
+.sync{background:#22c55e;margin-top:6px;}
 
 .record{
-background:white;
-padding:10px;
+background:#fff;
 border-radius:10px;
-margin-bottom:8px;
-border-left:5px solid #f59e0b;
-}
-
-.summary{
-background:linear-gradient(135deg,#dbeafe,#f3e8ff);
-border:2px solid #9333ea;
-padding:12px;
-border-radius:12px;
-}
-
-.box{
-background:white;
 padding:10px;
-border-radius:8px;
-margin-bottom:8px;
+margin-top:8px;
+border-left:6px solid #fed7aa;
 }
 
-.big{font-size:20px;font-weight:bold;color:#ea580c}
+.record.wednesday{
+background:#fffbeb;
+border-left-color:#f59e0b;
+}
+
+.record.holiday{
+background:#fffacd;
+border-left-color:#facc15;
+}
+
+.total{
+text-align:center;
+font-weight:700;
+margin-top:12px;
+}
 </style>
 </head>
 
@@ -87,23 +85,37 @@ margin-bottom:8px;
 
 <div class="container">
 
-<h1>⏱️ Time Tracking PRO+</h1>
-
-<div class="status">✅ เวอร์เทพ พร้อมใช้</div>
+<div class="header">
+<h1>⏱️ Time Tracking PRO</h1>
+</div>
 
 <div class="card">
-<input type="date" id="date">
-<input type="time" id="in" value="09:00">
-<input type="time" id="out" value="18:00">
-<input type="number" id="custom" placeholder="Custom OT">
-<input type="number" id="extra" placeholder="ค่าเดินทาง">
 
-<button class="add" onclick="add()">+ เพิ่ม</button>
-<button class="sync" onclick="sync()">⬆ Sync Sheet</button>
+<label>วันที่</label>
+<input type="date" id="date">
+
+<label>เวลาเข้า</label>
+<input type="time" id="in" value="09:00">
+
+<label>เวลาออก</label>
+<input type="time" id="out" value="18:00">
+
+<label>OT พิเศษ (บาท)</label>
+<input type="number" id="custom">
+
+<label>ประเภทวัน</label>
+<select id="type">
+<option value="normal">วันปกติ</option>
+<option value="holiday">นักขัตฤกษ์</option>
+</select>
+
+<button onclick="save()">💾 บันทึก</button>
+<button class="sync" onclick="sync()">⬆ Sync Google Sheet</button>
+
 </div>
 
 <div id="list"></div>
-<div id="sum"></div>
+<div class="total" id="total"></div>
 
 </div>
 
@@ -111,93 +123,145 @@ margin-bottom:8px;
 
 const WEB_APP_URL = "https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnSSViGx2eyVhpJ8P1NIR2klblIWlknHTRdp6k5G8ZIT89L0mszGLEPp56tjB_85ky88aw9HCJYdpDszJzhr_JqE4E5BYI-l62cyjXkeZtUbte3zANm34QjP9of0yyiV9GUX7SMikhO8RuiG2kjHNCiJS3bAFQV7YJP8ImkPj2Rj5aatMXSPeTlEd5zVxi6p2Or-xv4HoUHqbASeZ8yp2PjnoEJzm-gzSDiv2OBM_S2tTyUgpLkfQMHbsLXUsqPb9BXlY_WihbbFwsa4EkRAdYk9GMRZ-g&lib=MwBYzrbIWzcA96h9sUegyF9szXJcOglkN";
 
-let records = JSON.parse(localStorage.getItem("rec")) || [];
-
 function t(time){
 let [h,m]=time.split(":").map(Number);
 return h+m/60;
 }
 
-function calc(r){
-let inT=t(r.in);
-let outT=t(r.out);
+// 🔥 OT คิดแบบจริง
+function calcOT(inTime,outTime,type,date){
+
+let inT=t(inTime);
+let outT=t(outTime);
 if(outT<inT) outT+=24;
 
+let day=new Date(date).getDay();
+let isWed=(day===3);
+
 let ot100=0,ot150=0,ot200=0;
+
+// ปกติ
+if(type==="normal" && !isWed){
 
 ot100=Math.max(0,Math.min(outT,23)-Math.max(inT,18));
 
 if(inT<9) ot150+=9-inT;
 if(outT>23) ot150+=outT-23;
 
-let total=ot100*100+ot150*150+ot200*200;
-total+=r.custom+r.extra;
-
-return {total,ot100,ot150,ot200};
 }
 
-function add(){
-const r={
-date:date.value,
-in:in.value,
-out:out.value,
-custom:+custom.value||0,
-extra:+extra.value||0
+// พุธ
+if(isWed){
+ot150=Math.max(0,outT-inT);
+}
+
+// นักขัตฤกษ์
+if(type==="holiday"){
+ot150=Math.max(0,outT-inT);
+}
+
+return {
+total: ot100*100 + ot150*150 + ot200*200,
+ot100,ot150,ot200
 };
-records.push(r);
-save();
 }
 
+// 💾 save
 function save(){
-localStorage.setItem("rec",JSON.stringify(records));
+
+let date=dateInput.value;
+let inTime=inInput.value;
+let outTime=outInput.value;
+let custom=+customInput.value||0;
+let type=typeInput.value;
+
+if(!date||!outTime){
+alert("กรอกให้ครบ");
+return;
+}
+
+let calc=calcOT(inTime,outTime,type,date);
+
+let data=JSON.parse(localStorage.getItem("ot_data"))||[];
+
+data.push({
+date,inTime,outTime,
+...calc,
+custom,
+total:calc.total+custom,
+type
+});
+
+localStorage.setItem("ot_data",JSON.stringify(data));
+
 render();
 }
 
+// 📊 render
 function render(){
-try{
+
+let data=JSON.parse(localStorage.getItem("ot_data"))||[];
 let html="";
 let total=0;
 
-records.forEach(r=>{
-let c=calc(r);
-total+=c.total;
+data.forEach(d=>{
+
+total+=d.total;
+
+let cls="record";
+let day=new Date(d.date).getDay();
+if(day===3) cls+=" wednesday";
+if(d.type==="holiday") cls+=" holiday";
 
 html+=`
-<div class="record">
-${r.date} | ${r.in}-${r.out}<br>
-OT100:${c.ot100.toFixed(2)} | OT150:${c.ot150.toFixed(2)}<br>
-รวม: ${c.total}
+<div class="${cls}">
+📅 ${d.date}<br>
+⏰ ${d.inTime} - ${d.outTime}<br>
+OT100: ${d.ot100.toFixed(2)}<br>
+OT150: ${d.ot150.toFixed(2)}<br>
+💰 รวม: ${d.total}
 </div>`;
 });
 
 list.innerHTML=html||"ไม่มีข้อมูล";
-
-sum.innerHTML=`
-<div class="summary">
-<div class="box">เงินเดือน<div class="big">19000</div></div>
-<div class="box">รวม OT<div class="big">${total}</div></div>
-<div class="box">รวมทั้งหมด<div class="big">${19000+total}</div></div>
-</div>`;
-
-}catch(e){
-document.body.innerHTML="ERROR: "+e.message;
-}
+totalDiv.innerHTML="💵 รวมทั้งหมด: "+total+" บาท";
 }
 
+// 📡 sync
 async function sync(){
+let data=JSON.parse(localStorage.getItem("ot_data"))||[];
+
+if(data.length===0){
+alert("ไม่มีข้อมูล");
+return;
+}
+
 try{
 await fetch(WEB_APP_URL,{
 method:"POST",
 mode:"no-cors",
-body:JSON.stringify({records})
+body:JSON.stringify({records:data})
 });
 alert("ส่งแล้ว");
-}catch{
-alert("ส่งไม่สำเร็จ");
+}catch(e){
+alert("error");
 }
 }
 
+// refs
+const dateInput=document.getElementById("date");
+const inInput=document.getElementById("in");
+const outInput=document.getElementById("out");
+const customInput=document.getElementById("custom");
+const typeInput=document.getElementById("type");
+
+const list=document.getElementById("list");
+const totalDiv=document.getElementById("total");
+
+// init
+dateInput.value=new Date().toISOString().split("T")[0];
 render();
+
 </script>
 
 </body>

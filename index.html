@@ -300,7 +300,7 @@
             totalSpecialTransport += ot.specialTransport;
         });
 
-        const totalOT = totalOT100 + totalOT150 + totalOT200 + totalOTCustom;
+        const totalOT = totalOT100 + totalOT150 + totalOT200 + totalOTCustom + totalTransport + totalSpecialTransport;
         const salary = CONFIG.SALARY + CONFIG.ALLOWANCE;
         const totalIncome = salary + totalOT;
         const netAfterSoc = totalIncome - CONFIG.SOCIAL_SEC;

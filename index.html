@@ -491,7 +491,7 @@
                     <div class="record-item"><div class="record-item-label">OT200 (ชม)</div><div class="record-item-value">${ot.ot200_hours.toFixed(2)}</div></div>
                     <div class="record-item"><div class="record-item-label">OT Custom (บาท)</div><div class="record-item-value">${ot.otCustom.toFixed(0)}</div></div>
                     <div class="record-item"><div class="record-item-label">ค่าเดินทาง</div><div class="record-item-value">${ot.transport + ot.specialTransport}</div></div>
-                    <div class="record-item"><div class="record-item-label">รวม OT (บาท)</div><div class="record-item-value">${ot.otTotal_baht.toFixed(0)}</div></div>
+                    <div class="record-item"><div class="record-item-label">รวม OT (บาท)</div><div class="record-item-value">${ot.grandTotal.toFixed(0)}</div></div>
                 </div>
                 <button class="btn-delete" onclick="deleteRecord(${record.id})">ลบ</button>
             `;

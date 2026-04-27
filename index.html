@@ -7,8 +7,6 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 body{
@@ -16,7 +14,6 @@ body{
  background:linear-gradient(135deg,#fed7aa,#fce7f3,#dbeafe);
 }
 .container{max-width:520px;margin:auto;padding:16px;}
-
 .header{text-align:center;margin-bottom:10px;}
 .header h1{
  font-size:22px;
@@ -24,14 +21,12 @@ body{
  -webkit-background-clip:text;
  -webkit-text-fill-color:transparent;
 }
-
 .card{
  background:#fff;
  border-radius:14px;
  padding:14px;
  margin-bottom:12px;
 }
-
 input{
  width:100%;
  padding:10px;
@@ -39,7 +34,6 @@ input{
  border:2px solid #fed7aa;
  border-radius:8px;
 }
-
 button{
  width:100%;
  padding:12px;
@@ -48,11 +42,7 @@ button{
  font-weight:700;
  margin-top:6px;
 }
-
 .add{background:#ea580c;color:#fff;}
-.sync{background:#22c55e;color:#fff;}
-.pdf{background:#3b82f6;color:#fff;}
-
 .record{
  background:#fff;
  border-radius:10px;
@@ -60,10 +50,8 @@ button{
  margin-top:8px;
  border-left:6px solid #fed7aa;
 }
-
-.wednesday{background:#fffbeb;border-left-color:#f59e0b;}
-.holiday{background:#fffacd;border-left-color:#facc15;}
-
+.wednesday{background:#fffbeb;border-left:#f59e0b 6px solid;}
+.holiday{background:#fffacd;border-left:#facc15 6px solid;}
 .summary{
  background:#eef2ff;
  border:2px solid #7c3aed;
@@ -73,8 +61,6 @@ button{
  text-align:center;
  font-weight:700;
 }
-
-canvas{margin-top:10px;}
 </style>
 </head>
 
@@ -94,70 +80,82 @@ canvas{margin-top:10px;}
 <input type="number" id="special" placeholder="ค่าเดินทางพิเศษ">
 
 <button class="add" onclick="add()">+ เพิ่ม</button>
-<button class="sync" onclick="send()">Sync Sheet</button>
-<button class="pdf" onclick="printPDF()">Export PDF</button>
 </div>
 
 <div id="list"></div>
-
-<canvas id="chart"></canvas>
 
 </div>
 
 <script>
 
-// ===== CONFIG =====
-const SALARY=17000;
-const BONUS=2000;
-const SOCIAL=850;
-
-const HOLIDAY_API="https://docs.google.com/spreadsheets/d/1-siPR8NwN3wqatR3y6w8IJ-PtepFJnTzDFtjDsrJ8sg/gviz/tq?tqx=out:csv&sheet=Holidays";
+// ====== CONFIG ======
+const SHEET_URL =
+"https://docs.google.com/spreadsheets/d/1-siPR8NwN3wqatR3y6w8IJ-PtepFJnTzDFtjDsrJ8sg/gviz/tq?tqx=out:csv&sheet=Holidays";
 
 let holidays=[];
 let db=JSON.parse(localStorage.getItem("db"))||[];
+let ready=false;
 
-// ===== LOAD HOLIDAY =====
+// ====== LOAD HOLIDAY ======
 async function loadHoliday(){
- let r=await fetch(HOLIDAY_API);
- let t=await r.text();
- holidays=t.split("\n").map(x=>x.split(",")[0]).filter(x=>x.match(/2026/));
+ try{
+  let res=await fetch(SHEET_URL);
+  let txt=await res.text();
+
+  holidays = txt.split("\n")
+   .map(r=>r.split(",")[0])
+   .filter(d=>d.match(/^\d{4}-/));
+
+  ready=true;
+
+ }catch(e){
+  alert("โหลดวันหยุดไม่สำเร็จ");
+ }
 }
 
-// ===== HELP =====
+// ====== HELP ======
 function t(v){let[a,b]=v.split(":");return +a+(b/60)}
+
 function dayType(d){
  if(holidays.includes(d)) return "holiday";
  if(new Date(d).getDay()==3) return "wednesday";
  return "normal";
 }
-function period(d){
+
+function getPeriod(d){
  let x=new Date(d);
  let y=x.getFullYear(),m=x.getMonth();
- if(x.getDate()<26){m--;if(m<0){m=11;y--;}}
+
+ if(x.getDate()<26){
+  m--;
+  if(m<0){m=11;y--;}
+ }
+
  return y+"-"+(m+1);
 }
 
-// ===== CALC =====
+// ====== CALC ======
 function calc(r){
+
  let i=t(r.in),o=t(r.out);
  if(o<i)o+=24;
 
  let t100=0,t150=0,t200=0,tr=0;
- let tp=dayType(r.date);
+ let type=dayType(r.date);
 
- if(tp=="normal"){
+ if(type=="normal"){
   t100=Math.max(0,Math.min(o,23)-Math.max(i,18));
   if(i<9)t150+=(9-i);
   if(o>23)t150+=(o-23);
  }
 
- if(tp!="normal"){
+ if(type=="wednesday"||type=="holiday"){
   t150=Math.max(0,Math.min(o,23)-Math.max(i,9));
   if(i<9)t200+=(9-i);
   if(o>23)t200+=(o-23);
  }
 
- if(o>=23)tr=200;
+ if(o>=23) tr=200;
 
  let total=
  t100*100+
@@ -170,8 +168,19 @@ function calc(r){
  return {t100,t150,t200,tr,total};
 }
 
-// ===== ADD =====
+// ====== ADD ======
 function add(){
+
+ if(!ready){
+  alert("กำลังโหลดวันหยุด...");
+  return;
+ }
+
+ if(!date.value || !in.value || !out.value){
+  alert("กรอกให้ครบ");
+  return;
+ }
+
  let r={
   id:Date.now(),
   date:date.value,
@@ -180,51 +189,51 @@ function add(){
   custom:+customOT.value||0,
   special:+special.value||0
  };
+
  db.push(r);
  localStorage.setItem("db",JSON.stringify(db));
+
  render();
 }
 
-// ===== DELETE =====
+// ====== DELETE ======
 function del(id){
  db=db.filter(x=>x.id!=id);
  localStorage.setItem("db",JSON.stringify(db));
  render();
 }
 
-// ===== RENDER =====
+// ====== RENDER ======
 function render(){
 
- let box={},chartData={};
+ let box={};
+ let html="";
 
  db.forEach(r=>{
-  let p=period(r.date);
+  let p=getPeriod(r.date);
   if(!box[p])box[p]=[];
   box[p].push(r);
  });
 
- let html="";
-
  Object.keys(box).sort().reverse().forEach(p=>{
+
   let sum=0;
 
   box[p].forEach(r=>{
-   let c=calc(r);
-   sum+=c.total;
+   sum+=calc(r).total;
   });
-
-  chartData[p]=sum;
 
   html+=`<div class="summary">รอบ ${p}<br>฿${sum}</div>`;
 
   box[p].forEach(r=>{
    let c=calc(r);
+
    html+=`
    <div class="record ${dayType(r.date)}">
    ${r.date}<br>
-   ${r.in}-${r.out}<br>
+   ${r.in} - ${r.out}<br>
    100:${c.t100.toFixed(2)} / 150:${c.t150.toFixed(2)} / 200:${c.t200.toFixed(2)}<br>
-   🚗 ${c.tr+(r.special||0)}<br>
+   🚗 ${c.tr + (r.special||0)}<br>
    💰 ${c.total}
    <br><button onclick="del(${r.id})">ลบ</button>
    </div>`;
@@ -233,40 +242,17 @@ function render(){
  });
 
  list.innerHTML=html;
- drawChart(chartData);
 }
 
-// ===== CHART =====
-let chart;
-function drawChart(data){
+// ====== START ======
+function init(){
+ document.getElementById("date").value =
+ new Date().toISOString().split("T")[0];
 
- let ctx=document.getElementById("chart");
-
- if(chart) chart.destroy();
-
- chart=new Chart(ctx,{
-  type:'bar',
-  data:{
-   labels:Object.keys(data),
-   datasets:[{
-    label:'รายได้ต่อรอบ',
-    data:Object.values(data)
-   }]
-  }
- });
+ loadHoliday().then(render);
 }
 
-// ===== PDF =====
-function printPDF(){
- window.print();
-}
-
-// ===== START =====
-async function start(){
- await loadHoliday();
- render();
-}
-start();
+init();
 
 </script>
 

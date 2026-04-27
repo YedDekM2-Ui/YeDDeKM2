@@ -3,158 +3,192 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Time Tracking 2026</title>
+<title>Time Tracking PRO</title>
 
 <style>
 body{
-    font-family:sans-serif;
-    background: linear-gradient(135deg,#fed7aa,#fce7f3,#dbeafe);
-    margin:0;
-    padding:10px;
+    font-family: 'Noto Sans Thai', sans-serif;
+    background: linear-gradient(135deg,#fed7aa,#fbcfe8,#bfdbfe);
+    margin:0;padding:12px;
 }
 
+/* HEADER */
 .header{text-align:center;margin-bottom:10px;}
 .header h1{
+    font-size:26px;font-weight:700;
     background: linear-gradient(135deg,#ea580c,#9333ea,#ec4899);
     -webkit-background-clip:text;
     -webkit-text-fill-color:transparent;
 }
+.header p{font-size:12px;color:#666}
 
+/* STATUS */
+.status{
+    background:#dcfce7;border:2px solid #22c55e;
+    padding:10px;border-radius:12px;
+    text-align:center;margin-bottom:12px;
+}
+
+/* CARD */
 .card{
     background:#fff7ed;
     border:2px solid #fed7aa;
-    border-radius:12px;
-    padding:10px;
-    margin-bottom:10px;
+    border-radius:16px;padding:14px;margin-bottom:12px;
 }
 
+input{
+    width:100%;padding:12px;border-radius:12px;
+    border:2px solid #fdba74;margin-bottom:8px;
+}
+
+/* BUTTON */
+.btn{
+    width:100%;padding:14px;border:none;
+    border-radius:12px;font-weight:700;margin-top:6px;
+}
+.add{background:#f97316;color:#fff;}
+.sync{background:#22c55e;color:#fff;}
+
+/* RECORD */
 .record{
-    background:#fffef2;
-    border-left:5px solid #facc15;
-    border:2px solid #fde68a;
-    border-radius:10px;
-    padding:10px;
-    margin-bottom:8px;
+    background:#fefce8;
+    border-left:6px solid #facc15;
+    border-radius:16px;padding:12px;margin-bottom:10px;
 }
+.normal{background:#f3f4f6;border-left:6px solid #fdba74;}
 
+/* GRID */
 .grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:6px;
+    display:grid;grid-template-columns:1fr 1fr;
+    gap:8px;margin-top:6px;
 }
-
 .item{
-    background:#fef3c7;
-    padding:6px;
-    border-radius:6px;
-    font-size:12px;
+    background:#e5e7eb;padding:10px;
+    border-radius:10px;font-size:13px;
 }
 
-button{
-    width:100%;
-    padding:10px;
-    border:none;
-    border-radius:8px;
-    margin-top:6px;
-    font-weight:bold;
+/* DELETE */
+.del{
+    background:#ef4444;color:#fff;
+    border:none;padding:8px 12px;
+    border-radius:10px;margin-top:6px;
 }
 
-.add{background:#ea580c;color:#fff;}
-.del{background:#ef4444;color:#fff;}
-
+/* SUMMARY */
 .summary{
-    background:linear-gradient(135deg,#dbeafe,#f3e8ff);
-    border:2px solid #9333ea;
-    border-radius:12px;
-    padding:10px;
+    background:linear-gradient(135deg,#c7d2fe,#e9d5ff);
+    border-left:5px solid #9333ea;
+    border-radius:20px;padding:14px;
 }
-
 .box{
-    background:#fff7ed;
-    padding:6px;
-    border-radius:6px;
-    margin-bottom:6px;
+    background:#e5e7eb;padding:12px;
+    border-radius:12px;margin-bottom:8px;
+}
+.val{font-size:20px;font-weight:700;color:#ea580c;}
+
+/* PAYMENT */
+.pay{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.first{
+    border:2px solid #22c55e;background:#dcfce7;
+    padding:10px;border-radius:12px;text-align:center;
+}
+.second{
+    border:2px solid #ec4899;background:#fce7f3;
+    padding:10px;border-radius:12px;text-align:center;
 }
 
-.val{color:#ea580c;font-weight:bold;}
+/* EXPORT */
+.export{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
+.print{background:#8b5cf6;color:#fff;}
+.pdf{background:#3b82f6;color:#fff;}
 </style>
 </head>
 
 <body>
 
 <div class="header">
-    <h1>⏱️ Time Tracking</h1>
+<h1>⏱️ Time Tracking PRO</h1>
+<p>OT + Google Sheet Sync</p>
 </div>
 
+<div class="status">✅ เวอร์โปร พร้อมใช้งาน</div>
+
 <div class="card">
-    <input id="date" type="date">
-    <input id="in" type="time" value="09:00">
-    <input id="out" type="time" value="18:00">
-    <input id="extra" type="number" placeholder="OT เพิ่ม">
-    <button class="add" onclick="add()">เพิ่ม</button>
+<input type="date" id="date">
+<input type="time" id="in" value="09:00">
+<input type="time" id="out" value="18:00">
+<input type="number" id="ot" placeholder="Custom OT">
+<input type="number" id="travel" placeholder="ค่าเดินทาง">
+
+<button class="btn add" onclick="add()">+ เพิ่ม</button>
+<button class="btn sync" onclick="sync()">⬆️ Sync Sheet</button>
 </div>
 
 <div id="list"></div>
 <div id="sum"></div>
 
 <script>
+const WEB_APP = "https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnSSViGx2eyVhpJ8P1NIR2klblIWlknHTRdp6k5G8ZIT89L0mszGLEPp56tjB_85ky88aw9HCJYdpDszJzhr_JqE4E5BYI-l62cyjXkeZtUbte3zANm34QjP9of0yyiV9GUX7SMikhO8RuiG2kjHNCiJS3bAFQV7YJP8ImkPj2Rj5aatMXSPeTlEd5zVxi6p2Or-xv4HoUHqbASeZ8yp2PjnoEJzm-gzSDiv2OBM_S2tTyUgpLkfQMHbsLXUsqPb9BXlY_WihbbFwsa4EkRAdYk9GMRZ-g&lib=MwBYzrbIWzcA96h9sUegyF9szXJcOglkN";
+
 let data = JSON.parse(localStorage.getItem("rec")||"[]");
 
-/* กันพังแน่นอน */
-window.onload = function(){
-
-    document.getElementById("date").value =
-        new Date().toISOString().split('T')[0];
-
+window.onload=()=>{
+    date.value=new Date().toISOString().split('T')[0];
+    loadSheet();
     render();
+};
+
+function timeToDec(t){
+    let [h,m]=t.split(":").map(Number);
+    return h+m/60;
 }
 
-/* ADD */
+function calc(r){
+    let tin=timeToDec(r.in);
+    let tout=timeToDec(r.out);
+    if(tout<tin) tout+=24;
+
+    let ot100=Math.max(0,Math.min(tout,23)-Math.max(tin,18));
+    let ot150=0,ot200=0;
+
+    if(tin<9) ot150+=9-tin;
+    if(tout>23) ot150+=tout-23;
+
+    let total=
+        ot100*100 +
+        ot150*150 +
+        ot200*200 +
+        r.ot + r.travel;
+
+    return total;
+}
+
 function add(){
-    let d=document.getElementById("date").value;
-    let i=document.getElementById("in").value;
-    let o=document.getElementById("out").value;
-    let e=Number(document.getElementById("extra").value)||0;
-
-    if(!d||!i||!o) return alert("ใส่เวลา");
-
-    data.push({
+    let r={
         id:Date.now(),
-        date:d,
-        in:i,
-        out:o,
-        extra:e
-    });
+        date:date.value,
+        in:in.value,
+        out:out.value,
+        ot:+ot.value||0,
+        travel:+travel.value||0
+    };
 
-    localStorage.setItem("rec",JSON.stringify(data));
+    data.push(r);
+    save();
     render();
 }
 
-/* DELETE */
 function del(id){
     data=data.filter(x=>x.id!=id);
-    localStorage.setItem("rec",JSON.stringify(data));
+    save();
     render();
 }
 
-/* CALC */
-function calc(r){
-    let h1=parseInt(r.in);
-    let h2=parseInt(r.out);
-
-    if(h2<h1) h2+=24;
-
-    let ot = Math.max(0,h2-18)*100;
-    return ot + r.extra;
+function save(){
+    localStorage.setItem("rec",JSON.stringify(data));
 }
 
-/* RENDER */
 function render(){
-    let list=document.getElementById("list");
-    let sum=document.getElementById("sum");
-
-    if(!list||!sum) return;
-
     list.innerHTML="";
     let total=0;
 
@@ -163,25 +197,61 @@ function render(){
         total+=money;
 
         list.innerHTML+=`
-        <div class="record">
-            ${r.date}
-            <div class="grid">
-                <div class="item">เข้า ${r.in}</div>
-                <div class="item">ออก ${r.out}</div>
-                <div class="item">OT ${money}</div>
-            </div>
-            <button class="del" onclick="del(${r.id})">ลบ</button>
+        <div class="record ${money==0?'normal':''}">
+        ${r.date}
+        <div class="grid">
+        <div class="item">เข้า ${r.in}</div>
+        <div class="item">ออก ${r.out}</div>
+        <div class="item">OT ${money}</div>
+        <div class="item">เดินทาง ${r.travel}</div>
         </div>
-        `;
+        <button class="del" onclick="del(${r.id})">ลบ</button>
+        </div>`;
     });
 
     sum.innerHTML=`
     <div class="summary">
-        <div class="box">เงินเดือน <span class="val">19000</span></div>
-        <div class="box">รวม OT <span class="val">${total}</span></div>
-        <div class="box">รวมทั้งหมด <span class="val">${19000+total}</span></div>
+        <div class="box">เงินเดือน <div class="val">19000</div></div>
+        <div class="box">รวม OT <div class="val">${total}</div></div>
+        <div class="box">รวมทั้งหมด <div class="val">${19000+total}</div></div>
+
+        <div class="pay">
+            <div class="first">งวดแรก<br><b>16150</b></div>
+            <div class="second">งวดสอง<br><b>${19000+total-16150}</b></div>
+        </div>
+    </div>
+
+    <div class="export">
+        <button class="btn print" onclick="window.print()">🖨️ Print</button>
+        <button class="btn pdf" onclick="window.print()">⬇️ PDF</button>
     </div>
     `;
+}
+
+/* ===== GOOGLE SHEET ===== */
+async function sync(){
+    try{
+        await fetch(WEB_APP,{
+            method:"POST",
+            mode:"no-cors",
+            body:JSON.stringify({action:"append",records:data})
+        });
+        alert("ส่งสำเร็จ");
+    }catch(e){
+        alert("error "+e);
+    }
+}
+
+async function loadSheet(){
+    try{
+        let res=await fetch(WEB_APP);
+        let d=await res.json();
+        if(Array.isArray(d)){
+            data=d;
+            save();
+            render();
+        }
+    }catch{}
 }
 </script>
 

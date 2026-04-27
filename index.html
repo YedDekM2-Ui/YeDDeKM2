@@ -6,69 +6,50 @@
 <title>Time Tracking 2026</title>
 
 <style>
-body {
-    font-family: sans-serif;
+body{
+    font-family:sans-serif;
     background: linear-gradient(135deg,#fed7aa,#fce7f3,#dbeafe);
     margin:0;
     padding:10px;
 }
 
-/* HEADER */
-.header{
-    text-align:center;
-    margin-bottom:10px;
-}
+.header{text-align:center;margin-bottom:10px;}
 .header h1{
     background: linear-gradient(135deg,#ea580c,#9333ea,#ec4899);
     -webkit-background-clip:text;
     -webkit-text-fill-color:transparent;
 }
 
-/* STATUS */
-.status-box{
-    background:#dcfce7;
-    border:2px solid #22c55e;
-    padding:10px;
-    border-radius:10px;
-    text-align:center;
-    margin-bottom:10px;
-}
-
-/* CARD */
 .card{
     background:#fff7ed;
     border:2px solid #fed7aa;
-    border-radius:14px;
-    padding:12px;
+    border-radius:12px;
+    padding:10px;
     margin-bottom:10px;
 }
 
-/* RECORD */
 .record{
     background:#fffef2;
-    border-left:6px solid #facc15;
+    border-left:5px solid #facc15;
     border:2px solid #fde68a;
     border-radius:10px;
     padding:10px;
     margin-bottom:8px;
 }
 
-/* GRID */
 .grid{
     display:grid;
     grid-template-columns:1fr 1fr;
     gap:6px;
 }
 
-/* ITEM */
 .item{
-    background:#fef9c3;
+    background:#fef3c7;
     padding:6px;
     border-radius:6px;
     font-size:12px;
 }
 
-/* BUTTON */
 button{
     width:100%;
     padding:10px;
@@ -78,73 +59,73 @@ button{
     font-weight:bold;
 }
 
-.btn-add{ background:#ea580c;color:#fff; }
-.btn-save{ background:#22c55e;color:#fff; }
-.btn-del{ background:#ef4444;color:#fff; }
+.add{background:#ea580c;color:#fff;}
+.del{background:#ef4444;color:#fff;}
 
-/* SUMMARY */
 .summary{
     background:linear-gradient(135deg,#dbeafe,#f3e8ff);
     border:2px solid #9333ea;
-    border-radius:14px;
-    padding:12px;
-    margin-top:10px;
+    border-radius:12px;
+    padding:10px;
 }
 
 .box{
-    background:#fff;
-    padding:8px;
-    border-radius:8px;
+    background:#fff7ed;
+    padding:6px;
+    border-radius:6px;
     margin-bottom:6px;
 }
 
-.value{
-    font-weight:bold;
-    color:#ea580c;
-}
+.val{color:#ea580c;font-weight:bold;}
 </style>
 </head>
 
 <body>
 
 <div class="header">
-    <h1>⏱️ Time Tracking 2026</h1>
+    <h1>⏱️ Time Tracking</h1>
 </div>
 
-<div class="status-box">✅ Sync Google Sheet</div>
-
 <div class="card">
-    <input type="date" id="date">
-    <input type="time" id="in" value="09:00">
-    <input type="time" id="out" value="18:00">
-    <input type="number" id="ot" placeholder="OT เพิ่ม">
-    <button class="btn-add" onclick="add()">➕ เพิ่ม</button>
-    <button class="btn-save" onclick="sync()">⬆️ Sync</button>
+    <input id="date" type="date">
+    <input id="in" type="time" value="09:00">
+    <input id="out" type="time" value="18:00">
+    <input id="extra" type="number" placeholder="OT เพิ่ม">
+    <button class="add" onclick="add()">เพิ่ม</button>
 </div>
 
 <div id="list"></div>
 <div id="sum"></div>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycbxq2Rd3oPL7UEW8Pe4b1sS0zSxvm8b_vcnZ32-MyaZN2kt8D01Q4qajzjLkXvjB2Tgc/exec";
-
 let data = JSON.parse(localStorage.getItem("rec")||"[]");
+
+/* กันพังแน่นอน */
+window.onload = function(){
+
+    document.getElementById("date").value =
+        new Date().toISOString().split('T')[0];
+
+    render();
+}
 
 /* ADD */
 function add(){
-    let r={
-        id:Date.now(),
-        date:date.value,
-        in:in.value,
-        out:out.value,
-        ot:Number(ot.value)||0
-    };
-    data.push(r);
-    save();
-}
+    let d=document.getElementById("date").value;
+    let i=document.getElementById("in").value;
+    let o=document.getElementById("out").value;
+    let e=Number(document.getElementById("extra").value)||0;
 
-/* SAVE */
-function save(){
+    if(!d||!i||!o) return alert("ใส่เวลา");
+
+    data.push({
+        id:Date.now(),
+        date:d,
+        in:i,
+        out:o,
+        extra:e
+    });
+
     localStorage.setItem("rec",JSON.stringify(data));
     render();
 }
@@ -152,20 +133,28 @@ function save(){
 /* DELETE */
 function del(id){
     data=data.filter(x=>x.id!=id);
-    save();
+    localStorage.setItem("rec",JSON.stringify(data));
+    render();
 }
 
 /* CALC */
 function calc(r){
-    let h1=Number(r.in.split(":")[0]);
-    let h2=Number(r.out.split(":")[0]);
+    let h1=parseInt(r.in);
+    let h2=parseInt(r.out);
+
+    if(h2<h1) h2+=24;
 
     let ot = Math.max(0,h2-18)*100;
-    return ot + r.ot;
+    return ot + r.extra;
 }
 
 /* RENDER */
 function render(){
+    let list=document.getElementById("list");
+    let sum=document.getElementById("sum");
+
+    if(!list||!sum) return;
+
     list.innerHTML="";
     let total=0;
 
@@ -181,31 +170,19 @@ function render(){
                 <div class="item">ออก ${r.out}</div>
                 <div class="item">OT ${money}</div>
             </div>
-            <button class="btn-del" onclick="del(${r.id})">ลบ</button>
+            <button class="del" onclick="del(${r.id})">ลบ</button>
         </div>
         `;
     });
 
     sum.innerHTML=`
     <div class="summary">
-        <div class="box">เงินเดือน <span class="value">19000</span></div>
-        <div class="box">รวม OT <span class="value">${total}</span></div>
-        <div class="box">รวมทั้งหมด <span class="value">${19000+total}</span></div>
+        <div class="box">เงินเดือน <span class="val">19000</span></div>
+        <div class="box">รวม OT <span class="val">${total}</span></div>
+        <div class="box">รวมทั้งหมด <span class="val">${19000+total}</span></div>
     </div>
     `;
 }
-
-/* SYNC */
-async function sync(){
-    await fetch(API,{
-        method:"POST",
-        mode:"no-cors",
-        body:JSON.stringify({action:"append",records:data})
-    });
-    alert("ส่งแล้ว");
-}
-
-render();
 </script>
 
 </body>

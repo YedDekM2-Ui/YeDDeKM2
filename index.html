@@ -589,7 +589,7 @@ body {
    CONFIGURATION — แก้ค่าตรงนี้เพื่ออัปเดต
    ────────────────────────────────────────── */
 const CONFIG = {
-  GAS_URL: 'https://script.google.com/macros/s/AKfycbyB8XZGOfYUeNhZ33JwzkH5XfHCVXzWxuLvMzFdVTzJHEis522WhZzrY6B3WZC1CY4K/exec',
+  GAS_URL: 'https://script.google.com/macros/s/AKfycbzDHiEMBP0Z-kxOADMBxP1VjJTDUX5-WgJq3-WY_nVbK2FKHMRp5mCMlOgTfFE9hblf/exec',
   SYNC_INTERVAL_MS: 60000,   // auto-sync ทุก 60 วินาที
   LOCAL_KEY: 'ttp_v2',       // localStorage key
   VERSION: '2.0.0'
@@ -1347,74 +1347,6 @@ function toast(msg, type = 'ok') {
   document.getElementById('fCustom').addEventListener('input', () => APP.updatePreview());
   document.getElementById('fSpecial').addEventListener('input', () => APP.updatePreview());
 })();
-</script>
-</body>
-</html>
-="th">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Executive Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
-<style>
-  :root { --tiffany: #81D8D0; --bg: #F4F7F6; --text: #2D3748; }
-  body { font-family: 'Kanit', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
-  .container { max-width: 600px; margin: auto; }
-  
-  /* Glassmorphism Cards */
-  .card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.3); }
-  
-  .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-  .stat-box { background: var(--tiffany); color: white; padding: 15px; border-radius: 15px; text-align: center; }
-  
-  input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; margin: 5px 0 15px 0; box-sizing: border-box; outline: none; }
-  button { width: 100%; padding: 15px; background: var(--tiffany); border: none; border-radius: 10px; color: white; font-weight: 600; cursor: pointer; transition: 0.3s; }
-  button:hover { filter: brightness(1.1); }
-  
-  .record-item { background: white; padding: 15px; border-radius: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; border-left: 4px solid var(--tiffany); }
-</style>
-</head>
-<body>
-<div class="container">
-  <h2 style="text-align: center; color: var(--tiffany);">Executive Tracker</h2>
-  
-  <div class="summary-grid" id="summary">
-    <div class="stat-box">รายได้รวม<br><b id="total-income">0</b></div>
-    <div class="stat-box">OT รวม<br><b id="total-ot">0</b></div>
-  </div>
-
-  <div class="card" style="margin-top:20px;">
-    <input type="date" id="date">
-    <div style="display:flex; gap:10px;">
-      <input type="time" id="in" value="09:00">
-      <input type="time" id="out" value="18:00">
-    </div>
-    <button onclick="saveData()">บันทึกรายการ</button>
-  </div>
-
-  <div id="list"></div>
-</div>
-
-<script>
-  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyB8XZGOfYUeNhZ33JwzkH5XfHCVXzWxuLvMzFdVTzJHEis522WhZzrY6B3WZC1CY4K/exec";
-
-  async function loadData() {
-    let res = await fetch(WEB_APP_URL);
-    let data = await res.json();
-    
-    // Render Summary
-    document.getElementById('total-income').innerText = data.summary[18][1] || 0; // สมมติแถวตำแหน่งสรุป
-    
-    // Render List
-    document.getElementById('list').innerHTML = data.data.map(r => `
-      <div class="record-item">
-        <div><b>${r[0]}</b><br><small>${r[3]}-${r[4]}</small></div>
-        <div style="font-weight:bold;">฿${r[15]}</div>
-      </div>
-    `).join('');
-  }
-  
-  loadData();
 </script>
 </body>
 </html>

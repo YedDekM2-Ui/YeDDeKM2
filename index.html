@@ -846,13 +846,17 @@ const APP = {
         method: 'POST',
         body: JSON.stringify({ action:'append', records:[rec] })
       });
-      const j = await res.json();
       if (j.success) {
-        STATE.localRecs = STATE.localRecs.filter(r => r.id !== rec.id);
-        saveLocal();
-        toast(isEdit ? 'แก้ไขสำเร็จ ✓' : 'บันทึกสำเร็จ ✓', 'ok');
-        await this.sync(false);
-      } else {
+  STATE.localRecs = STATE.localRecs.filter(r => r.id !== rec.id);
+  saveLocal();
+  toast(isEdit ? 'แก้ไขสำเร็จ ✓' : 'บันทึกสำเร็จ ✓', 'ok');
+
+  renderList();      // ✅ แสดงทันที
+  renderDaily();
+  renderMonthly();
+
+  setTimeout(() => APP.sync(false), 2000);
+}
         toast('บันทึก Local (Sheets: ' + j.message + ')', 'err');
       }
     } catch(e) {

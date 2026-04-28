@@ -635,21 +635,17 @@ function calcOT(rec) {
 /* ── MERGE RECORDS ── */
 function mergeAll() {
   const map = new Map();
+  // รวบรวมข้อมูลทั้งหมดที่มี (ทั้งจาก Sheet และ Local)
+  const allData = [...STATE.localRecs, ...STATE.sheetRecords];
   
-  // นำข้อมูลจาก Sheet มาใส่ (และทำความสะอาดวันที่)
-  STATE.sheetRecords.forEach(r => {
+  allData.forEach(r => {
+    // ตัดเวลาทิ้ง เหลือแต่วันที่ YYYY-MM-DD
     let d = r.date.toString().split('T')[0].trim();
-    map.set(d, { ...r, date: d, _local: false });
+    // เก็บลง Map เพื่อป้องกันข้อมูลซ้ำ
+    map.set(d, { ...r, date: d });
   });
   
-  // นำข้อมูลจาก Local มาใส่ (ถ้ามีข้อมูลในวันนั้นแล้ว ให้ข้าม ไม่ต้องทับ)
-  STATE.localRecs.forEach(r => {
-    let d = r.date.toString().split('T')[0].trim();
-    if (!map.has(d)) {
-      map.set(d, { ...r, date: d, _local: true });
-    }
-  });
-  
+  // เรียงลำดับจากวันที่ล่าสุดขึ้นก่อน (b เทียบกับ a)
   return Array.from(map.values()).sort((a, b) => b.date.localeCompare(a.date));
 }
   // Fill the form
@@ -912,72 +908,39 @@ function renderConfigCard() {
     </div>`;
 }
 
-/* ── RENDER: LIST ── */
 function renderList() {
-  const el = document.getElementById('listContent');
+  const container = document.getElementById('listContainer');
+  if (!container) return;
+
+  // ดึงข้อมูลทั้งหมดที่ไม่มีการกรอง
   const records = mergeAll();
-  if (!records.length) {
-    el.innerHTML = '<div class="empty-state">ยังไม่มีข้อมูล<br>เพิ่มในแท็บ "+ บันทึก"</div>';
+  
+  // ถ้าไม่มีข้อมูล
+  if (records.length === 0) {
+    container.innerHTML = '<div style="text-align:center; padding:20px;">ยังไม่มีข้อมูล</div>';
     return;
   }
-  const groups = {};
-  records.forEach(r => {
-    const p = getPeriod(r.date);
-    if (!groups[p]) groups[p] = [];
-    groups[p].push(r);
-  });
 
-  let html = '';
-  Object.keys(groups).sort().reverse().forEach(p => {
-    const recs = groups[p];
-    const periodTotal = recs.reduce((s, r) => s + calcOT(r).total, 0);
-    html += `<div class="period-block">
-      <div class="period-hd">
-        <div class="period-name">รอบ ${periodLabel(p)}</div>
-        <div class="period-sum">${fmtBaht(periodTotal)}</div>
-      </div>`;
-
-    recs.forEach(r => {
-      const c = calcOT(r);
-      const typeLabel = {normal:'ปกติ',wednesday:'พุธ',holiday:'นักขัตฤกษ์'}[c.type];
-      const localBadge = r._local ? `<span class="src-pill">Local</span>` : '';
-
-      html += `<div class="rec ${c.type}">
-        <div class="rec-top">
-          <div class="rec-left">
-            <div class="rec-date">${r.date} ${localBadge}</div>
-            <div class="rec-meta">
-              <span>${dayName(r.date)}</span>
-              <span class="type-pill ${c.type}">${typeLabel}</span>
-              <span>${r.timeIn} – ${r.timeOut}</span>
-            </div>
-          </div>
-          <div class="rec-right">
-            <div class="rec-total">${fmtBaht(c.total)}</div>
-            ${c.otTotal > 0 ? `<div class="rec-ot-sub">OT ${fmtBaht(c.otTotal)}</div>` : ''}
-          </div>
+  // สร้าง HTML แสดงผลทุกรายการ
+  container.innerHTML = records.map(rec => {
+    // คำนวณ OT เพื่อแสดงผลในรายการด้วย
+    const ot = calcOT(rec);
+    return `
+      <div class="list-item" style="border-bottom:1px solid #eee; padding:10px 0;">
+        <div style="display:flex; justify-content:space-between;">
+          <strong style="color:var(--t600)">${rec.date}</strong>
+          <span>${rec.timeIn} - ${rec.timeOut}</span>
         </div>
-        <div class="rec-detail">
-          <div class="dc"><div class="dk">OT×1.0</div><div class="dv">${fmtHr(c.t100)}</div></div>
-          <div class="dc"><div class="dk">OT×1.5</div><div class="dv">${fmtHr(c.t150)}</div></div>
-          <div class="dc"><div class="dk">OT×2.0</div><div class="dv">${fmtHr(c.t200)}</div></div>
+        <div style="font-size:0.9em; color:#666;">
+          OT: ${ot.otTotal} บาท | รวม: ${ot.total} บาท
         </div>
-        <div class="rec-pills">
-          ${c.tr > 0 ? `<span class="pill tr">🚗 ค่าเดินทาง ${fmtBaht(c.tr)}</span>` : ''}
-          ${c.special > 0 ? `<span class="pill sp">✈ พิเศษ ${fmtBaht(c.special)}</span>` : ''}
-          ${c.custom > 0 ? `<span class="pill ct">+ OT Custom ${fmtBaht(c.custom)}</span>` : ''}
+        <div style="margin-top:5px;">
+          <button onclick="editRec('${rec.date}')" style="padding:2px 10px;">แก้ไข</button>
+          <button onclick="deleteRec('${rec.date}')" style="padding:2px 10px; background:#ffeded; border:none; color:red;">ลบ</button>
         </div>
-        <div class="rec-actions">
-          <button class="btn-act edit" onclick="editRec('${r.date}')">✎ แก้ไข</button>
-          <button class="btn-act del" onclick="deleteRec('${r.date}')">🗑 ลบ</button>
-        </div>
-      </div>`;
-    });
-    html += '</div>';
-  });
-
-  el.innerHTML = html;
-  APP._updateLastSyncBar();
+      </div>
+    `;
+  }).join('');
 }
 
 /* ── RENDER: DAILY ── */

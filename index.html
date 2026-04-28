@@ -632,7 +632,26 @@ function calcOT(rec) {
     total: otTotal + transport + (parseFloat(rec.specialTransport) || 0) 
   };
 }
-
+/* ── MERGE RECORDS ── */
+function mergeAll() {
+  const map = new Map();
+  
+  // นำข้อมูลจาก Sheet มาใส่ (และทำความสะอาดวันที่)
+  STATE.sheetRecords.forEach(r => {
+    let d = r.date.toString().split('T')[0].trim();
+    map.set(d, { ...r, date: d, _local: false });
+  });
+  
+  // นำข้อมูลจาก Local มาใส่ (ถ้ามีข้อมูลในวันนั้นแล้ว ให้ข้าม ไม่ต้องทับ)
+  STATE.localRecs.forEach(r => {
+    let d = r.date.toString().split('T')[0].trim();
+    if (!map.has(d)) {
+      map.set(d, { ...r, date: d, _local: true });
+    }
+  });
+  
+  return Array.from(map.values()).sort((a, b) => b.date.localeCompare(a.date));
+}
   // Fill the form
   document.getElementById('fDate').value = rec.date;
   document.getElementById('fIn').value = rec.timeIn;

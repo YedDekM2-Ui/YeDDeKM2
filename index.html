@@ -542,7 +542,7 @@ body { font-family:var(--font); background:var(--bg); color:var(--n800); min-hei
 
 /* ── CONFIG ── */
 const CONFIG = {
-  GAS_URL: 'https://script.google.com/macros/s/AKfycby22xIa7dST2iw_UCFELOqcd8mQq7K8pQ2yafVX2c2ZfbtqdGA7CPU3AfnPIRPqRnQ7/exec',
+  GAS_URL: 'https://script.google.com/macros/s/AKfycbzri7remP9qXMcI8DZGsqOjd2oyuHuan_pCPmB_78xHLdEdJIE0MzpjiYi_-ZAKvI3Z/exec',
   SYNC_INTERVAL_MS: 60000,
   LOCAL_KEY: 'ttp_v2',
   VERSION: '2.1.0'
@@ -592,24 +592,24 @@ function toDecimal(t) {
 function getDayType(dateStr) {
   if (!dateStr) return 'normal';
   const cleanDate = dateStr.toString().split('T')[0];
-  if (CONFIG.holidays && CONFIG.holidays.includes(cleanDate)) return 'holiday';
+  if (STATE.holidays && STATE.holidays.includes(cleanDate)) return 'holiday';
   const d = new Date(cleanDate + 'T00:00:00');
   if (d.getDay() === 3) return 'wednesday';
   return 'normal';
 }
 
 function calcOT(rec) {
-  const C = CONFIG || {};
-  const OT100 = parseFloat(C.OT100) || 100;
-  const OT150 = parseFloat(C.OT150) || 150;
-  const OT200 = parseFloat(C.OT200) || 200;
-  const TRANS = parseFloat(C.TRANSPORT_BONUS) || 200;
+  const C = STATE.config || DEFAULT_CFG;
+  const OT100 = parseFloat(C.OT100_RATE) || 100;
+  const OT150 = parseFloat(C.OT150_RATE) || 150;
+  const OT200 = parseFloat(C.OT200_RATE) || 200;
+  const TRANS  = parseFloat(C.TRANSPORT)  || 200;
 
-  let inTime = toDecimal(rec.timeIn);
+  let inTime  = toDecimal(rec.timeIn);
   let outTime = toDecimal(rec.timeOut);
   if (outTime <= inTime) outTime += 24;
 
-  let type = getDayType(rec.date);
+  const type = getDayType(rec.date);
   let t100 = 0, t150 = 0, t200 = 0, transport = 0;
 
   if (type === 'normal') {
@@ -624,12 +624,22 @@ function calcOT(rec) {
 
   if (outTime >= 23) transport = TRANS;
 
-  const custom = parseFloat(rec.customOT) || 0;
-  const otTotal = (t100 * OT100) + (t150 * OT150) + (t200 * OT200) + custom;
+  const custom  = parseFloat(rec.customOT)         || 0;
+  const special = parseFloat(rec.specialTransport) || 0;
+  const b100 = t100 * OT100;
+  const b150 = t150 * OT150;
+  const b200 = t200 * OT200;
+  const otTotal = b100 + b150 + b200 + custom;
 
-  return { 
-    t100, t150, t200, transport, otTotal, 
-    total: otTotal + transport + (parseFloat(rec.specialTransport) || 0) 
+  return {
+    type,
+    t100, t150, t200,
+    b100, b150, b200,
+    tr: transport,
+    custom,
+    special,
+    otTotal,
+    total: otTotal + transport + special
   };
 }
 /* ── MERGE RECORDS ── */
@@ -646,8 +656,56 @@ function mergeAll() {
   });
   
   // เรียงลำดับจากวันที่ล่าสุดขึ้นก่อน (b เทียบกับ a)
-  return Array.from(map.values()).sort((a, b) => b.date.localeCompare(a.date));
+  return Array.from(map.values()).sort((a, b) => a.date.localeCompare(b.date));
 }
+/* ── HELPER FUNCTIONS ── */
+function todayStr() {
+  const d = new Date();
+  return d.toISOString().split('T')[0];
+}
+function fmtBaht(n) {
+  return '฿' + Math.round(n).toLocaleString('th-TH');
+}
+function fmtHr(h) {
+  return h.toFixed(2) + ' ชม';
+}
+function dayName(dateStr) {
+  const days = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
+  try { return days[new Date(dateStr + 'T00:00:00').getDay()]; } catch(e) { return ''; }
+}
+function getPeriod(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const year = d.getFullYear(), month = d.getMonth() + 1, day = d.getDate();
+  if (day >= 26) {
+    const nm = month === 12 ? 1 : month + 1;
+    const ny = month === 12 ? year + 1 : year;
+    return `${ny}-${String(nm).padStart(2,'0')}`;
+  }
+  return `${year}-${String(month).padStart(2,'0')}`;
+}
+function periodLabel(p) {
+  const [year, month] = p.split('-');
+  const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  return `${months[parseInt(month)-1]} ${parseInt(year) + 543}`;
+}
+async function fetchWithTimeout(url, options = {}, timeout = 15000) {
+  const ctrl = new AbortController();
+  const id = setTimeout(() => ctrl.abort(), timeout);
+  try {
+    const res = await fetch(url, { ...options, signal: ctrl.signal });
+    clearTimeout(id); return res;
+  } catch(e) { clearTimeout(id); throw e; }
+}
+function closeModal() {
+  document.getElementById('confirmModal').classList.remove('show');
+}
+
+/* ── EDIT RECORD ── */
+async function editRec(date) {
+  const records = mergeAll();
+  const rec = records.find(r => r.date === date);
+  if (!rec) { toast('ไม่พบข้อมูล', 'err'); return; }
+
   // Fill the form
   document.getElementById('fDate').value = rec.date;
   document.getElementById('fIn').value = rec.timeIn;
@@ -680,13 +738,35 @@ function mergeAll() {
       method: 'POST',
       body: JSON.stringify({ action: 'deleteByDate', date })
     });
-    // Also remove from sheetRecords temporarily so duplicate check passes
     STATE.sheetRecords = STATE.sheetRecords.filter(r => r.date !== date);
   } catch(e) {
     STATE.sheetRecords = STATE.sheetRecords.filter(r => r.date !== date);
   }
 
   toast('แก้ไขข้อมูลวันที่ ' + date, 'ok');
+}
+
+/* ── DELETE RECORD ── */
+function deleteRec(date) {
+  document.getElementById('modalTitle').textContent = 'ยืนยันการลบ';
+  document.getElementById('modalSub').textContent = `ลบข้อมูลวันที่ ${date} ใช่หรือไม่?`;
+  document.getElementById('confirmModal').classList.add('show');
+  document.getElementById('modalConfirmBtn').onclick = async () => {
+    closeModal();
+    STATE.localRecs = STATE.localRecs.filter(r => r.date !== date);
+    saveLocal();
+    try {
+      await fetchWithTimeout(CONFIG.GAS_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'deleteByDate', date })
+      });
+      STATE.sheetRecords = STATE.sheetRecords.filter(r => r.date !== date);
+    } catch(e) {
+      STATE.sheetRecords = STATE.sheetRecords.filter(r => r.date !== date);
+    }
+    renderList(); renderDaily(); renderMonthly();
+    toast('ลบแล้ว ✓', 'ok');
+  };
 }
 
 /* ── MAIN APP OBJECT ── */
@@ -846,13 +926,13 @@ const APP = {
         method: 'POST',
         body: JSON.stringify({ action:'append', records:[rec] })
       });
+      const j = await res.json();
       if (j.success) {
-  STATE.localRecs = STATE.localRecs.filter(r => r.id !== rec.id); // ❌ ตัวปัญหา
-  saveLocal();
-  toast(isEdit ? 'แก้ไขสำเร็จ ✓' : 'บันทึกสำเร็จ ✓', 'ok');
-
-  setTimeout(() => APP.sync(false), 2000);
-}
+        STATE.localRecs = STATE.localRecs.filter(r => r.id !== rec.id);
+        saveLocal();
+        toast(isEdit ? 'แก้ไขสำเร็จ ✓' : 'บันทึกสำเร็จ ✓', 'ok');
+        await this.sync(false);
+      } else {
         toast('บันทึก Local (Sheets: ' + j.message + ')', 'err');
       }
     } catch(e) {
@@ -908,41 +988,55 @@ function renderConfigCard() {
     </div>`;
 }
 
-/* ── แก้ไขส่วนแสดงผลให้โชว์ข้อมูลทั้งหมดตลอดเวลา ── */
+/* ── RENDER: LIST ── */
 function renderList() {
-  const container = document.getElementById('listContent'); // ✅ เปลี่ยนตรงนี้
-  if (!container) return;
+  const el = document.getElementById('listContent');
+  if (!el) return;
 
-  // ดึงข้อมูลทั้งหมดจาก mergeAll() แบบดิบๆ ไม่ต้องผ่านตัวกรองใดๆ
-  const records = mergeAll();
-  
-  if (records.length === 0) {
-    container.innerHTML = '<div style="text-align:center; padding:20px;">ยังไม่มีข้อมูล</div>';
+  const records = mergeAll(); // เรียงจากเก่าไปใหม่ (ascending)
+
+  if (!records.length) {
+    el.innerHTML = '<div class="empty-state">ยังไม่มีข้อมูล<br>เพิ่มในแท็บ "+ บันทึก"</div>';
     return;
   }
 
-  // วาดรายการทั้งหมด
-  container.innerHTML = records.map(rec => {
-    // คำนวณ OT เพื่อแสดงผล
-    const ot = calcOT(rec);
-    return `
-      <div class="list-item" style="border-bottom:1px solid #eee; padding:12px 5px; background:white;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div>
-            <strong style="color:#1E8F84; font-size:1.1em;">${rec.date}</strong>
-            <div style="font-size:0.9em; color:#555;">เวลา: ${rec.timeIn || '-'} - ${rec.timeOut || '-'}</div>
-          </div>
-          <div style="text-align:right;">
-            <div style="font-weight:bold;">${ot.total || 0} บาท</div>
+  let html = '';
+  records.forEach(rec => {
+    const c = calcOT(rec);
+    const tc = c.type;
+    const typePill = {normal:'ปกติ', wednesday:'พุธ', holiday:'หยุด'}[tc] || 'ปกติ';
+    html += `<div class="rec ${tc}">
+      <div class="rec-top">
+        <div class="rec-left">
+          <div class="rec-date">${rec.date} ${rec._local ? '<span class="src-pill">Local</span>' : ''}</div>
+          <div class="rec-meta">
+            <span>${dayName(rec.date)}</span>
+            <span class="type-pill ${tc}">${typePill}</span>
+            <span>${rec.timeIn} – ${rec.timeOut}</span>
           </div>
         </div>
-        <div style="margin-top:8px; display:flex; gap:10px;">
-          <button onclick="editRec('${rec.date}')" style="flex:1; padding:5px; border-radius:5px; border:none; background:#E5F9F5;">แก้ไข</button>
-          <button onclick="deleteRec('${rec.date}')" style="flex:1; padding:5px; border-radius:5px; border:none; background:#FFE4EC; color:#D9534F;">ลบ</button>
+        <div class="rec-right">
+          <div class="rec-total">${fmtBaht(c.total)}</div>
+          ${c.otTotal > 0 ? `<div class="rec-ot-sub">OT ${fmtBaht(c.otTotal)}</div>` : ''}
         </div>
       </div>
-    `;
-  }).join('');
+      <div class="rec-detail">
+        <div class="dc"><div class="dk">OT×1.0</div><div class="dv">${c.t100.toFixed(2)} ชม</div></div>
+        <div class="dc"><div class="dk">OT×1.5</div><div class="dv">${c.t150.toFixed(2)} ชม</div></div>
+        <div class="dc"><div class="dk">OT×2.0</div><div class="dv">${c.t200.toFixed(2)} ชม</div></div>
+      </div>
+      ${(c.tr > 0 || c.custom > 0 || c.special > 0) ? `<div class="rec-pills">
+        ${c.tr > 0 ? `<span class="pill tr">🚗 ${fmtBaht(c.tr)}</span>` : ''}
+        ${c.custom > 0 ? `<span class="pill ct">⚡ Custom ${fmtBaht(c.custom)}</span>` : ''}
+        ${c.special > 0 ? `<span class="pill sp">🚐 พิเศษ ${fmtBaht(c.special)}</span>` : ''}
+      </div>` : ''}
+      <div class="rec-actions">
+        <button class="btn-act edit" onclick="editRec('${rec.date}')">✎ แก้ไข</button>
+        <button class="btn-act del" onclick="deleteRec('${rec.date}')">🗑 ลบ</button>
+      </div>
+    </div>`;
+  });
+  el.innerHTML = html;
 }
 
 /* ── RENDER: DAILY ── */

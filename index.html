@@ -542,7 +542,7 @@ body { font-family:var(--font); background:var(--bg); color:var(--n800); min-hei
 
 /* ── CONFIG ── */
 const CONFIG = {
-  GAS_URL: 'https://script.google.com/macros/s/AKfycbyXGUldccIHAOEXzKBhs7SngdZ-cEX6FmoDceUsYTFO4QXgyeOrTbPoUyVacvyHlpw/exec',
+  GAS_URL: 'https://script.google.com/macros/s/AKfycbxDpAuZ67Lgb5cbSW2GNa6_eARBPN923xu7Bf_W1jmkFZT6MTWDBwWFMH9P3kzmtmGO/exec',
   SYNC_INTERVAL_MS: 60000,
   LOCAL_KEY: 'ttp_v2',
   VERSION: '2.1.0'
@@ -930,9 +930,12 @@ const APP = {
       if (j.success) {
         toast(isEdit ? 'แก้ไขสำเร็จ ✓' : 'บันทึกสำเร็จ ✓', 'ok');
         await this.sync(false);
-        // ลบจาก local หลัง sync เสร็จแล้วเท่านั้น ป้องกันข้อมูลหาย
-        STATE.localRecs = STATE.localRecs.filter(r => r.id !== rec.id);
-        saveLocal();
+        // ลบจาก local เฉพาะเมื่อ Sheets ยืนยันว่ามีข้อมูลแล้ว
+        const confirmedInSheets = STATE.sheetRecords.some(r => r.date === date);
+        if (confirmedInSheets) {
+          STATE.localRecs = STATE.localRecs.filter(r => r.id !== rec.id);
+          saveLocal();
+        }
         renderList(); renderDaily(); renderMonthly();
       } else {
         toast('บันทึก Local (Sheets: ' + j.message + ')', 'err');

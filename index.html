@@ -3,182 +3,67 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⏱️ Time Tracking PRO</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
-
+<title>Executive Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Noto Sans Thai';background:linear-gradient(135deg,#fed7aa,#fce7f3,#dbeafe);}
-.container{max-width:520px;margin:auto;padding:16px;}
-.card{background:#fff;border-radius:12px;padding:12px;margin-bottom:10px;}
-input{width:100%;padding:10px;margin:5px 0;border:2px solid #fed7aa;border-radius:8px;}
-button{width:100%;padding:10px;border:none;border-radius:8px;margin-top:5px;font-weight:700;}
-.add{background:#ea580c;color:#fff;}
-.sync{background:#22c55e;color:#fff;}
-.record{background:#fff;border-left:6px solid #fed7aa;padding:10px;margin-top:6px;border-radius:8px;}
-.wednesday{background:#fffbeb;border-left-color:#f59e0b;}
-.holiday{background:#fffacd;border-left-color:#facc15;}
-.summary{background:#eef2ff;border:2px solid #7c3aed;padding:10px;border-radius:10px;margin-top:10px;text-align:center;font-weight:700;}
+  :root { --tiffany: #81D8D0; --bg: #F4F7F6; --text: #2D3748; }
+  body { font-family: 'Kanit', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+  .container { max-width: 600px; margin: auto; }
+  
+  /* Glassmorphism Cards */
+  .card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.3); }
+  
+  .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+  .stat-box { background: var(--tiffany); color: white; padding: 15px; border-radius: 15px; text-align: center; }
+  
+  input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; margin: 5px 0 15px 0; box-sizing: border-box; outline: none; }
+  button { width: 100%; padding: 15px; background: var(--tiffany); border: none; border-radius: 10px; color: white; font-weight: 600; cursor: pointer; transition: 0.3s; }
+  button:hover { filter: brightness(1.1); }
+  
+  .record-item { background: white; padding: 15px; border-radius: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; border-left: 4px solid var(--tiffany); }
 </style>
 </head>
-
 <body>
 <div class="container">
+  <h2 style="text-align: center; color: var(--tiffany);">Executive Tracker</h2>
+  
+  <div class="summary-grid" id="summary">
+    <div class="stat-box">รายได้รวม<br><b id="total-income">0</b></div>
+    <div class="stat-box">OT รวม<br><b id="total-ot">0</b></div>
+  </div>
 
-<div class="card">
-<input type="date" id="date">
-<input type="time" id="in" value="09:00">
-<input type="time" id="out" value="18:00">
-<input type="number" id="custom" placeholder="OT เพิ่ม">
-<input type="number" id="special" placeholder="ค่าเดินทางพิเศษ">
-<button class="add" onclick="add()">+ เพิ่ม</button>
-<button class="sync" onclick="sync()">Sync</button>
-</div>
+  <div class="card" style="margin-top:20px;">
+    <input type="date" id="date">
+    <div style="display:flex; gap:10px;">
+      <input type="time" id="in" value="09:00">
+      <input type="time" id="out" value="18:00">
+    </div>
+    <button onclick="saveData()">บันทึกรายการ</button>
+  </div>
 
-<div id="list"></div>
-
+  <div id="list"></div>
 </div>
 
 <script>
+  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyB8XZGOfYUeNhZ33JwzkH5XfHCVXzWxuLvMzFdVTzJHEis522WhZzrY6B3WZC1CY4K/exec";
 
-const WEB_APP_URL = "ใส่ URL /exec ของมึงตรงนี้";
-
-let db = JSON.parse(localStorage.getItem("db")) || [];
-let HOLIDAYS = [];
-let CONFIG = {};
-
-function t(v){let[a,b]=v.split(":");return +a+(b/60)}
-
-function dayType(d){
- if(HOLIDAYS.includes(d)) return "holiday";
- if(new Date(d).getDay()==3) return "wednesday";
- return "normal";
-}
-
-function calc(r){
- let i=t(r.in),o=t(r.out);
- if(o<i)o+=24;
-
- let t100=0,t150=0,t200=0,tr=0;
-
- let type=dayType(r.date);
-
- if(type==="normal"){
-  t100=Math.max(0,Math.min(o,23)-Math.max(i,18));
-  if(i<9)t150+=(9-i);
-  if(o>23)t150+=(o-23);
- }
-
- if(type!=="normal"){
-  t150=Math.max(0,Math.min(o,23)-Math.max(i,9));
-  if(i<9)t200+=(9-i);
-  if(o>23)t200+=(o-23);
- }
-
- if(o>=23) tr=200;
-
- return {
-  total:
-  t100*100+
-  t150*150+
-  t200*200+
-  (r.custom||0)+
-  tr+
-  (r.special||0)
- };
-}
-
-function add(){
- if(!date.value || !in.value || !out.value){
-  alert("กรอกให้ครบ");
-  return;
- }
-
- db.push({
-  id:Date.now(),
-  date:date.value,
-  in:in.value,
-  out:out.value,
-  custom:+custom.value||0,
-  special:+special.value||0
- });
-
- localStorage.setItem("db",JSON.stringify(db));
- render();
-}
-
-async function sync(){
- try{
-  const res = await fetch(WEB_APP_URL,{
-    method:"POST",
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      action:"append",
-      records:db
-    })
-  });
-
-  const json = await res.json();
-
-  if(json.success){
-    alert("✅ sync สำเร็จ");
-  }else{
-    alert("❌ "+json.message);
+  async function loadData() {
+    let res = await fetch(WEB_APP_URL);
+    let data = await res.json();
+    
+    // Render Summary
+    document.getElementById('total-income').innerText = data.summary[18][1] || 0; // สมมติแถวตำแหน่งสรุป
+    
+    // Render List
+    document.getElementById('list').innerHTML = data.data.map(r => `
+      <div class="record-item">
+        <div><b>${r[0]}</b><br><small>${r[3]}-${r[4]}</small></div>
+        <div style="font-weight:bold;">฿${r[15]}</div>
+      </div>
+    `).join('');
   }
-
- }catch(e){
-  alert("❌ ใช้ local");
- }
-}
-
-async function load(){
- try{
-  const res = await fetch(WEB_APP_URL,{
-    method:"POST",
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:"getAll"})
-  });
-
-  const json = await res.json();
-
-  if(json.success){
-    HOLIDAYS = json.holidays;
-    CONFIG = json.config;
-    db = json.records;
-    localStorage.setItem("db",JSON.stringify(db));
-  }
-
- }catch(e){
-  console.log("ใช้ local");
- }
-
- render();
-}
-
-function render(){
- let html="";
- let sum=0;
-
- db.forEach(r=>{
-  let c=calc(r);
-  sum+=c.total;
-
-  html+=`
-  <div class="record ${dayType(r.date)}">
-  ${r.date}<br>
-  ${r.in}-${r.out}<br>
-  💰 ${c.total}
-  </div>`;
- });
-
- html+=`<div class="summary">รวม ฿${sum}</div>`;
- list.innerHTML=html;
-}
-
-date.value=new Date().toISOString().split("T")[0];
-load();
-
+  
+  loadData();
 </script>
 </body>
 </html>

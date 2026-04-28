@@ -581,85 +581,57 @@ function saveLocal() {
 
 /* ── OT CALCULATION ── */
 function toDecimal(t) {
-  if (!t || !t.includes(':')) return 0;
-  const [h, m] = t.split(':').map(Number);
-  return h + m / 60;
+  if (!t) return 0;
+  let s = t.toString();
+  if (s.includes('T')) s = s.split('T')[1].substring(0, 5);
+  const parts = s.split(':');
+  if (parts.length < 2) return 0;
+  return parseInt(parts[0], 10) + (parseInt(parts[1], 10) / 60);
 }
+
 function getDayType(dateStr) {
-  if (STATE.holidays.includes(dateStr)) return 'holiday';
-  if (new Date(dateStr + 'T00:00:00').getDay() === 3) return 'wednesday';
+  if (!dateStr) return 'normal';
+  const cleanDate = dateStr.toString().split('T')[0];
+  if (CONFIG.holidays && CONFIG.holidays.includes(cleanDate)) return 'holiday';
+  const d = new Date(cleanDate + 'T00:00:00');
+  if (d.getDay() === 3) return 'wednesday';
   return 'normal';
 }
+
 function calcOT(rec) {
-  const C = CONFIG; // โหลด config จากที่ดึงมา
+  const C = CONFIG || {};
+  const OT100 = parseFloat(C.OT100) || 100;
+  const OT150 = parseFloat(C.OT150) || 150;
+  const OT200 = parseFloat(C.OT200) || 200;
+  const TRANS = parseFloat(C.TRANSPORT_BONUS) || 200;
+
   let inTime = toDecimal(rec.timeIn);
   let outTime = toDecimal(rec.timeOut);
-  if (outTime <= inTime) outTime += 24; // ข้ามเที่ยงคืน
+  if (outTime <= inTime) outTime += 24;
 
-  let type = getDayType(rec.date); // ฟังก์ชันนี้ต้องเช็ควันหยุดจาก C.holidays
+  let type = getDayType(rec.date);
   let t100 = 0, t150 = 0, t200 = 0, transport = 0;
 
-  // 1. ตรวจสอบเงื่อนไขวัน
   if (type === 'normal') {
-    // Normal: 09-18 (ปกติ), 18-23 (OT100), ก่อน 09/หลัง 23 (OT150)
     t100 = Math.max(0, Math.min(outTime, 23) - Math.max(inTime, 18));
     t150 = Math.max(0, Math.min(outTime, 9) - inTime) + Math.max(0, outTime - Math.max(inTime, 23));
-  } 
-  else if (type === 'wednesday') {
-    // Wed: ทุกเวลา OT150 (ตามที่คุณกำหนด)
+  } else if (type === 'wednesday') {
     t150 = outTime - inTime;
-  } 
-  else if (type === 'holiday') {
-    // Holiday: 09-23 (OT150), ก่อน 09/หลัง 23 (OT200)
+  } else if (type === 'holiday') {
     t150 = Math.max(0, Math.min(outTime, 23) - Math.max(inTime, 9));
     t200 = Math.max(0, Math.min(outTime, 9) - inTime) + Math.max(0, outTime - Math.max(inTime, 23));
   }
 
-  // 2. ค่าเดินทาง
-  if (outTime >= 23) transport = C.TRANSPORT_BONUS;
+  if (outTime >= 23) transport = TRANS;
 
-  // 3. รวมเงิน
-  const money = (t100 * C.OT100) + (t150 * C.OT150) + (t200 * C.OT200) + transport + (rec.customOT || 0);
+  const custom = parseFloat(rec.customOT) || 0;
+  const otTotal = (t100 * OT100) + (t150 * OT150) + (t200 * OT200) + custom;
 
-  return { t100, t150, t200, transport, money };
+  return { 
+    t100, t150, t200, transport, otTotal, 
+    total: otTotal + transport + (parseFloat(rec.specialTransport) || 0) 
+  };
 }
-
-// ฟังก์ชันเช็คประเภทวัน
-function getDayType(dateStr) {
-  if (CONFIG.holidays.includes(dateStr)) return 'holiday';
-  const d = new Date(dateStr).getDay();
-  if (d === 3) return 'wednesday'; // วันพุธ
-  return 'normal';
-}
-
-/* ── DELETE RECORD ── */
-async function deleteRec(date) {
-  const rec = mergeAll().find(r => r.date === date);
-  if (!rec) return;
-  showConfirm(
-    'ลบข้อมูล',
-    `คุณต้องการลบข้อมูลวันที่ ${date} (${dayName(date)}) ใช่หรือไม่?\nข้อมูลจะถูกลบทั้งใน Local และ Google Sheets`,
-    async () => {
-      // Remove local
-      STATE.localRecs = STATE.localRecs.filter(r => r.date !== date);
-      saveLocal();
-      // Remove sheet
-      try {
-        await fetchWithTimeout(CONFIG.GAS_URL, {
-          method: 'POST',
-          body: JSON.stringify({ action: 'deleteByDate', date })
-        });
-      } catch(e) {}
-      renderList(); renderDaily(); renderMonthly();
-      toast('ลบข้อมูลแล้ว', 'ok');
-    }
-  );
-}
-
-/* ── EDIT RECORD ── */
-async function editRec(date) {
-  const rec = mergeAll().find(r => r.date === date);
-  if (!rec) return;
 
   // Fill the form
   document.getElementById('fDate').value = rec.date;

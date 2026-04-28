@@ -542,7 +542,7 @@ body { font-family:var(--font); background:var(--bg); color:var(--n800); min-hei
 
 /* ── CONFIG ── */
 const CONFIG = {
-  GAS_URL: 'https://script.google.com/macros/s/AKfycbzmroEgDaeCcMjvE6s4A5E7JZVDgqJFlm1AoUdYjvPiFXamyt7ek5KIlgK9iw8HuMpp/exec',
+  GAS_URL: 'https://script.google.com/macros/s/AKfycby22xIa7dST2iw_UCFELOqcd8mQq7K8pQ2yafVX2c2ZfbtqdGA7CPU3AfnPIRPqRnQ7/exec',
   SYNC_INTERVAL_MS: 60000,
   LOCAL_KEY: 'ttp_v2',
   VERSION: '2.1.0'
@@ -591,81 +591,46 @@ function getDayType(dateStr) {
   return 'normal';
 }
 function calcOT(rec) {
-  const C = STATE.config;
-  const type = getDayType(rec.date);
-  const OT100 = +C.OT100_RATE || 100, OT150 = +C.OT150_RATE || 150;
-  const OT200 = +C.OT200_RATE || 200, TRANS = +C.TRANSPORT || 200;
-  const START = +C.OT100_START || 18;
-  let i = toDecimal(rec.timeIn), o = toDecimal(rec.timeOut);
-  if (o < i) o += 24;
-  let t100 = 0, t150 = 0, t200 = 0, tr = 0;
+  const C = CONFIG; // โหลด config จากที่ดึงมา
+  let inTime = toDecimal(rec.timeIn);
+  let outTime = toDecimal(rec.timeOut);
+  if (outTime <= inTime) outTime += 24; // ข้ามเที่ยงคืน
+
+  let type = getDayType(rec.date); // ฟังก์ชันนี้ต้องเช็ควันหยุดจาก C.holidays
+  let t100 = 0, t150 = 0, t200 = 0, transport = 0;
+
+  // 1. ตรวจสอบเงื่อนไขวัน
   if (type === 'normal') {
-    t100 = Math.max(0, Math.min(o, 23) - Math.max(i, START));
-    if (i < 9) t150 += (9 - i);
-    if (o > 23) t150 += (o - 23);
-  } else {
-    t150 = Math.max(0, Math.min(o, 23) - Math.max(i, 9));
-    if (i < 9) t200 += (9 - i);
-    if (o > 23) t200 += (o - 23);
+    // Normal: 09-18 (ปกติ), 18-23 (OT100), ก่อน 09/หลัง 23 (OT150)
+    t100 = Math.max(0, Math.min(outTime, 23) - Math.max(inTime, 18));
+    t150 = Math.max(0, Math.min(outTime, 9) - inTime) + Math.max(0, outTime - Math.max(inTime, 23));
+  } 
+  else if (type === 'wednesday') {
+    // Wed: ทุกเวลา OT150 (ตามที่คุณกำหนด)
+    t150 = outTime - inTime;
+  } 
+  else if (type === 'holiday') {
+    // Holiday: 09-23 (OT150), ก่อน 09/หลัง 23 (OT200)
+    t150 = Math.max(0, Math.min(outTime, 23) - Math.max(inTime, 9));
+    t200 = Math.max(0, Math.min(outTime, 9) - inTime) + Math.max(0, outTime - Math.max(inTime, 23));
   }
-  if (o >= 23) tr = TRANS;
-  const b100 = t100*OT100, b150 = t150*OT150, b200 = t200*OT200;
-  const custom = +(rec.customOT) || 0, special = +(rec.specialTransport) || 0;
-  const otTotal = b100 + b150 + b200 + custom;
-  return { type, t100, t150, t200, b100, b150, b200, tr, custom, special, otTotal, total: otTotal+tr+special };
+
+  // 2. ค่าเดินทาง
+  if (outTime >= 23) transport = C.TRANSPORT_BONUS;
+
+  // 3. รวมเงิน
+  const money = (t100 * C.OT100) + (t150 * C.OT150) + (t200 * C.OT200) + transport + (rec.customOT || 0);
+
+  return { t100, t150, t200, transport, money };
 }
 
-/* ── PERIOD HELPERS ── */
-function getPeriod(dateStr) {
-  const d = new Date(dateStr + 'T00:00:00');
-  let y = d.getFullYear(), m = d.getMonth();
-  if (d.getDate() < 26) { m--; if (m < 0) { m = 11; y--; } }
-  return `${y}-${String(m+1).padStart(2,'0')}`;
+// ฟังก์ชันเช็คประเภทวัน
+function getDayType(dateStr) {
+  if (CONFIG.holidays.includes(dateStr)) return 'holiday';
+  const d = new Date(dateStr).getDay();
+  if (d === 3) return 'wednesday'; // วันพุธ
+  return 'normal';
 }
-function periodLabel(p) {
-  const [y, m] = p.split('-').map(Number);
-  const mn = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-  return `${mn[m-1]} ${y+543}  (${y}-${String(m).padStart(2,'0')})`;
-}
-function todayStr() { return new Date().toLocaleDateString('sv-SE'); }
-const DAY_TH = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
-function dayName(d) { return DAY_TH[new Date(d+'T00:00:00').getDay()]; }
-function fmtBaht(n) { return '฿' + Math.round(n).toLocaleString('th-TH'); }
-function fmtHr(n) { return n.toFixed(2) + ' ชม'; }
-
-/* ── MERGE ── */
-function mergeAll() {
-  const map = new Map();
-  STATE.sheetRecords.forEach(r => map.set(r.date, { ...r, _local: false }));
-  STATE.localRecs.forEach(r => { if (!map.has(r.date)) map.set(r.date, { ...r, _local: true }); });
-  return Array.from(map.values()).sort((a, b) => b.date.localeCompare(a.date));
-}
-
-/* ── NETWORK ── */
-async function fetchWithTimeout(url, opts = {}, ms = 12000) {
-  const ctrl = new AbortController();
-  const tid = setTimeout(() => ctrl.abort(), ms);
-  try {
-    const res = await fetch(url, { ...opts, signal: ctrl.signal });
-    clearTimeout(tid); return res;
-  } catch(e) { clearTimeout(tid); throw e; }
-}
-
-/* ── MODAL ── */
-let _modalCallback = null;
-function showConfirm(title, sub, onConfirm) {
-  document.getElementById('modalTitle').textContent = title;
-  document.getElementById('modalSub').textContent = sub;
-  _modalCallback = onConfirm;
-  document.getElementById('modalConfirmBtn').onclick = () => { closeModal(); _modalCallback && _modalCallback(); };
-  document.getElementById('confirmModal').classList.add('show');
-}
-function closeModal() {
-  document.getElementById('confirmModal').classList.remove('show');
-}
-document.getElementById('confirmModal').addEventListener('click', e => {
-  if (e.target === document.getElementById('confirmModal')) closeModal();
-});
 
 /* ── DELETE RECORD ── */
 async function deleteRec(date) {

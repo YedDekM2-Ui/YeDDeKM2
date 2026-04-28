@@ -568,13 +568,21 @@ let STATE = {
 function loadLocal() {
   try {
     const raw = localStorage.getItem(CONFIG.LOCAL_KEY);
-    if (raw) STATE.localRecs = JSON.parse(raw).localRecs || [];
+    if (raw) {
+      const data = JSON.parse(raw);
+      STATE.localRecs = data.localRecs || [];
+      STATE.holidays  = data.holidays  || [];
+      STATE.wedSub    = data.wedSub    || [];
+    }
   } catch(e) { STATE.localRecs = []; }
 }
 function saveLocal() {
   try {
     localStorage.setItem(CONFIG.LOCAL_KEY, JSON.stringify({
-      localRecs: STATE.localRecs, _v: CONFIG.VERSION
+      localRecs: STATE.localRecs,
+      holidays:  STATE.holidays,
+      wedSub:    STATE.wedSub,
+      _v: CONFIG.VERSION
     }));
   } catch(e) {}
 }
@@ -793,6 +801,7 @@ const APP = {
         STATE.wedSub   = cfgJson.data.wedSub   || [];
         const { holidays:_, wedSub:__, ...cfgOnly } = cfgJson.data;
         STATE.config = { ...DEFAULT_CFG, ...cfgOnly };
+        saveLocal(); // cache holidays+wedSub ไว้ใช้ตอน offline
       }
       if (Array.isArray(dataJson)) {
         STATE.sheetRecords = dataJson.filter(r => r.date && r.timeIn && r.timeOut);
@@ -974,8 +983,19 @@ function renderHolidayChips() {
   const cnt = document.getElementById('hdCount');
   const h = STATE.holidays;
   cnt.textContent = h.length + ' วัน';
-  if (!h.length) { el.innerHTML = '<span style="font-size:12px;color:var(--n400)">ไม่มีข้อมูล</span>'; return; }
-  el.innerHTML = h.slice().sort().map(d => `<span class="hchip">${d} (${dayName(d)})</span>`).join('');
+  if (!h.length) {
+    el.innerHTML = '<span style="font-size:12px;color:var(--n400)">ยังไม่มีข้อมูล — กด Sync เพื่อโหลด</span>';
+    return;
+  }
+  // แสดงเฉพาะปีปัจจุบัน+ปีหน้า และเรียงตามวันที่
+  const now = new Date().getFullYear();
+  el.innerHTML = h.slice().sort()
+    .filter(d => { const y = parseInt(d.split('-')[0]); return y >= now; })
+    .map(d => `<span class="hchip">${d} (${dayName(d)})</span>`).join('');
+  // ถ้ากรองแล้วไม่มีเลย ให้แสดงทั้งหมด
+  if (!el.innerHTML) {
+    el.innerHTML = h.slice().sort().map(d => `<span class="hchip">${d} (${dayName(d)})</span>`).join('');
+  }
 }
 
 /* ── RENDER: CONFIG ── */
@@ -1241,23 +1261,3 @@ function toast(msg, type='ok') {
   clearTimeout(_toastTimer);
   _toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
 }
-
-/* ── BOOT ── */
-(async function init() {
-  loadLocal();
-  document.getElementById('fDate').value = todayStr();
-  renderList(); renderDaily(); renderMonthly();
-  await APP.sync(false);
-  STATE.autoSyncTimer = setInterval(() => APP.sync(false), CONFIG.SYNC_INTERVAL_MS);
-
-  ['fDate','fIn','fOut'].forEach(id => {
-    document.getElementById(id).addEventListener('change', () => APP.updatePreview());
-  });
-  ['fCustom','fSpecial'].forEach(id => {
-    document.getElementById(id).addEventListener('input', () => APP.updatePreview());
-  });
-  APP.updatePreview();
-})();
-</script>
-</body>
-</html>

@@ -847,15 +847,9 @@ const APP = {
         body: JSON.stringify({ action:'append', records:[rec] })
       });
       if (j.success) {
-  // ❌ ไม่ต้องลบ local ทันที
-  // STATE.localRecs = STATE.localRecs.filter(r => r.id !== rec.id);
-
+  STATE.localRecs = STATE.localRecs.filter(r => r.id !== rec.id); // ❌ ตัวปัญหา
   saveLocal();
   toast(isEdit ? 'แก้ไขสำเร็จ ✓' : 'บันทึกสำเร็จ ✓', 'ok');
-
-  renderList();      // ✅ โชว์ทันที
-  renderDaily();
-  renderMonthly();
 
   setTimeout(() => APP.sync(false), 2000);
 }

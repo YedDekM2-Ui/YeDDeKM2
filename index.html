@@ -910,7 +910,7 @@ function renderConfigCard() {
 
 /* ── แก้ไขส่วนแสดงผลให้โชว์ข้อมูลทั้งหมดตลอดเวลา ── */
 function renderList() {
-  const container = document.getElementById('listContainer');
+  const container = document.getElementById('listContent'); // ✅ เปลี่ยนตรงนี้
   if (!container) return;
 
   // ดึงข้อมูลทั้งหมดจาก mergeAll() แบบดิบๆ ไม่ต้องผ่านตัวกรองใดๆ

@@ -542,8 +542,8 @@ body { font-family:var(--font); background:var(--bg); color:var(--n800); min-hei
 
 /* ── CONFIG ── */
 const CONFIG = {
-  GAS_URL: 'https://script.google.com/macros/s/AKfycbxDpAuZ67Lgb5cbSW2GNa6_eARBPN923xu7Bf_W1jmkFZT6MTWDBwWFMH9P3kzmtmGO/exec',
-  SYNC_INTERVAL_MS: 60000,
+  GAS_URL: 'https://script.google.com/macros/s/AKfycbyY4DqUgu7P_-gv4ap5gQ0nAX5Iw-ULPmRDpcTYF8F8qEUDa6tc11RCXtESg1RqQFyX/exec',
+  SYNC_INTERVAL_MS: 30000,
   LOCAL_KEY: 'ttp_v2',
   VERSION: '2.1.0'
 };
@@ -556,7 +556,7 @@ const DEFAULT_CFG = {
 };
 
 let STATE = {
-  holidays: [], config: { ...DEFAULT_CFG },
+  holidays: [], wedSub: [], config: { ...DEFAULT_CFG },
   sheetRecords: [], localRecs: [],
   lastSync: null, syncOK: false,
   currentPage: 'add', selectedPeriod: null,
@@ -593,6 +593,7 @@ function getDayType(dateStr) {
   if (!dateStr) return 'normal';
   const cleanDate = dateStr.toString().split('T')[0];
   if (STATE.holidays && STATE.holidays.includes(cleanDate)) return 'holiday';
+  if (STATE.wedSub  && STATE.wedSub.includes(cleanDate))   return 'wednesday';
   const d = new Date(cleanDate + 'T00:00:00');
   if (d.getDay() === 3) return 'wednesday';
   return 'normal';
@@ -789,7 +790,8 @@ const APP = {
 
       if (cfgJson.success) {
         STATE.holidays = cfgJson.data.holidays || [];
-        const { holidays:_, ...cfgOnly } = cfgJson.data;
+        STATE.wedSub   = cfgJson.data.wedSub   || [];
+        const { holidays:_, wedSub:__, ...cfgOnly } = cfgJson.data;
         STATE.config = { ...DEFAULT_CFG, ...cfgOnly };
       }
       if (Array.isArray(dataJson)) {
@@ -817,6 +819,8 @@ const APP = {
   _afterSync() {
     renderHolidayChips(); renderConfigCard();
     renderList(); renderDaily(); renderMonthly();
+    // อัพเดต sync bar ทุกครั้งหลัง sync
+    this._updateLastSyncBar();
   },
 
   _updateLastSyncBar() {
@@ -1138,7 +1142,7 @@ function renderMonthly() {
   const totalOT=tot100+tot150+tot200+totCustom;
   const totalTrAll=totTrans+totSpecial;
   const grossSalary=SALARY+ALLOWANCE;
-  const totalIncome=grossSalary+totalOT;
+  const totalIncome=grossSalary+totalOT+totalTrAll;
   const netAfterSoc=totalIncome-SOCIAL_SEC;
   const secondPmt=netAfterSoc-FIRST_PMT;
   const maxOTVal=Math.max(tot100,tot150,tot200,totCustom,1);

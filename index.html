@@ -847,11 +847,13 @@ const APP = {
         body: JSON.stringify({ action:'append', records:[rec] })
       });
       if (j.success) {
-  STATE.localRecs = STATE.localRecs.filter(r => r.id !== rec.id);
+  // ❌ ไม่ต้องลบ local ทันที
+  // STATE.localRecs = STATE.localRecs.filter(r => r.id !== rec.id);
+
   saveLocal();
   toast(isEdit ? 'แก้ไขสำเร็จ ✓' : 'บันทึกสำเร็จ ✓', 'ok');
 
-  renderList();      // ✅ แสดงทันที
+  renderList();      // ✅ โชว์ทันที
   renderDaily();
   renderMonthly();
 

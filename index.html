@@ -297,7 +297,22 @@ body {
   cursor:pointer; font-family:var(--font); transition: all .15s;
 }
 .btn-del:active { background:#FFF5F5; }
+.btn-edit {
+  position:absolute;
+  right:60px;   /* ขยับให้ไม่ชนปุ่มลบ */
+  bottom:10px;
+  background:none;
+  border:1px solid #3B82F6;
+  color:#3B82F6;
+  font-size:10px;
+  padding:3px 8px;
+  border-radius:6px;
+  cursor:pointer;
+}
 
+.btn-edit:active {
+  background:#EFF6FF;
+}
 /* ═══════════════════════════════════════════ DAILY SUMMARY */
 .daily-list { display:flex; flex-direction:column; gap:8px; }
 .daily-item {
@@ -589,7 +604,7 @@ body {
    CONFIGURATION — แก้ค่าตรงนี้เพื่ออัปเดต
    ────────────────────────────────────────── */
 const CONFIG = {
-  GAS_URL: 'https://script.google.com/macros/s/AKfycbwIvKSiViiOPjId7K1L5Ton-5COfrbLW5NNXzB8suEUPW1BMyZxQRHLd3f0QGUkis8/exec',
+  GAS_URL: 'https://script.google.com/macros/s/AKfycbw1qk4z0hVKUikYxOhIl2cAuCql59tqSxuT-bLOxVOUKfc8GMwA7kt0uIR-NEDFgmp2/exec',
   SYNC_INTERVAL_MS: 60000,   // auto-sync ทุก 60 วินาที
   LOCAL_KEY: 'ttp_v2',       // localStorage key
   VERSION: '2.0.0'
@@ -751,7 +766,32 @@ async function fetchWithTimeout(url, opts = {}, timeoutMs = 12000) {
     throw e;
   }
 }
+function editRec(date) {
+  const rec = mergeAll().find(r => r.date === date);
+  if (!rec) return;
 
+  APP.tab('add');
+
+  document.getElementById('fDate').value = rec.date;
+  document.getElementById('fIn').value = rec.timeIn;
+  document.getElementById('fOut').value = rec.timeOut;
+  document.getElementById('fCustom').value = rec.customOT || '';
+  document.getElementById('fSpecial').value = rec.specialTransport || '';
+
+  deleteByDate(date);
+
+  APP.updatePreview();
+}
+
+function deleteByDate(date) {
+  fetch(CONFIG.GAS_URL, {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'deleteByDate',
+      date: date
+    })
+  });
+}
 /* ──────────────────────────────────────────
    SYNC
    ────────────────────────────────────────── */
@@ -1048,7 +1088,8 @@ function renderList() {
           ${c.special > 0 ? `<span class="pill sp">✈ พิเศษ ${fmtBaht(c.special)}</span>` : ''}
           ${c.custom  > 0 ? `<span class="pill ct">+ OT Custom ${fmtBaht(c.custom)}</span>` : ''}
         </div>
-        ${r._local ? `<button class="btn-del" onclick="deleteLocal(${r.id})">ลบ</button>` : ''}
+        ${r._local ? <button class="btn-del" onclick="deleteLocal(${r.id})">ลบ</button> : ''}
+<button class="btn-edit" onclick="editRec('${r.date}')">แก้ไข</button>
       </div>`;
     });
 
@@ -1347,6 +1388,177 @@ function toast(msg, type = 'ok') {
   document.getElementById('fCustom').addEventListener('input', () => APP.updatePreview());
   document.getElementById('fSpecial').addEventListener('input', () => APP.updatePreview());
 })();
+ <!-- 🔥 แก้เฉพาะ SCRIPT ส่วนล่าง -->
+<script>
+'use strict';
+
+/* CONFIG */
+const CONFIG = {
+  GAS_URL: 'https://script.google.com/macros/s/AKfycbw1qk4z0hVKUikYxOhIl2cAuCql59tqSxuT-bLOxVOUKfc8GMwA7kt0uIR-NEDFgmp2/exec',
+  LOCAL_KEY: 'ttp_v2'
+};
+
+/* STATE */
+let STATE = {
+  holidays: [],
+  config: {},
+  sheetRecords: [],
+  localRecs: []
+};
+
+/* STORAGE */
+function loadLocal() {
+  const raw = localStorage.getItem(CONFIG.LOCAL_KEY);
+  if (raw) STATE.localRecs = JSON.parse(raw).localRecs || [];
+}
+function saveLocal() {
+  localStorage.setItem(CONFIG.LOCAL_KEY, JSON.stringify({
+    localRecs: STATE.localRecs
+  }));
+}
+
+/* 🔥 MERGE FIX */
+function mergeAll() {
+  const map = new Map();
+
+  STATE.sheetRecords.forEach(r => {
+    map.set(r.date, { ...r, _local: false });
+  });
+
+  STATE.localRecs.forEach(r => {
+    if (!map.has(r.date)) {
+      map.set(r.date, { ...r, _local: true });
+    }
+  });
+
+  return Array.from(map.values())
+    .sort((a, b) => b.date.localeCompare(a.date));
+}
+
+/* 🔥 DELETE FIX */
+async function deleteByDate(date) {
+  try {
+    await fetch(CONFIG.GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'deleteByDate',
+        date
+      })
+    });
+  } catch(e) {}
+
+  STATE.localRecs = STATE.localRecs.filter(r => r.date !== date);
+  saveLocal();
+}
+
+/* 🔥 EDIT FIX */
+async function editRec(date) {
+  const rec = mergeAll().find(r => r.date === date);
+  if (!rec) return;
+
+  document.getElementById('fDate').value = rec.date;
+  document.getElementById('fIn').value = rec.timeIn;
+  document.getElementById('fOut').value = rec.timeOut;
+  document.getElementById('fCustom').value = rec.customOT || '';
+  document.getElementById('fSpecial').value = rec.specialTransport || '';
+
+  await deleteByDate(date);
+}
+
+/* 🔥 SAVE FIX */
+async function save() {
+  const date = fDate.value;
+  const tin = fIn.value;
+  const tout = fOut.value;
+
+  if (!date || !tin || !tout) return alert("กรอกให้ครบ");
+
+  if (mergeAll().some(r => r.date === date)) {
+    return alert("มีข้อมูลแล้ว");
+  }
+
+  const rec = {
+    id: Date.now(),
+    date,
+    timeIn: tin,
+    timeOut: tout,
+    customOT: +fCustom.value || 0,
+    specialTransport: +fSpecial.value || 0
+  };
+
+  STATE.localRecs.push({ ...rec, _local: true });
+  saveLocal();
+
+  try {
+    const res = await fetch(CONFIG.GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'append',
+        records: [rec]
+      })
+    });
+
+    const j = await res.json();
+
+    if (j.success) {
+      STATE.localRecs = STATE.localRecs.filter(r => r.id !== rec.id);
+      saveLocal();
+      await sync();
+    }
+
+  } catch(e) {}
+}
+
+/* SYNC */
+async function sync() {
+  try {
+    const [cfg, data] = await Promise.all([
+      fetch(CONFIG.GAS_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'getConfig' })
+      }),
+      fetch(CONFIG.GAS_URL)
+    ]);
+
+    const cfgJson = await cfg.json();
+    const dataJson = await data.json();
+
+    if (cfgJson.success) {
+      STATE.holidays = cfgJson.data.holidays || [];
+      STATE.config = cfgJson.data;
+    }
+
+    if (Array.isArray(dataJson)) {
+      STATE.sheetRecords = dataJson;
+    }
+
+    render();
+
+  } catch(e) {
+    console.log("offline");
+  }
+}
+
+/* RENDER */
+function render() {
+  const list = mergeAll();
+  const el = document.getElementById('listContent');
+
+  el.innerHTML = list.map(r => `
+    <div style="padding:10px;border-bottom:1px solid #ddd">
+      ${r.date} ${r.timeIn}-${r.timeOut}
+      <button onclick="editRec('${r.date}')">แก้</button>
+      <button onclick="deleteByDate('${r.date}')">ลบ</button>
+    </div>
+  `).join('');
+}
+
+/* INIT */
+(async function(){
+  loadLocal();
+  await sync();
+})();
+</script>  
 </script>
 </body>
 </html>

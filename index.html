@@ -1261,3 +1261,23 @@ function toast(msg, type='ok') {
   clearTimeout(_toastTimer);
   _toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
 }
+
+/* ── BOOT ── */
+(async function init() {
+  loadLocal();
+  document.getElementById('fDate').value = todayStr();
+  renderList(); renderDaily(); renderMonthly();
+  await APP.sync(false);
+  STATE.autoSyncTimer = setInterval(() => APP.sync(false), CONFIG.SYNC_INTERVAL_MS);
+
+  ['fDate','fIn','fOut'].forEach(id => {
+    document.getElementById(id).addEventListener('change', () => APP.updatePreview());
+  });
+  ['fCustom','fSpecial'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => APP.updatePreview());
+  });
+  APP.updatePreview();
+})();
+</script>
+</body>
+</html>

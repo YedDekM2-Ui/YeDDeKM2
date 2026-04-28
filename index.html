@@ -1,176 +1,160 @@
 <!DOCTYPE html>
-<html lang="th">
+<html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ระบบจัดการข้อมูล - Professional</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Sarabun:wght@300;500&display=swap" rel="stylesheet">
+  <title>Work Log System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;500;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #2d6a4f;
-      --primary-hover: #1b4332;
-      --bg: #f4f7f6;
-      --card: #ffffff;
-      --text: #2d3436;
-      --danger: #d63031;
+      --primary-green: #1b4332; /* เขียวเข้มโปร */
+      --accent-green: #2d6a4f;
+      --bg-color: #f0f2f5;
+      --white: #ffffff;
     }
-
     body {
-      font-family: 'Inter', 'Sarabun', sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
+      font-family: 'Sarabun', sans-serif;
+      background-color: var(--bg-color);
       margin: 0;
-      padding: 20px;
       display: flex;
       justify-content: center;
+      padding: 20px;
     }
-
     .container {
       width: 100%;
-      max-width: 800px;
-      background: var(--card);
-      padding: 30px;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      max-width: 600px;
+      background: var(--white);
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }
-
-    h2 { color: var(--primary); margin-bottom: 25px; text-align: center; }
-
+    h2 { color: var(--primary-green); text-align: center; margin-bottom: 25px; }
+    
     .form-group { margin-bottom: 15px; }
-    label { display: block; margin-bottom: 5px; font-weight: 500; }
+    label { display: block; margin-bottom: 8px; font-weight: 500; color: #444; }
     input {
       width: 100%;
       padding: 12px;
-      border: 1px solid #ddd;
+      border: 1px solid #ced4da;
       border-radius: 8px;
-      box-sizing: border-box;
       font-size: 16px;
+      box-sizing: border-box;
     }
+    input:focus { outline: none; border-color: var(--accent-green); }
 
-    .btn-row { display: flex; gap: 10px; margin-top: 20px; }
-    button {
-      flex: 1;
-      padding: 12px;
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      background-color: var(--primary-green);
+      color: white;
       border: none;
       border-radius: 8px;
+      font-size: 16px;
+      font-weight: 700;
       cursor: pointer;
-      font-weight: 600;
-      transition: 0.3s;
+      transition: background 0.3s;
     }
+    .btn-submit:hover { background-color: var(--accent-green); }
+    .btn-submit:disabled { background-color: #999; }
 
-    .btn-submit { background: var(--primary); color: white; }
-    .btn-submit:hover { background: var(--primary-hover); }
-    .btn-submit:disabled { background: #ccc; }
-
-    .data-table {
-      width: 100%;
-      margin-top: 30px;
-      border-collapse: collapse;
+    .list-area { margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px; }
+    .item {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: 5px solid var(--accent-green);
     }
-    .data-table th, .data-table td {
-      padding: 12px;
-      text-align: left;
-      border-bottom: 1px solid #eee;
-    }
-    .data-table th { background: #f9f9f9; color: var(--primary); }
-
-    .loading { text-align: center; color: #666; font-style: italic; }
-    .delete-btn { color: var(--danger); cursor: pointer; border: none; background: none; font-weight: bold; }
+    .delete-btn { color: #dc3545; cursor: pointer; font-weight: bold; padding: 5px 10px; }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h2>บันทึกข้อมูลการทำงาน 👷‍♂️</h2>
+  <h2>ระบบบันทึกเวลาทำงาน 📋</h2>
   
-  <div id="form">
-    <div class="form-group">
-      <label>วันที่</label>
-      <input type="date" id="date">
+  <div class="form-group">
+    <label>วันที่</label>
+    <input type="date" id="date">
+  </div>
+  <div style="display: flex; gap: 10px;">
+    <div class="form-group" style="flex: 1;">
+      <label>เข้างาน</label>
+      <input type="time" id="timeIn">
     </div>
-    <div style="display: flex; gap: 10px;">
-      <div class="form-group" style="flex: 1;">
-        <label>เวลาเข้า</label>
-        <input type="time" id="timeIn">
-      </div>
-      <div class="form-group" style="flex: 1;">
-        <label>เวลาออก</label>
-        <input type="time" id="timeOut">
-      </div>
-    </div>
-    <div class="btn-row">
-      <button class="btn-submit" id="saveBtn" onclick="saveData()">บันทึกข้อมูล</button>
+    <div class="form-group" style="flex: 1;">
+      <label>เลิกงาน</label>
+      <input type="time" id="timeOut">
     </div>
   </div>
+  
+  <button class="btn-submit" id="saveBtn" onclick="sendData()">บันทึกข้อมูล</button>
 
-  <hr style="margin: 40px 0; border: 0; border-top: 1px solid #eee;">
-
-  <h3>ประวัติการบันทึก</h3>
-  <div id="status" class="loading">กำลังโหลดข้อมูล...</div>
-  <table class="data-table" id="dataTable">
-    <thead>
-      <tr>
-        <th>วันที่</th>
-        <th>เข้า-ออก</th>
-        <th>จัดการ</th>
-      </tr>
-    </thead>
-    <tbody id="tableBody"></tbody>
-  </table>
+  <div class="list-area" id="listArea">
+    <p style="text-align: center; color: #666;">กำลังโหลดข้อมูล...</p>
+  </div>
 </div>
 
 <script>
-  const API_URL = "https://script.google.com/macros/s/AKfycbycFdDdEC6i3-P71v5ZiPSA_SkSK_nxarPaZ_xziihsN6Q2pMiaCKDsg4bvkGuDeg6g/exec"; // **อย่าลืมเปลี่ยน ID**
+  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxF1EVrlCu5XrC9z0tnR3wc7EJbTQl8pAK04A4A-BcJJ_WzUCtF2zZ5PvYgYNPJsfdh/exec"; // วาง URL ที่ได้จาก Deployment ตรงนี้
 
-  // โหลดข้อมูลเมื่อเปิดหน้าเว็บ
   window.onload = loadData;
 
   async function loadData() {
     try {
-      const resp = await fetch(API_URL);
-      const data = await resp.json();
-      renderTable(data);
-      document.getElementById('status').style.display = 'none';
+      const response = await fetch(WEB_APP_URL);
+      const data = await response.json();
+      renderList(data);
     } catch (err) {
-      document.getElementById('status').innerText = "โหลดข้อมูลไม่สำเร็จ";
+      document.getElementById('listArea').innerHTML = "โหลดข้อมูลไม่สำเร็จ";
     }
   }
 
-  function renderTable(data) {
-    const tbody = document.getElementById('tableBody');
-    tbody.innerHTML = "";
-    data.reverse().forEach(row => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${row.date || '-'}</td>
-        <td>${row.timeIn} - ${row.timeOut}</td>
-        <td><button class="delete-btn" onclick="deleteRow('${row.id}')">ลบ</button></td>
+  function renderList(data) {
+    const area = document.getElementById('listArea');
+    if (data.length === 0) {
+      area.innerHTML = "<p style='text-align:center'>ยังไม่มีข้อมูล</p>";
+      return;
+    }
+    area.innerHTML = "<h3>รายการล่าสุด</h3>";
+    data.reverse().slice(0, 10).forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.innerHTML = `
+        <div>
+          <strong>${item.date}</strong><br>
+          <small>${item.timeIn} - ${item.timeOut}</small>
+        </div>
+        <div class="delete-btn" onclick="deleteData('${item.id}')">ลบ</div>
       `;
-      tbody.appendChild(tr);
+      area.appendChild(div);
     });
   }
 
-  async function saveData() {
+  async function sendData() {
     const btn = document.getElementById('saveBtn');
-    const record = {
+    const records = [{
       date: document.getElementById('date').value,
       timeIn: document.getElementById('timeIn').value,
       timeOut: document.getElementById('timeOut').value,
       customOT: 0,
       specialTransport: 0
-    };
+    }];
 
-    if(!record.date || !record.timeIn) return alert("กรุณากรอกข้อมูลให้ครบ");
+    if(!records[0].date || !records[0].timeIn) return alert("กรุณากรอกข้อมูล");
 
     btn.disabled = true;
     btn.innerText = "กำลังบันทึก...";
 
     try {
-      await fetch(API_URL, {
+      await fetch(WEB_APP_URL, {
         method: "POST",
-        body: JSON.stringify({ action: 'append', records: [record] })
+        body: JSON.stringify({ action: 'append', records: records })
       });
-      alert("บันทึกสำเร็จ!");
+      alert("สำเร็จ!");
       location.reload();
     } catch (err) {
       alert("เกิดข้อผิดพลาด");
@@ -179,19 +163,14 @@
     }
   }
 
-  async function deleteRow(id) {
-    if(!confirm("ยืนยันการลบ?")) return;
-    try {
-      await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify({ action: 'deleteById', id: id })
-      });
-      location.reload();
-    } catch (err) {
-      alert("ลบไม่สำเร็จ");
-    }
+  async function deleteData(id) {
+    if(!confirm("ลบรายการนี้ใช่ไหม?")) return;
+    await fetch(WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify({ action: 'deleteById', id: id })
+    });
+    location.reload();
   }
 </script>
-
 </body>
 </html>

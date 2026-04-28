@@ -2,259 +2,1351 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⏱️ Time Tracking COMPANY</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>TimeTrack Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box;}
-body{
- font-family:'Noto Sans Thai',sans-serif;
- background:linear-gradient(135deg,#fed7aa,#fce7f3,#dbeafe);
+/* ═══════════════════════════════════════════
+   DESIGN TOKENS — Tiffany Blue Pastel System
+   ═══════════════════════════════════════════ */
+:root {
+  /* Primary palette */
+  --t50:  #F0FAFA;
+  --t100: #D5F2EF;
+  --t200: #A8E4DE;
+  --t300: #7AD5CC;
+  --t400: #4DC6BB;  /* Tiffany core */
+  --t500: #2AADA1;
+  --t600: #1E8F84;
+  --t700: #146F67;
+
+  /* Pastel accents */
+  --rose:    #FFE4EC;
+  --roseDk:  #F472A8;
+  --amber:   #FFF3DC;
+  --amberDk: #F5A623;
+  --lavender:#EEE9FF;
+  --lavDk:   #8B6FD8;
+  --sky:     #E5F3FF;
+  --skyDk:   #3B8ED6;
+  --mint:    #E5F9F5;
+  --sage:    #D4EDE8;
+
+  /* Neutrals */
+  --bg:    #F2FAFA;
+  --card:  #FFFFFF;
+  --n50:   #F7F9F9;
+  --n100:  #ECF0F0;
+  --n200:  #D3DCDB;
+  --n300:  #A8BCBA;
+  --n400:  #7A9997;
+  --n600:  #3D6361;
+  --n800:  #1C3A38;
+
+  /* Semantic */
+  --success-bg: #E6F9F3;
+  --success:    #1A8C62;
+  --warn-bg:    #FFF8E6;
+  --warn:       #C07A00;
+  --err-bg:     #FFF0F0;
+  --err:        #C0392B;
+  --info-bg:    #EAF3FF;
+  --info:       #1A5FAE;
+
+  /* Sizing */
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r:    14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 4px rgba(42,173,161,.08);
+  --shadow-sm: 0 2px 10px rgba(42,173,161,.10);
+  --shadow:    0 4px 20px rgba(42,173,161,.13);
+
+  /* Typography */
+  --font: 'Noto Sans Thai', sans-serif;
 }
-.container{max-width:520px;margin:auto;padding:16px;}
-.header{text-align:center;margin-bottom:10px;}
-.header h1{
- font-size:22px;
- background:linear-gradient(135deg,#ea580c,#9333ea,#ec4899);
- -webkit-background-clip:text;
- -webkit-text-fill-color:transparent;
+
+/* ═══════════════════════════════════════════ RESET */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html { scroll-behavior:smooth; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--n800);
+  min-height: 100dvh;
+  overflow-x: hidden;
 }
-.card{
- background:#fff;
- border-radius:14px;
- padding:14px;
- margin-bottom:12px;
+
+/* ═══════════════════════════════════════════ LAYOUT */
+#app { max-width: 480px; margin: 0 auto; padding-bottom: 90px; position: relative; }
+
+/* ═══════════════════════════════════════════ TOPBAR */
+#topbar {
+  position: sticky; top: 0; z-index: 200;
+  background: rgba(240,250,250,.92);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--t100);
+  padding: 12px 16px 10px;
+  display: flex; align-items: center; justify-content: space-between;
 }
-input{
- width:100%;
- padding:10px;
- margin:6px 0;
- border:2px solid #fed7aa;
- border-radius:8px;
+.tb-left h1 { font-size: 18px; font-weight: 700; color: var(--t600); letter-spacing:-.3px; }
+.tb-left .tb-sub { font-size: 11px; color: var(--n400); margin-top:1px; display:flex; align-items:center; gap:5px; }
+.live-dot { width:6px; height:6px; border-radius:50%; background:#34D399; animation: livepulse 2s ease-in-out infinite; }
+@keyframes livepulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+
+.tb-right { display:flex; align-items:center; gap:8px; }
+.btn-sync {
+  background: var(--t400); color: #fff;
+  border: none; border-radius: 20px;
+  padding: 6px 14px; font-size: 12px; font-weight: 600;
+  font-family: var(--font); cursor: pointer;
+  display: flex; align-items: center; gap: 4px;
+  transition: all .2s; white-space:nowrap;
 }
-button{
- width:100%;
- padding:12px;
- border:none;
- border-radius:10px;
- font-weight:700;
- margin-top:6px;
+.btn-sync:active { transform:scale(.95); }
+.btn-sync.busy { opacity:.6; pointer-events:none; }
+.spin { animation: rot 1s linear infinite; display:inline-block; }
+@keyframes rot { to{transform:rotate(360deg)} }
+
+/* ═══════════════════════════════════════════ TABS */
+#tabBar {
+  display: flex;
+  background: var(--card);
+  border-bottom: 1px solid var(--t100);
+  padding: 0 4px;
+  position: sticky; top: 58px; z-index: 190;
+  overflow-x: auto; scrollbar-width: none;
 }
-.add{background:#ea580c;color:#fff;}
-.record{
- background:#fff;
- border-radius:10px;
- padding:10px;
- margin-top:8px;
- border-left:6px solid #fed7aa;
+#tabBar::-webkit-scrollbar { display:none; }
+.tab-btn {
+  flex: 0 0 auto; padding: 11px 14px 9px;
+  font-size: 12.5px; font-weight: 500; color: var(--n400);
+  border: none; background: none; border-bottom: 2.5px solid transparent;
+  cursor: pointer; font-family: var(--font); white-space:nowrap;
+  transition: all .2s; user-select:none;
 }
-.wednesday{background:#fffbeb;border-left:#f59e0b 6px solid;}
-.holiday{background:#fffacd;border-left:#facc15 6px solid;}
-.summary{
- background:#eef2ff;
- border:2px solid #7c3aed;
- padding:10px;
- border-radius:10px;
- margin-top:10px;
- text-align:center;
- font-weight:700;
+.tab-btn.on { color: var(--t500); border-bottom-color: var(--t400); }
+
+/* ═══════════════════════════════════════════ PAGES */
+.page { display:none; padding: 14px 14px 0; animation: fadeIn .2s ease; }
+.page.on { display:block; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+
+/* ═══════════════════════════════════════════ COMPONENTS */
+/* --- Card --- */
+.card {
+  background: var(--card);
+  border: 1px solid var(--t100);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-xs);
 }
+.card-head {
+  font-size: 10.5px; font-weight: 700; letter-spacing:.6px;
+  text-transform:uppercase; color: var(--n400); margin-bottom:12px;
+  display: flex; align-items:center; gap:6px;
+}
+.card-head .badge {
+  font-size: 9px; padding: 1px 6px; border-radius:10px;
+  background: var(--t100); color: var(--t600); font-weight:600; letter-spacing:.3px;
+}
+
+/* --- Form inputs --- */
+.fg { display:flex; flex-direction:column; gap:4px; }
+.fg label { font-size:11px; font-weight:600; color: var(--n400); }
+.fg input {
+  background: var(--t50);
+  border: 1.5px solid var(--t100);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  font-size: 14px; font-weight:500; color: var(--n800);
+  font-family: var(--font);
+  transition: all .18s;
+  width: 100%;
+  -webkit-appearance: none;
+}
+.fg input:focus { outline:none; border-color: var(--t400); background:#fff; box-shadow:0 0 0 3px rgba(77,198,187,.15); }
+.row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+.row1 { margin-bottom:10px; }
+
+/* --- Preview box --- */
+#previewBox {
+  background: var(--mint);
+  border: 1px solid var(--t200);
+  border-radius: var(--r-sm);
+  padding:12px 14px;
+  margin: 10px 0;
+  display:none;
+}
+.pv-row { display:flex; justify-content:space-between; font-size:13px; }
+.pv-type { font-weight:600; }
+.pv-type.normal  { color: var(--t500); }
+.pv-type.wednesday { color: var(--amberDk); }
+.pv-type.holiday { color: var(--roseDk); }
+.pv-nums { display:flex; gap:10px; }
+.pv-ot { color: var(--t500); font-weight:600; }
+.pv-total { color: var(--n800); font-weight:700; }
+.pv-detail { font-size:11px; color: var(--n400); margin-top:5px; display:flex; gap:8px; flex-wrap:wrap; }
+
+/* --- Main CTA button --- */
+.btn-main {
+  width:100%; padding:13px;
+  background: linear-gradient(135deg, var(--t400), var(--t600));
+  border: none; border-radius: var(--r-sm);
+  color: #fff; font-size:15px; font-weight:700;
+  font-family: var(--font); cursor:pointer;
+  transition: all .2s; letter-spacing:.1px;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+}
+.btn-main:active { transform:scale(.98); opacity:.9; }
+.btn-main.loading { opacity:.6; pointer-events:none; }
+
+/* --- Status toast --- */
+#toast {
+  position: fixed; bottom: 96px; left:50%; transform:translateX(-50%) translateY(20px);
+  background: var(--n800); color:#fff; font-size:13px; font-weight:500;
+  padding: 9px 18px; border-radius:20px; z-index:999;
+  opacity:0; transition: all .3s; pointer-events:none; white-space:nowrap;
+  max-width: calc(100vw - 40px); text-align:center;
+}
+#toast.ok  { background: var(--success); }
+#toast.err { background: var(--err); }
+#toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* ═══════════════════════════════════════════ RECORD CARDS */
+.period-block { margin-bottom:20px; }
+.period-hd {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:6px 2px 8px;
+}
+.period-name {
+  font-size:13px; font-weight:700; color: var(--n600);
+  display:flex; align-items:center; gap:8px;
+}
+.period-name::before {
+  content:''; display:block; width:3px; height:16px;
+  background: linear-gradient(to bottom, var(--t400), var(--t200));
+  border-radius:2px;
+}
+.period-sum {
+  font-size:13px; font-weight:700; color: var(--t500);
+  background: var(--t100); padding:3px 12px; border-radius:20px;
+}
+
+.rec {
+  background: var(--card);
+  border: 1px solid var(--t100);
+  border-radius: var(--r-sm);
+  border-left: 3.5px solid var(--t400);
+  padding: 11px 13px;
+  margin-bottom: 8px;
+  position:relative;
+}
+.rec.wednesday { border-left-color: var(--amberDk); background: #FFFDF5; }
+.rec.holiday    { border-left-color: var(--roseDk);  background: #FFF8FC; }
+
+.rec-top { display:flex; align-items:flex-start; justify-content:space-between; }
+.rec-left .rec-date { font-size:14px; font-weight:700; color: var(--n800); }
+.rec-left .rec-meta { font-size:11px; color: var(--n400); margin-top:2px; display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+.type-pill {
+  font-size:9.5px; font-weight:700; padding:1px 7px;
+  border-radius:10px; letter-spacing:.3px;
+}
+.type-pill.normal    { background: var(--t100);    color: var(--t600); }
+.type-pill.wednesday { background: var(--amber);   color: #8A5F00; }
+.type-pill.holiday   { background: var(--rose);    color: #9D1761; }
+.src-pill {
+  font-size:9px; font-weight:600; padding:1px 6px;
+  border-radius:8px; background: var(--warn-bg); color: var(--warn);
+}
+
+.rec-right { text-align:right; }
+.rec-total { font-size:16px; font-weight:800; color: var(--t600); }
+.rec-ot-sub { font-size:10px; color: var(--n400); margin-top:1px; }
+
+.rec-detail {
+  display:grid; grid-template-columns: repeat(3, 1fr); gap:6px;
+  margin-top:10px; padding-top:10px;
+  border-top: 1px solid var(--t100);
+}
+.dc {
+  background: var(--n50); border-radius: var(--r-xs);
+  padding:5px 6px; text-align:center;
+}
+.dc .dk { font-size:9.5px; color: var(--n400); margin-bottom:2px; }
+.dc .dv { font-size:12px; font-weight:700; color: var(--n600); }
+
+.rec-pills { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
+.pill {
+  font-size:10px; font-weight:600; padding:3px 9px;
+  border-radius:10px; display:flex; align-items:center; gap:3px;
+}
+.pill.tr  { background: var(--sky);      color: var(--skyDk); }
+.pill.sp  { background: var(--rose);     color: var(--roseDk); }
+.pill.ct  { background: var(--lavender); color: var(--lavDk); }
+
+.btn-del {
+  position:absolute; right:10px; bottom:10px;
+  background:none; border: 1px solid #FFD0D0; color:#F87171;
+  font-size:10px; padding:3px 8px; border-radius: var(--r-xs);
+  cursor:pointer; font-family:var(--font); transition: all .15s;
+}
+.btn-del:active { background:#FFF5F5; }
+
+/* ═══════════════════════════════════════════ DAILY SUMMARY */
+.daily-list { display:flex; flex-direction:column; gap:8px; }
+.daily-item {
+  background: var(--card);
+  border: 1px solid var(--t100);
+  border-radius: var(--r-sm);
+  padding:12px 14px;
+  display: flex; align-items:center; justify-content:space-between;
+  cursor: pointer; transition: background .15s;
+}
+.daily-item:active { background: var(--t50); }
+.daily-item .di-left { display:flex; flex-direction:column; gap:3px; }
+.daily-item .di-date { font-size:14px; font-weight:700; color: var(--n800); }
+.daily-item .di-sub  { font-size:11px; color: var(--n400); display:flex; gap:6px; }
+.daily-item .di-right { display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
+.daily-item .di-total { font-size:15px; font-weight:800; color: var(--t600); }
+.daily-item .di-ot   { font-size:10px; color: var(--n400); }
+
+/* ═══════════════════════════════════════════ MONTHLY SUMMARY */
+.sum-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+.sum-tile {
+  background: var(--card);
+  border: 1px solid var(--t100);
+  border-radius: var(--r-sm);
+  padding:13px 14px;
+  box-shadow: var(--shadow-xs);
+}
+.sum-tile.full { grid-column:1/-1; }
+.sum-tile.accent {
+  background: linear-gradient(135deg, var(--t400) 0%, var(--t600) 100%);
+  border-color:transparent;
+}
+.sum-tile .st-label { font-size:10.5px; font-weight:600; color: var(--n400); margin-bottom:4px; }
+.sum-tile.accent .st-label { color: rgba(255,255,255,.75); }
+.sum-tile .st-val   { font-size:20px; font-weight:800; color: var(--n800); line-height:1; }
+.sum-tile.accent .st-val { color:#fff; }
+.sum-tile .st-val.xl { font-size:26px; }
+.sum-tile .st-note  { font-size:10px; color: var(--n300); margin-top:3px; }
+
+.sec-title {
+  font-size:10.5px; font-weight:700; letter-spacing:.6px;
+  text-transform:uppercase; color: var(--n400); margin:16px 0 10px;
+}
+
+.pay-table { width:100%; border-collapse:collapse; }
+.pay-table tr { border-bottom: 1px solid var(--t100); }
+.pay-table tr:last-child { border-bottom:none; }
+.pay-table td { padding:8px 0; font-size:13px; }
+.pay-table td:last-child { text-align:right; font-weight:700; }
+.pay-table .plus  { color: var(--success); }
+.pay-table .minus { color: var(--err); }
+.pay-table .hi td { background: var(--t50); padding:8px 10px; }
+.pay-table .hi td:first-child { border-radius: var(--r-xs) 0 0 var(--r-xs); color: var(--t600); font-weight:700; }
+.pay-table .hi td:last-child  { border-radius:0 var(--r-xs) var(--r-xs) 0; color: var(--t600); font-size:15px; }
+
+/* OT Bars */
+.ot-bars { display:flex; flex-direction:column; gap:9px; }
+.ot-row { display:flex; align-items:center; gap:8px; }
+.ot-lbl { font-size:11px; color: var(--n400); width:44px; flex-shrink:0; }
+.ot-track { flex:1; height:7px; background: var(--t50); border-radius:4px; overflow:hidden; border:1px solid var(--t100); }
+.ot-fill  { height:100%; border-radius:4px; transition: width .6s cubic-bezier(.22,1,.36,1); }
+.ot-fill.c100    { background: var(--t400); }
+.ot-fill.c150    { background: var(--amberDk); }
+.ot-fill.c200    { background: var(--roseDk); }
+.ot-fill.ccustom { background: var(--lavDk); }
+.ot-val { font-size:11px; font-weight:700; color: var(--n600); width:68px; text-align:right; flex-shrink:0; }
+
+/* Day type breakdown */
+.dtype-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:7px 0; border-bottom:1px solid var(--t100);
+  font-size:13px;
+}
+.dtype-row:last-child { border-bottom:none; }
+.dtype-left { display:flex; align-items:center; gap:8px; color: var(--n600); }
+.dtype-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.dtype-right { font-weight:700; color: var(--n800); }
+
+/* Period selector */
+.period-select {
+  display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px;
+}
+.period-btn {
+  padding:6px 14px; border-radius:20px; font-size:12px; font-weight:600;
+  border: 1.5px solid var(--t200); background:var(--card); color: var(--n400);
+  cursor:pointer; font-family:var(--font); transition: all .15s;
+}
+.period-btn.on {
+  background: var(--t400); border-color:var(--t400); color:#fff;
+}
+
+/* ═══════════════════════════════════════════ HOLIDAY LIST */
+.holiday-chips { display:flex; flex-wrap:wrap; gap:5px; max-height:100px; overflow-y:auto; }
+.hchip {
+  font-size:10.5px; font-weight:600; padding:3px 9px;
+  border-radius:10px; background: var(--rose); color: #9D1761;
+}
+
+/* ═══════════════════════════════════════════ STATES */
+.loading-state { text-align:center; padding:40px 20px; color: var(--n300); }
+.loading-dots { display:inline-flex; gap:5px; margin-bottom:12px; }
+.ld { width:8px; height:8px; border-radius:50%; background: var(--t200); animation: ldbn 1.2s ease-in-out infinite; }
+.ld:nth-child(2){animation-delay:.15s} .ld:nth-child(3){animation-delay:.3s}
+@keyframes ldbn { 0%,80%,100%{transform:scale(.8);opacity:.5} 40%{transform:scale(1.2);opacity:1} }
+.empty-state { text-align:center; padding:50px 20px; color: var(--n300); font-size:14px; line-height:2; }
+
+/* ═══════════════════════════════════════════ BOTTOM NAV */
+#bottomNav {
+  position:fixed; bottom:0; left:0; right:0; z-index:300;
+  background: rgba(255,255,255,.95);
+  backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+  border-top: 1px solid var(--t100);
+  display:flex; max-width:480px; margin:0 auto;
+}
+.nav-btn {
+  flex:1; padding:10px 4px 12px;
+  background:none; border:none; cursor:pointer;
+  font-family:var(--font); font-size:10px; font-weight:500;
+  color: var(--n400); display:flex; flex-direction:column;
+  align-items:center; gap:3px; transition: color .15s;
+}
+.nav-btn.on { color: var(--t500); }
+.nav-icon { font-size:20px; line-height:1; }
+.nav-dot {
+  width:4px; height:4px; border-radius:50%; background: var(--t400);
+  margin-top:1px; opacity:0; transition: opacity .15s;
+}
+.nav-btn.on .nav-dot { opacity:1; }
+
+/* ═══════════════════════════════════════════ MISC */
+.divider { height:1px; background: var(--t100); margin:12px 0; }
+.last-sync-bar {
+  text-align:center; font-size:10.5px; color: var(--n300);
+  padding:6px 0 10px; display:flex; align-items:center; justify-content:center; gap:5px;
+}
+.sync-ok   { color: var(--success); }
+.sync-warn { color: var(--warn); }
 </style>
 </head>
-
 <body>
 
-<div class="container">
+<div id="app">
 
-<div class="header">
-<h1>⏱️ Time Tracking COMPANY</h1>
+  <!-- ── TOP BAR ── -->
+  <div id="topbar">
+    <div class="tb-left">
+      <h1>⏱ TimeTrack Pro</h1>
+      <div class="tb-sub">
+        <span class="live-dot" id="liveDot"></span>
+        <span id="syncStatus">กำลังเชื่อมต่อ...</span>
+      </div>
+    </div>
+    <div class="tb-right">
+      <button class="btn-sync" id="syncBtn" onclick="APP.sync()">
+        <span id="syncIco">↻</span> Sync
+      </button>
+    </div>
+  </div>
+
+  <!-- ── TAB BAR ── -->
+  <div id="tabBar">
+    <button class="tab-btn on" onclick="APP.tab('add')">+ บันทึก</button>
+    <button class="tab-btn"   onclick="APP.tab('list')">รายการ</button>
+    <button class="tab-btn"   onclick="APP.tab('daily')">รายวัน</button>
+    <button class="tab-btn"   onclick="APP.tab('monthly')">รายเดือน</button>
+  </div>
+
+  <!-- ════════════════ PAGE: ADD ════════════════ -->
+  <div id="page-add" class="page on">
+
+    <div class="card">
+      <div class="card-head">บันทึกเวลาทำงาน <span class="badge" id="todayType">-</span></div>
+
+      <div class="row1">
+        <div class="fg"><label>วันที่</label>
+          <input type="date" id="fDate" oninput="APP.updatePreview()">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="fg"><label>เวลาเข้า</label>
+          <input type="time" id="fIn" value="09:00" oninput="APP.updatePreview()">
+        </div>
+        <div class="fg"><label>เวลาออก</label>
+          <input type="time" id="fOut" value="18:00" oninput="APP.updatePreview()">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="fg"><label>OT เพิ่มเติม (฿)</label>
+          <input type="number" id="fCustom" placeholder="0" oninput="APP.updatePreview()">
+        </div>
+        <div class="fg"><label>ค่าเดินทางพิเศษ (฿)</label>
+          <input type="number" id="fSpecial" placeholder="0" oninput="APP.updatePreview()">
+        </div>
+      </div>
+
+      <div id="previewBox">
+        <div class="pv-row">
+          <span class="pv-type" id="pvType">-</span>
+          <span class="pv-nums">
+            <span class="pv-ot"  id="pvOT"></span>
+            <span class="pv-total" id="pvTot"></span>
+          </span>
+        </div>
+        <div class="pv-detail" id="pvDetail"></div>
+      </div>
+
+      <button class="btn-main" id="btnSave" onclick="APP.save()">
+        <span>＋</span> บันทึกข้อมูล
+      </button>
+    </div>
+
+    <!-- Holiday chips -->
+    <div class="card">
+      <div class="card-head">วันหยุดนักขัตฤกษ์ <span class="badge" id="hdCount">0 วัน</span></div>
+      <div class="holiday-chips" id="hdChips">
+        <span style="font-size:12px;color:var(--n400)">กำลังโหลด...</span>
+      </div>
+    </div>
+
+    <!-- Config preview -->
+    <div class="card" id="cfgCard">
+      <div class="card-head">ค่าตั้ง (Config)</div>
+      <div id="cfgContent" style="font-size:12px;color:var(--n400)">กำลังโหลด...</div>
+    </div>
+
+  </div>
+
+  <!-- ════════════════ PAGE: LIST ════════════════ -->
+  <div id="page-list" class="page">
+    <div class="last-sync-bar" id="lastSyncBar">—</div>
+    <div id="listContent">
+      <div class="loading-state">
+        <div class="loading-dots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
+        <div>กำลังโหลด...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════ PAGE: DAILY ════════════════ -->
+  <div id="page-daily" class="page">
+    <div id="dailyContent">
+      <div class="loading-state">
+        <div class="loading-dots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
+        <div>กำลังคำนวณ...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════ PAGE: MONTHLY ════════════════ -->
+  <div id="page-monthly" class="page">
+    <div id="periodSelect" class="period-select"></div>
+    <div id="monthlyContent">
+      <div class="loading-state">
+        <div class="loading-dots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
+        <div>กำลังคำนวณ...</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- ════════════════ BOTTOM NAV ════════════════ -->
+<div id="bottomNav">
+  <button class="nav-btn on" onclick="APP.tab('add')" id="nav-add">
+    <span class="nav-icon">✏️</span><span>บันทึก</span><div class="nav-dot"></div>
+  </button>
+  <button class="nav-btn" onclick="APP.tab('list')" id="nav-list">
+    <span class="nav-icon">📋</span><span>รายการ</span><div class="nav-dot"></div>
+  </button>
+  <button class="nav-btn" onclick="APP.tab('daily')" id="nav-daily">
+    <span class="nav-icon">📅</span><span>รายวัน</span><div class="nav-dot"></div>
+  </button>
+  <button class="nav-btn" onclick="APP.tab('monthly')" id="nav-monthly">
+    <span class="nav-icon">📊</span><span>รายเดือน</span><div class="nav-dot"></div>
+  </button>
 </div>
 
-<div class="card">
-<input type="date" id="date">
-<input type="time" id="in" value="09:00">
-<input type="time" id="out" value="18:00">
-<input type="number" id="customOT" placeholder="OT เพิ่ม">
-<input type="number" id="special" placeholder="ค่าเดินทางพิเศษ">
-
-<button class="add" onclick="add()">+ เพิ่ม</button>
-</div>
-
-<div id="list"></div>
-
-</div>
-
+<!-- ════════════════════════════════════════════════
+  JAVASCRIPT — TimeTrack Pro v2.0
+  Architecture: Singleton APP object, pure functions, localStorage cache
+════════════════════════════════════════════════ -->
 <script>
+'use strict';
 
-// ====== CONFIG ======
-const SHEET_URL =
-"https://docs.google.com/spreadsheets/d/1-siPR8NwN3wqatR3y6w8IJ-PtepFJnTzDFtjDsrJ8sg/gviz/tq?tqx=out:csv&sheet=Holidays";
+/* ──────────────────────────────────────────
+   CONFIGURATION — แก้ค่าตรงนี้เพื่ออัปเดต
+   ────────────────────────────────────────── */
+const CONFIG = {
+  GAS_URL: 'https://script.google.com/macros/s/AKfycbzDHiEMBP0Z-kxOADMBxP1VjJTDUX5-WgJq3-WY_nVbK2FKHMRp5mCMlOgTfFE9hblf/exec',
+  SYNC_INTERVAL_MS: 60000,   // auto-sync ทุก 60 วินาที
+  LOCAL_KEY: 'ttp_v2',       // localStorage key
+  VERSION: '2.0.0'
+};
 
-let holidays=[];
-let db=JSON.parse(localStorage.getItem("db"))||[];
-let ready=false;
+/* ──────────────────────────────────────────
+   DEFAULT CONFIG (fallback ถ้าดึง Sheets ไม่ได้)
+   ────────────────────────────────────────── */
+const DEFAULT_CFG = {
+  SALARY: 17000, ALLOWANCE: 2000, SOCIAL_SEC: 850,
+  TRANSPORT: 200, FIRST_PAYMENT: 16150,
+  OT100_RATE: 100, OT150_RATE: 150, OT200_RATE: 200,
+  OT100_START: 18
+};
 
-// ====== LOAD HOLIDAY ======
-async function loadHoliday(){
- try{
-  let res=await fetch(SHEET_URL);
-  let txt=await res.text();
+/* ──────────────────────────────────────────
+   STATE
+   ────────────────────────────────────────── */
+let STATE = {
+  holidays:     [],          // ['2025-01-01', ...]
+  config:       { ...DEFAULT_CFG },
+  sheetRecords: [],          // from doGet()
+  localRecs:    [],          // added offline, not yet in sheet
+  lastSync:     null,
+  syncOK:       false,
+  currentPage:  'add',
+  selectedPeriod: null,      // for monthly view
+  autoSyncTimer: null
+};
 
-  holidays = txt.split("\n")
-   .map(r=>r.split(",")[0])
-   .filter(d=>d.match(/^\d{4}-/));
-
-  ready=true;
-
- }catch(e){
-  alert("โหลดวันหยุดไม่สำเร็จ");
- }
+/* ──────────────────────────────────────────
+   LOAD / SAVE local storage
+   ────────────────────────────────────────── */
+function loadLocal() {
+  try {
+    const raw = localStorage.getItem(CONFIG.LOCAL_KEY);
+    if (raw) {
+      const saved = JSON.parse(raw);
+      STATE.localRecs = saved.localRecs || [];
+    }
+  } catch(e) { STATE.localRecs = []; }
 }
 
-// ====== HELP ======
-function t(v){let[a,b]=v.split(":");return +a+(b/60)}
-
-function dayType(d){
- if(holidays.includes(d)) return "holiday";
- if(new Date(d).getDay()==3) return "wednesday";
- return "normal";
+function saveLocal() {
+  try {
+    localStorage.setItem(CONFIG.LOCAL_KEY, JSON.stringify({
+      localRecs: STATE.localRecs,
+      _v: CONFIG.VERSION
+    }));
+  } catch(e) { console.warn('localStorage full', e); }
 }
 
-function getPeriod(d){
- let x=new Date(d);
- let y=x.getFullYear(),m=x.getMonth();
-
- if(x.getDate()<26){
-  m--;
-  if(m<0){m=11;y--;}
- }
-
- return y+"-"+(m+1);
+/* ──────────────────────────────────────────
+   OT CALCULATION ENGINE (mirrors GAS logic)
+   ────────────────────────────────────────── */
+function toDecimal(timeStr) {
+  if (!timeStr || !timeStr.includes(':')) return 0;
+  const [h, m] = timeStr.split(':').map(Number);
+  return h + m / 60;
 }
 
-// ====== CALC ======
-function calc(r){
-
- let i=t(r.in),o=t(r.out);
- if(o<i)o+=24;
-
- let t100=0,t150=0,t200=0,tr=0;
- let type=dayType(r.date);
-
- if(type=="normal"){
-  t100=Math.max(0,Math.min(o,23)-Math.max(i,18));
-  if(i<9)t150+=(9-i);
-  if(o>23)t150+=(o-23);
- }
-
- if(type=="wednesday"||type=="holiday"){
-  t150=Math.max(0,Math.min(o,23)-Math.max(i,9));
-  if(i<9)t200+=(9-i);
-  if(o>23)t200+=(o-23);
- }
-
- if(o>=23) tr=200;
-
- let total=
- t100*100+
- t150*150+
- t200*200+
- (r.custom||0)+
- tr+
- (r.special||0);
-
- return {t100,t150,t200,tr,total};
+function getDayType(dateStr) {
+  if (STATE.holidays.includes(dateStr)) return 'holiday';
+  const d = new Date(dateStr + 'T00:00:00');
+  if (d.getDay() === 3) return 'wednesday';
+  return 'normal';
 }
 
-// ====== ADD ======
-function add(){
+function calcOT(rec) {
+  const C = STATE.config;
+  const type = getDayType(rec.date);
+  const OT100  = +C.OT100_RATE  || 100;
+  const OT150  = +C.OT150_RATE  || 150;
+  const OT200  = +C.OT200_RATE  || 200;
+  const TRANS  = +C.TRANSPORT   || 200;
+  const START  = +C.OT100_START || 18;
 
- if(!ready){
-  alert("กำลังโหลดวันหยุด...");
-  return;
- }
+  let i = toDecimal(rec.timeIn), o = toDecimal(rec.timeOut);
+  if (o < i) o += 24;
 
- if(!date.value || !in.value || !out.value){
-  alert("กรอกให้ครบ");
-  return;
- }
+  let t100 = 0, t150 = 0, t200 = 0, tr = 0;
 
- let r={
-  id:Date.now(),
-  date:date.value,
-  in:in.value,
-  out:out.value,
-  custom:+customOT.value||0,
-  special:+special.value||0
- };
+  if (type === 'normal') {
+    t100 = Math.max(0, Math.min(o, 23) - Math.max(i, START));
+    if (i < 9) t150 += (9 - i);
+    if (o > 23) t150 += (o - 23);
+  } else {
+    t150 = Math.max(0, Math.min(o, 23) - Math.max(i, 9));
+    if (i < 9) t200 += (9 - i);
+    if (o > 23) t200 += (o - 23);
+  }
+  if (o >= 23) tr = TRANS;
 
- db.push(r);
- localStorage.setItem("db",JSON.stringify(db));
+  const b100    = t100 * OT100;
+  const b150    = t150 * OT150;
+  const b200    = t200 * OT200;
+  const custom  = +(rec.customOT) || 0;
+  const special = +(rec.specialTransport) || 0;
+  const otTotal = b100 + b150 + b200 + custom;
+  const total   = otTotal + tr + special;
 
- render();
+  return { type, t100, t150, t200, b100, b150, b200, tr, custom, special, otTotal, total };
 }
 
-// ====== DELETE ======
-function del(id){
- db=db.filter(x=>x.id!=id);
- localStorage.setItem("db",JSON.stringify(db));
- render();
+/* ──────────────────────────────────────────
+   PERIOD HELPERS  (รอบ 26 – 25 ของเดือนถัดไป)
+   ────────────────────────────────────────── */
+function getPeriod(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  let y = d.getFullYear(), m = d.getMonth();
+  if (d.getDate() < 26) { m--; if (m < 0) { m = 11; y--; } }
+  return `${y}-${String(m + 1).padStart(2, '0')}`;
 }
 
-// ====== RENDER ======
-function render(){
+function periodLabel(p) {
+  const [y, m] = p.split('-').map(Number);
+  const mn = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.',
+              'ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  return `${mn[m-1]} ${y + 543}  (${y}-${String(m).padStart(2,'0')})`;
+}
 
- let box={};
- let html="";
+function todayStr() {
+  return new Date().toLocaleDateString('sv-SE');
+}
 
- db.forEach(r=>{
-  let p=getPeriod(r.date);
-  if(!box[p])box[p]=[];
-  box[p].push(r);
- });
+const DAY_TH = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
 
- Object.keys(box).sort().reverse().forEach(p=>{
+function dayName(dateStr) {
+  return DAY_TH[new Date(dateStr + 'T00:00:00').getDay()];
+}
 
-  let sum=0;
+function fmtBaht(n) { return '฿' + Math.round(n).toLocaleString('th-TH'); }
+function fmtHr(n)   { return n.toFixed(2) + ' ชม'; }
 
-  box[p].forEach(r=>{
-   sum+=calc(r).total;
+/* ──────────────────────────────────────────
+   MERGE: sheet + local (dedup by date)
+   ────────────────────────────────────────── */
+function mergeAll() {
+  const sheetDates = new Set(STATE.sheetRecords.map(r => r.date));
+  const all = [...STATE.sheetRecords];
+  STATE.localRecs.forEach(lr => {
+    if (!sheetDates.has(lr.date)) all.push({ ...lr, _local: true });
+  });
+  return all.sort((a, b) => b.date.localeCompare(a.date));
+}
+
+/* ──────────────────────────────────────────
+   NETWORK — fetch with timeout + retry
+   ────────────────────────────────────────── */
+async function fetchWithTimeout(url, opts = {}, timeoutMs = 12000) {
+  const ctrl = new AbortController();
+  const tid = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { ...opts, signal: ctrl.signal });
+    clearTimeout(tid);
+    return res;
+  } catch(e) {
+    clearTimeout(tid);
+    throw e;
+  }
+}
+
+/* ──────────────────────────────────────────
+   SYNC
+   ────────────────────────────────────────── */
+const APP = {
+
+  async sync(showToast = true) {
+    const btn = document.getElementById('syncBtn');
+    const ico = document.getElementById('syncIco');
+    btn.classList.add('busy');
+    ico.classList.add('spin');
+    ico.textContent = '↻';
+    document.getElementById('syncStatus').textContent = 'กำลังซิงค์...';
+    document.getElementById('liveDot').style.background = '#FBD044';
+
+    try {
+      /* Parallel: config + data */
+      const [cfgRes, dataRes] = await Promise.all([
+        fetchWithTimeout(CONFIG.GAS_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'getConfig' })
+        }),
+        fetchWithTimeout(CONFIG.GAS_URL)
+      ]);
+
+      const cfgJson  = await cfgRes.json();
+      const dataJson = await dataRes.json();
+
+      if (cfgJson.success) {
+        const h = cfgJson.data.holidays || [];
+        STATE.holidays = h;
+        /* merge config, skip 'holidays' key */
+        const { holidays: _, ...cfgOnly } = cfgJson.data;
+        STATE.config = { ...DEFAULT_CFG, ...cfgOnly };
+      }
+
+      if (Array.isArray(dataJson)) {
+        STATE.sheetRecords = dataJson.filter(r => r.date && r.timeIn && r.timeOut);
+      }
+
+      STATE.lastSync = new Date();
+      STATE.syncOK   = true;
+      document.getElementById('liveDot').style.background = '#34D399';
+      document.getElementById('syncStatus').textContent =
+        `ซิงค์แล้ว ${STATE.sheetRecords.length} รายการ`;
+
+      this._afterSync();
+      if (showToast) toast('ซิงค์สำเร็จ ✓', 'ok');
+
+    } catch(e) {
+      STATE.syncOK = false;
+      document.getElementById('liveDot').style.background = '#F87171';
+      document.getElementById('syncStatus').textContent = 'ออฟไลน์ — ใช้ข้อมูล Local';
+      this._afterSync();
+      if (showToast) toast('ซิงค์ไม่ได้ ใช้ข้อมูล Local', 'err');
+    }
+
+    btn.classList.remove('busy');
+    ico.classList.remove('spin');
+    ico.textContent = '↻';
+    this._updateLastSyncBar();
+  },
+
+  _afterSync() {
+    renderHolidayChips();
+    renderConfigCard();
+    renderList();
+    renderDaily();
+    renderMonthly();
+  },
+
+  _updateLastSyncBar() {
+    const el = document.getElementById('lastSyncBar');
+    if (!STATE.lastSync) { el.textContent = '—'; return; }
+    const t = STATE.lastSync.toLocaleTimeString('th-TH');
+    const cls = STATE.syncOK ? 'sync-ok' : 'sync-warn';
+    el.innerHTML = `<span class="${cls}">● ซิงค์ล่าสุด: ${t}</span>
+      ${STATE.sheetRecords.length} รายการใน Sheets
+      | Local ${STATE.localRecs.length} รายการ`;
+  },
+
+  /* ─── TABS ─── */
+  tab(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('on'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('on'));
+    document.getElementById('page-' + name).classList.add('on');
+    document.getElementById('nav-' + name).classList.add('on');
+
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const idx = ['add','list','daily','monthly'].indexOf(name);
+    if (idx >= 0) tabBtns[idx].classList.add('on');
+
+    STATE.currentPage = name;
+    if (name === 'list')    renderList();
+    if (name === 'daily')   renderDaily();
+    if (name === 'monthly') renderMonthly();
+  },
+
+  /* ─── PREVIEW ─── */
+  updatePreview() {
+    const date = document.getElementById('fDate').value;
+    const tin  = document.getElementById('fIn').value;
+    const tout = document.getElementById('fOut').value;
+
+    /* Update today type badge */
+    if (date) {
+      const t = getDayType(date);
+      const lbl = { normal:'ปกติ', wednesday:'พุธ', holiday:'นักขัตฤกษ์' }[t];
+      const el = document.getElementById('todayType');
+      el.textContent = lbl;
+      el.style.background = t === 'normal' ? 'var(--t100)' : t === 'wednesday' ? 'var(--amber)' : 'var(--rose)';
+      el.style.color = t === 'normal' ? 'var(--t600)' : t === 'wednesday' ? '#8A5F00' : '#9D1761';
+    }
+
+    if (!date || !tin || !tout) return;
+
+    const rec = {
+      date, timeIn: tin, timeOut: tout,
+      customOT: document.getElementById('fCustom').value,
+      specialTransport: document.getElementById('fSpecial').value
+    };
+    const c = calcOT(rec);
+
+    const typeLabel = { normal:'วันปกติ', wednesday:'วันพุธ', holiday:'วันหยุดนักขัตฤกษ์' }[c.type];
+    const typeCls   = c.type;
+
+    document.getElementById('pvType').textContent = typeLabel;
+    document.getElementById('pvType').className   = 'pv-type ' + typeCls;
+    document.getElementById('pvOT').textContent   = c.otTotal > 0 ? `OT ${fmtBaht(c.otTotal)}` : '';
+    document.getElementById('pvTot').textContent  = `รวม ${fmtBaht(c.total)}`;
+
+    const details = [];
+    if (c.t100 > 0) details.push(`OT×1 ${fmtHr(c.t100)} = ${fmtBaht(c.b100)}`);
+    if (c.t150 > 0) details.push(`OT×1.5 ${fmtHr(c.t150)} = ${fmtBaht(c.b150)}`);
+    if (c.t200 > 0) details.push(`OT×2 ${fmtHr(c.t200)} = ${fmtBaht(c.b200)}`);
+    if (c.tr   > 0) details.push(`🚗 ${fmtBaht(c.tr)}`);
+    if (c.custom > 0) details.push(`Custom ${fmtBaht(c.custom)}`);
+
+    document.getElementById('pvDetail').textContent = details.join('  ·  ');
+    document.getElementById('previewBox').style.display = 'block';
+  },
+
+  /* ─── SAVE ─── */
+  async save() {
+    const date = document.getElementById('fDate').value;
+    const tin  = document.getElementById('fIn').value;
+    const tout = document.getElementById('fOut').value;
+    if (!date || !tin || !tout) { toast('กรุณากรอกข้อมูลให้ครบ', 'err'); return; }
+
+    const existing = mergeAll().find(r => r.date === date);
+    if (existing) { toast(`วันที่ ${date} มีข้อมูลอยู่แล้ว`, 'err'); return; }
+
+    const rec = {
+      id: Date.now(),
+      date, timeIn: tin, timeOut: tout,
+      customOT: +document.getElementById('fCustom').value || 0,
+      specialTransport: +document.getElementById('fSpecial').value || 0,
+      _local: true
+    };
+
+    STATE.localRecs.push(rec);
+    saveLocal();
+    toast('บันทึก Local แล้ว กำลังส่ง Sheets...', 'ok');
+
+    const btn = document.getElementById('btnSave');
+    btn.classList.add('loading');
+
+    try {
+      const res = await fetchWithTimeout(CONFIG.GAS_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'append', records: [rec] })
+      });
+      const j = await res.json();
+      if (j.success) {
+        /* Remove from local since sheet has it */
+        STATE.localRecs = STATE.localRecs.filter(r => r.id !== rec.id);
+        saveLocal();
+        toast('บันทึกสำเร็จ ✓', 'ok');
+        await this.sync(false);
+      } else {
+        toast('บันทึก Local (Sheets: ' + j.message + ')', 'err');
+      }
+    } catch(e) {
+      toast('บันทึก Local สำเร็จ (ออฟไลน์)', 'ok');
+      renderList(); renderDaily(); renderMonthly();
+    }
+
+    btn.classList.remove('loading');
+
+    /* reset form */
+    document.getElementById('fCustom').value  = '';
+    document.getElementById('fSpecial').value = '';
+    document.getElementById('previewBox').style.display = 'none';
+  }
+};
+
+/* ──────────────────────────────────────────
+   RENDER: HOLIDAY CHIPS
+   ────────────────────────────────────────── */
+function renderHolidayChips() {
+  const el  = document.getElementById('hdChips');
+  const cnt = document.getElementById('hdCount');
+  const h   = STATE.holidays;
+  cnt.textContent = h.length + ' วัน';
+  if (!h.length) { el.innerHTML = '<span style="font-size:12px;color:var(--n400)">ไม่มีข้อมูล</span>'; return; }
+  el.innerHTML = h.slice().sort().map(d =>
+    `<span class="hchip">${d} (${dayName(d)})</span>`
+  ).join('');
+}
+
+/* ──────────────────────────────────────────
+   RENDER: CONFIG CARD
+   ────────────────────────────────────────── */
+function renderConfigCard() {
+  const C = STATE.config;
+  const rows = [
+    ['เงินเดือน', fmtBaht(C.SALARY)],
+    ['เบี้ยขยัน', fmtBaht(C.ALLOWANCE)],
+    ['ประกันสังคม', fmtBaht(C.SOCIAL_SEC)],
+    ['งวดแรก', fmtBaht(C.FIRST_PAYMENT)],
+    ['ค่าเดินทาง (ดึก)', fmtBaht(C.TRANSPORT)],
+    ['OT×1.0 ต่อชม', fmtBaht(C.OT100_RATE)],
+    ['OT×1.5 ต่อชม', fmtBaht(C.OT150_RATE)],
+    ['OT×2.0 ต่อชม', fmtBaht(C.OT200_RATE)],
+    ['OT เริ่มที่', C.OT100_START + ':00 น.'],
+  ];
+  document.getElementById('cfgContent').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;">
+      ${rows.map(([k,v]) => `
+        <span style="color:var(--n400);font-size:11px;">${k}</span>
+        <span style="font-weight:700;font-size:12px;text-align:right;">${v}</span>
+      `).join('')}
+    </div>`;
+}
+
+/* ──────────────────────────────────────────
+   RENDER: LIST
+   ────────────────────────────────────────── */
+function renderList() {
+  const el      = document.getElementById('listContent');
+  const records = mergeAll();
+
+  if (!records.length) {
+    el.innerHTML = '<div class="empty-state">ยังไม่มีข้อมูล<br>เพิ่มในแท็บ "+ บันทึก"</div>';
+    return;
+  }
+
+  /* group by period */
+  const groups = {};
+  records.forEach(r => {
+    const p = getPeriod(r.date);
+    if (!groups[p]) groups[p] = [];
+    groups[p].push(r);
   });
 
-  html+=`<div class="summary">รอบ ${p}<br>฿${sum}</div>`;
+  let html = '';
+  Object.keys(groups).sort().reverse().forEach(p => {
+    const recs = groups[p];
+    const periodTotal = recs.reduce((s, r) => s + calcOT(r).total, 0);
 
-  box[p].forEach(r=>{
-   let c=calc(r);
+    html += `<div class="period-block">
+      <div class="period-hd">
+        <div class="period-name">รอบ ${periodLabel(p)}</div>
+        <div class="period-sum">${fmtBaht(periodTotal)}</div>
+      </div>`;
 
-   html+=`
-   <div class="record ${dayType(r.date)}">
-   ${r.date}<br>
-   ${r.in} - ${r.out}<br>
-   100:${c.t100.toFixed(2)} / 150:${c.t150.toFixed(2)} / 200:${c.t200.toFixed(2)}<br>
-   🚗 ${c.tr + (r.special||0)}<br>
-   💰 ${c.total}
-   <br><button onclick="del(${r.id})">ลบ</button>
-   </div>`;
+    recs.forEach(r => {
+      const c = calcOT(r);
+      const typeLabel = { normal:'ปกติ', wednesday:'พุธ', holiday:'นักขัตฤกษ์' }[c.type];
+      const localBadge = r._local ? `<span class="src-pill">Local</span>` : '';
+
+      html += `<div class="rec ${c.type}">
+        <div class="rec-top">
+          <div class="rec-left">
+            <div class="rec-date">${r.date} ${localBadge}</div>
+            <div class="rec-meta">
+              <span>${dayName(r.date)}</span>
+              <span class="type-pill ${c.type}">${typeLabel}</span>
+              <span>${r.timeIn} – ${r.timeOut}</span>
+            </div>
+          </div>
+          <div class="rec-right">
+            <div class="rec-total">${fmtBaht(c.total)}</div>
+            ${c.otTotal > 0 ? `<div class="rec-ot-sub">OT ${fmtBaht(c.otTotal)}</div>` : ''}
+          </div>
+        </div>
+        <div class="rec-detail">
+          <div class="dc"><div class="dk">OT×1.0</div><div class="dv">${fmtHr(c.t100)}</div></div>
+          <div class="dc"><div class="dk">OT×1.5</div><div class="dv">${fmtHr(c.t150)}</div></div>
+          <div class="dc"><div class="dk">OT×2.0</div><div class="dv">${fmtHr(c.t200)}</div></div>
+        </div>
+        <div class="rec-pills">
+          ${c.tr      > 0 ? `<span class="pill tr">🚗 ค่าเดินทาง ${fmtBaht(c.tr)}</span>` : ''}
+          ${c.special > 0 ? `<span class="pill sp">✈ พิเศษ ${fmtBaht(c.special)}</span>` : ''}
+          ${c.custom  > 0 ? `<span class="pill ct">+ OT Custom ${fmtBaht(c.custom)}</span>` : ''}
+        </div>
+        ${r._local ? `<button class="btn-del" onclick="deleteLocal(${r.id})">ลบ</button>` : ''}
+      </div>`;
+    });
+
+    html += '</div>';
   });
 
- });
-
- list.innerHTML=html;
+  el.innerHTML = html;
+  APP._updateLastSyncBar();
 }
 
-// ====== START ======
-function init(){
- document.getElementById("date").value =
- new Date().toISOString().split("T")[0];
+/* ──────────────────────────────────────────
+   RENDER: DAILY SUMMARY
+   ────────────────────────────────────────── */
+function renderDaily() {
+  const el      = document.getElementById('dailyContent');
+  const records = mergeAll();
 
- loadHoliday().then(render);
+  if (!records.length) {
+    el.innerHTML = '<div class="empty-state">ยังไม่มีข้อมูล</div>';
+    return;
+  }
+
+  const groups = {};
+  records.forEach(r => {
+    const p = getPeriod(r.date);
+    if (!groups[p]) groups[p] = [];
+    groups[p].push(r);
+  });
+
+  let html = '';
+  Object.keys(groups).sort().reverse().forEach(p => {
+    const recs = groups[p];
+    const periodTotal = recs.reduce((s, r) => s + calcOT(r).total, 0);
+
+    html += `<div class="period-block">
+      <div class="period-hd">
+        <div class="period-name">รอบ ${periodLabel(p)}</div>
+        <div class="period-sum">${fmtBaht(periodTotal)}</div>
+      </div>
+      <div class="daily-list">`;
+
+    recs.forEach(r => {
+      const c = calcOT(r);
+      const typeLabel = { normal:'ปกติ', wednesday:'พุธ', holiday:'หยุด' }[c.type];
+      const typeColor = { normal:'var(--t500)', wednesday:'var(--amberDk)', holiday:'var(--roseDk)' }[c.type];
+
+      const breakdown = [];
+      if (c.t100 > 0) breakdown.push(`OT×1 ${c.t100.toFixed(2)}ชม`);
+      if (c.t150 > 0) breakdown.push(`OT×1.5 ${c.t150.toFixed(2)}ชม`);
+      if (c.t200 > 0) breakdown.push(`OT×2 ${c.t200.toFixed(2)}ชม`);
+      if (c.tr   > 0) breakdown.push(`🚗 ${fmtBaht(c.tr)}`);
+
+      html += `<div class="daily-item">
+        <div class="di-left">
+          <div class="di-date">${r.date} <span style="font-size:11px;color:${typeColor};font-weight:700;">${typeLabel}</span></div>
+          <div class="di-sub">
+            <span>${dayName(r.date)}</span>
+            <span>•</span>
+            <span>${r.timeIn} – ${r.timeOut}</span>
+            ${r._local ? '<span class="src-pill">Local</span>' : ''}
+          </div>
+          ${breakdown.length ? `<div style="font-size:10.5px;color:var(--n400);margin-top:3px;">${breakdown.join('  ·  ')}</div>` : ''}
+        </div>
+        <div class="di-right">
+          <div class="di-total">${fmtBaht(c.total)}</div>
+          ${c.otTotal > 0 ? `<div class="di-ot">OT ${fmtBaht(c.otTotal)}</div>` : ''}
+        </div>
+      </div>`;
+    });
+
+    html += '</div></div>';
+  });
+
+  el.innerHTML = html;
 }
 
-init();
+/* ──────────────────────────────────────────
+   RENDER: MONTHLY SUMMARY
+   ────────────────────────────────────────── */
+function renderMonthly() {
+  const records  = mergeAll();
+  const psEl     = document.getElementById('periodSelect');
+  const contEl   = document.getElementById('monthlyContent');
 
+  if (!records.length) {
+    psEl.innerHTML = '';
+    contEl.innerHTML = '<div class="empty-state">ยังไม่มีข้อมูล</div>';
+    return;
+  }
+
+  /* collect periods */
+  const periodSet = new Set(records.map(r => getPeriod(r.date)));
+  const periods   = [...periodSet].sort().reverse();
+
+  if (!STATE.selectedPeriod || !periodSet.has(STATE.selectedPeriod)) {
+    STATE.selectedPeriod = periods[0];
+  }
+
+  /* Period selector buttons */
+  psEl.innerHTML = periods.map(p => `
+    <button class="period-btn ${p === STATE.selectedPeriod ? 'on' : ''}"
+      onclick="selectPeriod('${p}')">${periodLabel(p).split('(')[0].trim()}</button>
+  `).join('');
+
+  /* Build monthly data */
+  const recs = records.filter(r => getPeriod(r.date) === STATE.selectedPeriod);
+
+  let tot100 = 0, tot150 = 0, tot200 = 0, totCustom = 0;
+  let totTrans = 0, totSpecial = 0;
+  let normalDays = 0, wedDays = 0, holDays = 0;
+  let totalOTHours = 0;
+
+  recs.forEach(r => {
+    const c = calcOT(r);
+    tot100    += c.b100;
+    tot150    += c.b150;
+    tot200    += c.b200;
+    totCustom += c.custom;
+    totTrans  += c.tr;
+    totSpecial+= c.special;
+    if (c.type === 'normal')    normalDays++;
+    else if (c.type === 'wednesday') wedDays++;
+    else holDays++;
+    totalOTHours += c.t100 + c.t150 + c.t200;
+  });
+
+  const C           = STATE.config;
+  const SALARY      = +C.SALARY       || 17000;
+  const ALLOWANCE   = +C.ALLOWANCE    || 2000;
+  const SOCIAL_SEC  = +C.SOCIAL_SEC   || 850;
+  const FIRST_PMT   = +C.FIRST_PAYMENT|| 16150;
+
+  const totalOT      = tot100 + tot150 + tot200 + totCustom;
+  const totalTrAll   = totTrans + totSpecial;
+  const grossSalary  = SALARY + ALLOWANCE;
+  const totalIncome  = grossSalary + totalOT;
+  const netAfterSoc  = totalIncome - SOCIAL_SEC;
+  const secondPmt    = netAfterSoc - FIRST_PMT;
+
+  const maxOTVal     = Math.max(tot100, tot150, tot200, totCustom, 1);
+  const otItems = [
+    { label:'OT×1.0', val:tot100,    cls:'c100' },
+    { label:'OT×1.5', val:tot150,    cls:'c150' },
+    { label:'OT×2.0', val:tot200,    cls:'c200' },
+    { label:'Custom', val:totCustom, cls:'ccustom' },
+  ].filter(x => x.val > 0);
+
+  contEl.innerHTML = `
+
+    <!-- HERO CARDS -->
+    <div class="sum-grid">
+      <div class="sum-tile accent full">
+        <div class="st-label">รวมรายได้ทั้งหมด (ก่อนหักประกันสังคม)</div>
+        <div class="st-val xl">${fmtBaht(totalIncome)}</div>
+        <div style="color:rgba(255,255,255,.6);font-size:10.5px;margin-top:4px;">${recs.length} วันทำงาน · OT รวม ${totalOTHours.toFixed(2)} ชม</div>
+      </div>
+      <div class="sum-tile">
+        <div class="st-label">OT รวม</div>
+        <div class="st-val">${fmtBaht(totalOT)}</div>
+      </div>
+      <div class="sum-tile">
+        <div class="st-label">ค่าเดินทางรวม</div>
+        <div class="st-val">${fmtBaht(totalTrAll)}</div>
+      </div>
+      <div class="sum-tile">
+        <div class="st-label">เงินหลังหักประกัน</div>
+        <div class="st-val">${fmtBaht(netAfterSoc)}</div>
+      </div>
+      <div class="sum-tile">
+        <div class="st-label">งวดสอง (คาดการณ์)</div>
+        <div class="st-val" style="color:var(--t500)">${fmtBaht(secondPmt)}</div>
+      </div>
+    </div>
+
+    <!-- OT BREAKDOWN BARS -->
+    ${otItems.length ? `
+    <div class="sec-title">สัดส่วน OT</div>
+    <div class="card">
+      <div class="ot-bars">
+        ${otItems.map(ot => `
+          <div class="ot-row">
+            <div class="ot-lbl">${ot.label}</div>
+            <div class="ot-track">
+              <div class="ot-fill ${ot.cls}" style="width:${Math.round(ot.val/maxOTVal*100)}%"></div>
+            </div>
+            <div class="ot-val">${fmtBaht(ot.val)}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>` : ''}
+
+    <!-- DAY TYPE BREAKDOWN -->
+    <div class="sec-title">สัดส่วนวัน</div>
+    <div class="card">
+      <div class="dtype-row">
+        <div class="dtype-left"><div class="dtype-dot" style="background:var(--t400)"></div>วันปกติ</div>
+        <div class="dtype-right">${normalDays} วัน</div>
+      </div>
+      <div class="dtype-row">
+        <div class="dtype-left"><div class="dtype-dot" style="background:var(--amberDk)"></div>วันพุธ</div>
+        <div class="dtype-right">${wedDays} วัน</div>
+      </div>
+      <div class="dtype-row">
+        <div class="dtype-left"><div class="dtype-dot" style="background:var(--roseDk)"></div>วันหยุดนักขัตฤกษ์</div>
+        <div class="dtype-right">${holDays} วัน</div>
+      </div>
+      <div class="dtype-row" style="border-bottom:none">
+        <div class="dtype-left"><div class="dtype-dot" style="background:var(--n300)"></div>รวม</div>
+        <div class="dtype-right">${recs.length} วัน</div>
+      </div>
+    </div>
+
+    <!-- SALARY BREAKDOWN -->
+    <div class="sec-title">รายละเอียดรายได้</div>
+    <div class="card">
+      <table class="pay-table">
+        <tr><td>เงินเดือน</td><td class="plus">${fmtBaht(SALARY)}</td></tr>
+        <tr><td>เบี้ยขยัน</td><td class="plus">${fmtBaht(ALLOWANCE)}</td></tr>
+        ${tot100    > 0 ? `<tr><td>OT×1.0</td><td class="plus">${fmtBaht(tot100)}</td></tr>` : ''}
+        ${tot150    > 0 ? `<tr><td>OT×1.5</td><td class="plus">${fmtBaht(tot150)}</td></tr>` : ''}
+        ${tot200    > 0 ? `<tr><td>OT×2.0</td><td class="plus">${fmtBaht(tot200)}</td></tr>` : ''}
+        ${totCustom > 0 ? `<tr><td>OT Custom</td><td class="plus">${fmtBaht(totCustom)}</td></tr>` : ''}
+        ${totTrans  > 0 ? `<tr><td>ค่าเดินทาง (ดึก)</td><td class="plus">${fmtBaht(totTrans)}</td></tr>` : ''}
+        ${totSpecial> 0 ? `<tr><td>ค่าเดินทางพิเศษ</td><td class="plus">${fmtBaht(totSpecial)}</td></tr>` : ''}
+        <tr class="hi"><td>รวมทั้งหมด</td><td>${fmtBaht(totalIncome)}</td></tr>
+        <tr><td>หักประกันสังคม</td><td class="minus">-${fmtBaht(SOCIAL_SEC)}</td></tr>
+        <tr class="hi"><td>คงเหลือหลังหัก</td><td>${fmtBaht(netAfterSoc)}</td></tr>
+      </table>
+    </div>
+
+    <!-- PAYMENT SPLIT -->
+    <div class="sec-title">แบ่งงวดจ่าย</div>
+    <div class="sum-grid" style="margin-bottom:20px">
+      <div class="sum-tile">
+        <div class="st-label">งวดแรก (กำหนด)</div>
+        <div class="st-val">${fmtBaht(FIRST_PMT)}</div>
+        <div class="st-note">จ่ายตามกำหนด</div>
+      </div>
+      <div class="sum-tile" style="border-color:var(--t400);">
+        <div class="st-label">งวดสอง (คาดการณ์)</div>
+        <div class="st-val" style="color:var(--t500)">${fmtBaht(secondPmt)}</div>
+        <div class="st-note">สุทธิ - งวดแรก</div>
+      </div>
+    </div>
+  `;
+}
+
+/* ──────────────────────────────────────────
+   HELPERS
+   ────────────────────────────────────────── */
+function selectPeriod(p) {
+  STATE.selectedPeriod = p;
+  renderMonthly();
+}
+
+function deleteLocal(id) {
+  STATE.localRecs = STATE.localRecs.filter(r => r.id !== id);
+  saveLocal();
+  renderList(); renderDaily(); renderMonthly();
+  toast('ลบแล้ว', 'ok');
+}
+
+let _toastTimer = null;
+function toast(msg, type = 'ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className   = `${type} show`;
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+/* ──────────────────────────────────────────
+   BOOT
+   ────────────────────────────────────────── */
+(async function init() {
+  loadLocal();
+
+  /* Set today's date */
+  document.getElementById('fDate').value = todayStr();
+
+  /* Initial render with local data (instant) */
+  renderList();
+  renderDaily();
+  renderMonthly();
+
+  /* Sync with Sheets */
+  await APP.sync(false);
+
+  /* Auto-sync every minute */
+  STATE.autoSyncTimer = setInterval(() => APP.sync(false), CONFIG.SYNC_INTERVAL_MS);
+
+  /* Preview listeners */
+  document.getElementById('fDate').addEventListener('change', () => APP.updatePreview());
+  document.getElementById('fIn').addEventListener('change', () => APP.updatePreview());
+  document.getElementById('fOut').addEventListener('change', () => APP.updatePreview());
+  document.getElementById('fCustom').addEventListener('input', () => APP.updatePreview());
+  document.getElementById('fSpecial').addEventListener('input', () => APP.updatePreview());
+})();
 </script>
-
 </body>
 </html>

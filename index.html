@@ -1169,17 +1169,23 @@ function renderMonthly() {
 
   const recs = records.filter(r => getPeriod(r.date) === STATE.selectedPeriod);
   let tot100=0,tot150=0,tot200=0,totCustom=0,totTrans=0,totSpecial=0;
+  let hr100=0,hr150=0,hr200=0,transCnt=0,specialCnt=0;
   let normalDays=0,wedDays=0,holDays=0,totalOTHours=0;
 
   recs.forEach(r => {
     const c = calcOT(r);
     tot100+=c.b100; tot150+=c.b150; tot200+=c.b200; totCustom+=c.custom;
     totTrans+=c.tr; totSpecial+=c.special;
+    hr100+=c.t100; hr150+=c.t150; hr200+=c.t200;
+    if (c.tr>0) transCnt++;
+    if (c.special>0) specialCnt++;
     if (c.type==='normal') normalDays++;
     else if (c.type==='wednesday') wedDays++;
     else holDays++;
     totalOTHours += c.t100+c.t150+c.t200;
   });
+  const C2 = STATE.config;
+  const TRANSPORT_RATE = +C2.TRANSPORT||200;
 
   const C = STATE.config;
   const SALARY=+C.SALARY||17000, ALLOWANCE=+C.ALLOWANCE||2000;
@@ -1192,10 +1198,10 @@ function renderMonthly() {
   const secondPmt=netAfterSoc-FIRST_PMT;
   const maxOTVal=Math.max(tot100,tot150,tot200,totCustom,1);
   const otItems=[
-    {label:'OT×1.0',val:tot100,cls:'c100'},
-    {label:'OT×1.5',val:tot150,cls:'c150'},
-    {label:'OT×2.0',val:tot200,cls:'c200'},
-    {label:'Custom',val:totCustom,cls:'ccustom'},
+    {label:'OT×1.0',val:tot100,cls:'c100',hrs:hr100.toFixed(2)+' ชม'},
+    {label:'OT×1.5',val:tot150,cls:'c150',hrs:hr150.toFixed(2)+' ชม'},
+    {label:'OT×2.0',val:tot200,cls:'c200',hrs:hr200.toFixed(2)+' ชม'},
+    {label:'Custom',val:totCustom,cls:'ccustom',hrs:''},
   ].filter(x=>x.val>0);
 
   contEl.innerHTML = `
@@ -1231,7 +1237,10 @@ function renderMonthly() {
           <div class="ot-row">
             <div class="ot-lbl">${ot.label}</div>
             <div class="ot-track"><div class="ot-fill ${ot.cls}" style="width:${Math.round(ot.val/maxOTVal*100)}%"></div></div>
-            <div class="ot-val">${fmtBaht(ot.val)}</div>
+            <div style="text-align:right">
+              <div class="ot-val">${fmtBaht(ot.val)}</div>
+              <div style="font-size:10px;color:var(--n400);margin-top:1px">${ot.hrs}</div>
+            </div>
           </div>`).join('')}
       </div>
     </div>` : ''}
@@ -1249,12 +1258,12 @@ function renderMonthly() {
       <table class="pay-table">
         <tr><td>เงินเดือน</td><td class="plus">${fmtBaht(SALARY)}</td></tr>
         <tr><td>เบี้ยขยัน</td><td class="plus">${fmtBaht(ALLOWANCE)}</td></tr>
-        ${tot100>0?`<tr><td>OT×1.0</td><td class="plus">${fmtBaht(tot100)}</td></tr>`:''}
-        ${tot150>0?`<tr><td>OT×1.5</td><td class="plus">${fmtBaht(tot150)}</td></tr>`:''}
-        ${tot200>0?`<tr><td>OT×2.0</td><td class="plus">${fmtBaht(tot200)}</td></tr>`:''}
-        ${totCustom>0?`<tr><td>OT Custom</td><td class="plus">${fmtBaht(totCustom)}</td></tr>`:''}
-        ${totTrans>0?`<tr><td>ค่าเดินทาง (ดึก)</td><td class="plus">${fmtBaht(totTrans)}</td></tr>`:''}
-        ${totSpecial>0?`<tr><td>ค่าเดินทางพิเศษ</td><td class="plus">${fmtBaht(totSpecial)}</td></tr>`:''}
+        ${tot100>0?`<tr><td style="font-size:12px">OT×${+C2.OT100_RATE||100}×${hr100.toFixed(2)}ชม</td><td class="plus">${fmtBaht(tot100)}</td></tr>`:''}
+        ${tot150>0?`<tr><td style="font-size:12px">OT×${+C2.OT150_RATE||150}×${hr150.toFixed(2)}ชม</td><td class="plus">${fmtBaht(tot150)}</td></tr>`:''}
+        ${tot200>0?`<tr><td style="font-size:12px">OT×${+C2.OT200_RATE||200}×${hr200.toFixed(2)}ชม</td><td class="plus">${fmtBaht(tot200)}</td></tr>`:''}
+        ${totCustom>0?`<tr><td style="font-size:12px">OT Custom</td><td class="plus">${fmtBaht(totCustom)}</td></tr>`:''}
+        ${totTrans>0?`<tr><td style="font-size:12px">ค่าเดินทางดึก×${TRANSPORT_RATE}×${transCnt}วัน</td><td class="plus">${fmtBaht(totTrans)}</td></tr>`:''}
+        ${totSpecial>0?`<tr><td style="font-size:12px">ค่าเดินทางพิเศษ×${specialCnt}วัน</td><td class="plus">${fmtBaht(totSpecial)}</td></tr>`:''}
         <tr class="hi"><td>รวมทั้งหมด</td><td>${fmtBaht(totalIncome)}</td></tr>
         <tr><td>หักประกันสังคม</td><td class="minus">-${fmtBaht(SOCIAL_SEC)}</td></tr>
         <tr class="hi"><td>คงเหลือหลังหัก</td><td>${fmtBaht(netAfterSoc)}</td></tr>

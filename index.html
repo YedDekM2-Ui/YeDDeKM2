@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>TimeTrack Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 /* ═══════════════════════════════════════════
    DESIGN TOKENS
@@ -199,7 +200,7 @@ body { font-family:var(--font); background:var(--bg); color:var(--n800); min-hei
 .rec-left .rec-meta { font-size:11px; color:var(--n400); margin-top:2px; display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
 .type-pill {
   font-size:9.5px; font-weight:700; padding:1px 7px;
-  border-radius:10px; letter-spacing:.3px;
+  border-radius:10px; letter-spacing:.3px; white-space:nowrap;
 }
 .type-pill.normal { background:var(--t100); color:var(--t600); }
 .type-pill.wednesday { background:var(--amber); color:#8A5F00; }
@@ -395,7 +396,10 @@ body { font-family:var(--font); background:var(--bg); color:var(--n800); min-hei
         <span id="syncStatus">กำลังเชื่อมต่อ...</span>
       </div>
     </div>
-    <div>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <button class="btn-sync" id="capBtn" onclick="APP.captureFull()" style="background:var(--lavDk);">
+        <span id="capIco">📸</span> แคป
+      </button>
       <button class="btn-sync" id="syncBtn" onclick="APP.sync()">
         <span id="syncIco">↻</span> Sync
       </button>
@@ -470,6 +474,23 @@ body { font-family:var(--font); background:var(--bg); color:var(--n800); min-hei
     <div class="card">
       <div class="card-head">ค่าตั้ง (Config)</div>
       <div id="cfgContent" style="font-size:12px;color:var(--n400)">กำลังโหลด...</div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">สำรองข้อมูล / ย้ายเครื่อง</div>
+      <div style="font-size:11.5px;color:var(--n400);line-height:1.6;margin-bottom:12px;">
+        ข้อมูลซิงค์กับ Google Sheets อัตโนมัติอยู่แล้ว (กด Sync บนเครื่องใหม่เพื่อดึงข้อมูลกลับ)
+        หากต้องการสำรองเป็นไฟล์ หรือย้ายแบบ offline ใช้ปุ่มด้านล่าง
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="APP.exportData()" style="flex:1;padding:11px;background:var(--t50);color:var(--t600);border:1.5px solid var(--t200);border-radius:var(--r-sm);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:6px;">
+          ⬇ ส่งออก JSON
+        </button>
+        <button onclick="APP.importData()" style="flex:1;padding:11px;background:var(--lavender);color:var(--lavDk);border:1.5px solid #C9BBF0;border-radius:var(--r-sm);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:6px;">
+          ⬆ นำเข้า JSON
+        </button>
+      </div>
+      <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="APP.handleImportFile(this)">
     </div>
   </div>
 
@@ -900,7 +921,7 @@ const APP = {
 
     if (date) {
       const t = getDayType(date);
-      const lbl = {normal:'ปกติ',wednesday:'พุธ',holiday:'นักขัตฤกษ์'}[t];
+      const lbl = {normal:'ปกติ',wednesday:'วันพุธ หยุด',holiday:'นักขัตฤกษ์'}[t];
       const el = document.getElementById('todayType');
       el.textContent = lbl;
       el.style.background = t==='normal'?'var(--t100)':t==='wednesday'?'var(--amber)':'var(--rose)';
@@ -912,7 +933,7 @@ const APP = {
       customOT: document.getElementById('fCustom').value,
       specialTransport: document.getElementById('fSpecial').value };
     const c = calcOT(rec);
-    const typeLabel = {normal:'วันปกติ',wednesday:'วันพุธ',holiday:'วันหยุดนักขัตฤกษ์'}[c.type];
+    const typeLabel = {normal:'วันปกติ',wednesday:'วันพุธ หยุด',holiday:'วันหยุดนักขัตฤกษ์'}[c.type];
 
     document.getElementById('pvType').textContent = typeLabel;
     document.getElementById('pvType').className = 'pv-type ' + c.type;
@@ -995,6 +1016,112 @@ const APP = {
     document.getElementById('fCustom').value = '';
     document.getElementById('fSpecial').value = '';
     document.getElementById('previewBox').style.display = 'none';
+  },
+
+  /* ── แคปยาวทั้งหน้า ── */
+  async captureFull() {
+    if (typeof html2canvas === 'undefined') {
+      toast('ไลบรารีแคปยังโหลดไม่เสร็จ ลองใหม่อีกครั้ง', 'err');
+      return;
+    }
+    const btn = document.getElementById('capBtn');
+    const ico = document.getElementById('capIco');
+    btn.classList.add('busy'); ico.classList.add('spin');
+    toast('กำลังแคปหน้าจอ...', 'ok');
+
+    // ซ่อน element ที่ลอยทับ (nav, toast) ชั่วคราวเพื่อไม่ให้บังเนื้อหา
+    const nav = document.getElementById('bottomNav');
+    const navDisp = nav.style.display;
+    nav.style.display = 'none';
+
+    try {
+      const target = document.getElementById('app');
+      const canvas = await html2canvas(target, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: getComputedStyle(document.body).backgroundColor || '#F2FAFA',
+        windowWidth: target.scrollWidth,
+        windowHeight: target.scrollHeight,
+        scrollX: 0,
+        scrollY: 0
+      });
+      const pageName = ({add:'บันทึก',list:'รายการ',daily:'รายวัน',monthly:'รายเดือน'})[STATE.currentPage] || 'หน้า';
+      const stamp = new Date().toISOString().slice(0,10);
+      const link = document.createElement('a');
+      link.download = `TimeTrack_${pageName}_${stamp}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      toast('แคปสำเร็จ ✓ บันทึกรูปแล้ว', 'ok');
+    } catch(e) {
+      toast('แคปไม่สำเร็จ: ' + (e.message || 'error'), 'err');
+    } finally {
+      nav.style.display = navDisp;
+      btn.classList.remove('busy'); ico.classList.remove('spin');
+    }
+  },
+
+  /* ── ส่งออกข้อมูลเป็นไฟล์ JSON (สำรอง/ย้ายเครื่อง) ── */
+  exportData() {
+    const payload = {
+      _app: 'TimeTrack Pro',
+      _version: CONFIG.VERSION,
+      _exportedAt: new Date().toISOString(),
+      records: mergeAll(),            // ข้อมูลที่รวม Sheets + Local แล้ว
+      holidays: STATE.holidays,
+      wedSub: STATE.wedSub,
+      config: STATE.config
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const stamp = new Date().toISOString().slice(0,10);
+    const link = document.createElement('a');
+    link.download = `TimeTrack_Backup_${stamp}.json`;
+    link.href = url;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast(`ส่งออก ${payload.records.length} รายการแล้ว ✓`, 'ok');
+  },
+
+  /* ── นำเข้าข้อมูลจากไฟล์ JSON ── */
+  importData() {
+    document.getElementById('importFile').click();
+  },
+
+  async handleImportFile(input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      const incoming = Array.isArray(data.records) ? data.records
+                     : (Array.isArray(data) ? data : null);
+      if (!incoming) { toast('ไฟล์ไม่ถูกต้อง', 'err'); input.value=''; return; }
+
+      // รวมข้อมูล: ของเดิม + ของใหม่ (วันที่ซ้ำให้ของในไฟล์ที่นำเข้าทับ)
+      const map = new Map();
+      mergeAll().forEach(r => map.set(r.date.toString().split('T')[0], r));
+      let added = 0;
+      incoming.forEach(r => {
+        if (!r.date || !r.timeIn || !r.timeOut) return;
+        const d = r.date.toString().split('T')[0];
+        map.set(d, { ...r, date: d, _local: true });
+        added++;
+      });
+
+      // เขียนทับ localRecs ทั้งหมดด้วยข้อมูลที่รวมแล้ว (mark เป็น local เพื่อรอ sync ขึ้น Sheets)
+      STATE.localRecs = Array.from(map.values()).map(r => ({ ...r, _local: true }));
+      if (Array.isArray(data.holidays) && data.holidays.length) STATE.holidays = data.holidays;
+      if (Array.isArray(data.wedSub)) STATE.wedSub = data.wedSub;
+      if (data.config && typeof data.config === 'object') STATE.config = { ...DEFAULT_CFG, ...data.config };
+      saveLocal();
+
+      renderHolidayChips(); renderConfigCard();
+      renderList(); renderDaily(); renderMonthly();
+      toast(`นำเข้า ${added} รายการแล้ว ✓ กด Sync เพื่ออัปขึ้น Sheets`, 'ok');
+    } catch(e) {
+      toast('อ่านไฟล์ไม่สำเร็จ: ' + (e.message||'error'), 'err');
+    }
+    input.value = '';
   }
 };
 
@@ -1058,7 +1185,7 @@ function renderList() {
   records.forEach(rec => {
     const c = calcOT(rec);
     const tc = c.type;
-    const typePill = {normal:'ปกติ', wednesday:'พุธ', holiday:'หยุด'}[tc] || 'ปกติ';
+    const typePill = {normal:'ปกติ', wednesday:'วันพุธ หยุด', holiday:'นักขัตฤกษ์'}[tc] || 'ปกติ';
     html += `<div class="rec ${tc}">
       <div class="rec-top">
         <div class="rec-left">
@@ -1119,7 +1246,7 @@ function renderDaily() {
 
     recs.forEach(r => {
       const c = calcOT(r);
-      const typeLabel = {normal:'ปกติ',wednesday:'พุธ',holiday:'หยุด'}[c.type];
+      const typeLabel = {normal:'ปกติ',wednesday:'วันพุธ หยุด',holiday:'นักขัตฤกษ์'}[c.type];
       const typeColor = {normal:'var(--t500)',wednesday:'var(--amberDk)',holiday:'var(--roseDk)'}[c.type];
       const breakdown = [];
       if (c.t100 > 0) breakdown.push(`OT×1 ${c.t100.toFixed(2)}ชม`);
@@ -1311,6 +1438,33 @@ function toast(msg, type='ok') {
     document.getElementById(id).addEventListener('input', () => APP.updatePreview());
   });
   APP.updatePreview();
+
+  // ── ข้อ 2: เขียนบันทึกขึ้น Sheets ทุกครั้งที่ปิด/ซ่อนหน้า (รองรับย้ายเครื่อง) ──
+  let _flushing = false;
+  async function flushOnExit() {
+    if (_flushing) return;
+    // ส่งเฉพาะรายการ local ที่ยังไม่ขึ้น Sheets
+    const pending = STATE.localRecs.filter(r =>
+      !STATE.sheetRecords.some(s => s.date.toString().split('T')[0] === r.date.toString().split('T')[0])
+    );
+    if (!pending.length) return;
+    _flushing = true;
+    try {
+      // sendBeacon ส่งได้แม้หน้ากำลังปิด (ดีกว่า fetch ตอน unload)
+      const body = JSON.stringify({ action:'append', records: pending });
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(CONFIG.GAS_URL, body);
+      } else {
+        await fetch(CONFIG.GAS_URL, { method:'POST', body, keepalive:true });
+      }
+    } catch(e) {}
+    _flushing = false;
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flushOnExit();
+  });
+  window.addEventListener('pagehide', flushOnExit);
 })();
 </script>
 </body>

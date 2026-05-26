@@ -605,6 +605,7 @@ let STATE = {
   sheetRecords: [], localRecs: [],
   lastSync: null, syncOK: false,
   currentPage: 'add', selectedPeriod: null,
+  expandedYear: undefined,  // ปีที่กางเดือนอยู่ (undefined=ยังไม่ตั้งค่า, null=ยุบหมด)
   editingDate: null,   // date being edited (original date before delete)
   autoSyncTimer: null
 };
@@ -734,16 +735,17 @@ function dayName(dateStr) {
   try { return days[new Date(dateStr + 'T00:00:00').getDay()]; } catch(e) { return ''; }
 }
 function getPeriod(dateStr) {
-  // รอบจ่าย: วันที่ 26 ของเดือน X ถึง 25 ของเดือน X+1 = งวดของเดือน X
-  // เช่น 26 เม.ย.–25 พ.ค. = งวด "เม.ย." (4/69)
+  // รอบจ่าย: ทำงาน 26 ของเดือน X ถึง 25 ของเดือน X+1 → เงินออกสิ้นเดือน X+1
+  // ตั้งชื่อรอบตาม "เดือนที่เงินออก" (X+1)
+  // เช่น 26 มี.ค.–25 เม.ย. = งวด "เม.ย." (4/69) เพราะเงินออก เม.ย.
   const d = new Date(dateStr + 'T00:00:00');
   let year = d.getFullYear(), month = d.getMonth() + 1;
   const day = d.getDate();
-  if (day <= 25) {           // วันที่ 1–25 = อยู่ในรอบที่เริ่มเดือนก่อนหน้า
-    month = month - 1;
-    if (month === 0) { month = 12; year = year - 1; }
+  if (day >= 26) {           // วันที่ 26–31 = เงินจะออกสิ้นเดือนถัดไป
+    month = month + 1;
+    if (month === 13) { month = 1; year = year + 1; }
   }
-  // วันที่ 26–31 = อยู่ในรอบที่เริ่มเดือนตัวเอง (คงเดิม)
+  // วันที่ 1–25 = เงินออกสิ้นเดือนตัวเอง (คงเดิม)
   return `${year}-${String(month).padStart(2,'0')}`;
 }
 function periodLabel(p) {
@@ -1415,25 +1417,34 @@ function renderMonthly() {
   if (selYear < minYear) minYear = selYear;
   if (selYear > maxYear) maxYear = selYear;
 
-  // ── แถวปุ่มปี (พ.ศ. 2 หลัก) เรียงจากใหม่ไปเก่า ──
+  // ค่าเริ่มต้น: กางปีที่มีเดือนถูกเลือกอยู่ (เฉพาะครั้งแรกสุดที่ยังไม่เคยตั้งค่า)
+  if (STATE.expandedYear === undefined) STATE.expandedYear = selYear;
+
+  // ── แถวปุ่มปี (พ.ศ. 2 หลัก) เรียงจากใหม่ไปเก่า — กดเพื่อกาง/ยุบเดือน ──
   const years = [];
   for (let y = maxYear; y >= minYear; y--) years.push(y);
   ysEl.innerHTML = years.map(y => {
     const be2 = String((y + 543) % 100).padStart(2,'0');
-    return `<button class="year-btn ${y===selYear?'on':''}" onclick="selectYear(${y})">${be2}</button>`;
+    const isExpanded = (y === STATE.expandedYear);
+    const arrow = isExpanded ? ' ▾' : ' ▸';
+    return `<button class="year-btn ${y===selYear?'on':''}" onclick="toggleYear(${y})">${be2}${arrow}</button>`;
   }).join('');
 
-  // ── แถวปุ่มเดือน 1-12 ของปีที่เลือก (กดได้เสมอ) ──
-  const monthBtns = [];
-  for (let m = 1; m <= 12; m++) {
-    const p = makePeriod(selYear, m);
-    const hasData = periodSet.has(p);
-    const isOn = (p === STATE.selectedPeriod);
-    monthBtns.push(
-      `<button class="period-btn ${isOn?'on':''} ${hasData?'':'empty'}" onclick="selectPeriod('${p}')">${periodLabelShort(p)}</button>`
-    );
+  // ── แถวเดือน: แสดงเฉพาะ 1-12 ของ "ปีที่กางอยู่" เท่านั้น (ประหยัดพื้นที่) ──
+  if (STATE.expandedYear === null) {
+    psEl.innerHTML = '';
+  } else {
+    const monthBtns = [];
+    for (let m = 1; m <= 12; m++) {
+      const p = makePeriod(STATE.expandedYear, m);
+      const hasData = periodSet.has(p);
+      const isOn = (p === STATE.selectedPeriod);
+      monthBtns.push(
+        `<button class="period-btn ${isOn?'on':''} ${hasData?'':'empty'}" onclick="selectPeriod('${p}')">${periodLabelShort(p)}</button>`
+      );
+    }
+    psEl.innerHTML = monthBtns.join('');
   }
-  psEl.innerHTML = monthBtns.join('');
 
   // ── สรุปยอดของเดือนที่เลือก ──
   const recs = records.filter(r => getPeriod(r.date) === STATE.selectedPeriod);
@@ -1565,10 +1576,9 @@ function renderMonthly() {
 
 /* ── HELPERS ── */
 function selectPeriod(p) { STATE.selectedPeriod = p; renderMonthly(); }
-// เลือกปี: คงเดือนเดิมไว้ แต่เปลี่ยนปี (เช่น กำลังดู 3/69 กดปี 70 -> 3/70)
-function selectYear(year) {
-  const curMonth = parseInt(STATE.selectedPeriod.split('-')[1]) || 1;
-  STATE.selectedPeriod = makePeriod(year, curMonth);
+// กดปี: ถ้ากางปีนั้นอยู่แล้วให้ยุบ, ถ้ายัง/ปีอื่นให้กางปีนั้น
+function toggleYear(year) {
+  STATE.expandedYear = (STATE.expandedYear === year) ? null : year;
   renderMonthly();
 }
 

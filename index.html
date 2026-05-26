@@ -329,6 +329,19 @@ body { font-family:var(--font); background:var(--bg); color:var(--n800); min-hei
 }
 .period-btn.on { background:var(--t400); border-color:var(--t400); color:#fff; }
 
+/* แถวเลือกปี */
+.year-select { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+.year-btn {
+  padding:6px 16px; border-radius:20px; font-size:13px; font-weight:700;
+  border:1.5px solid var(--lavDk); background:var(--card); color:var(--lavDk);
+  cursor:pointer; font-family:var(--font); transition:all .15s;
+}
+.year-btn.on { background:var(--lavDk); border-color:var(--lavDk); color:#fff; }
+/* ปุ่มเดือนที่ยังไม่มีข้อมูล — จางลงแต่ยังกดได้ */
+.period-btn.empty { opacity:.5; border-style:dashed; }
+.period-btn.empty.on { opacity:1; }
+.period-label { font-size:11px; color:var(--n400); margin-bottom:6px; font-weight:600; }
+
 .holiday-chips { display:flex; flex-wrap:wrap; gap:5px; max-height:100px; overflow-y:auto; }
 .hchip { font-size:10.5px; font-weight:600; padding:3px 9px; border-radius:10px; background:var(--rose); color:#9D1761; }
 
@@ -525,6 +538,9 @@ body { font-family:var(--font); background:var(--bg); color:var(--n800); min-hei
 
   <!-- PAGE: MONTHLY -->
   <div id="page-monthly" class="page">
+    <div class="period-label">เลือกปี (พ.ศ.)</div>
+    <div id="yearSelect" class="year-select"></div>
+    <div class="period-label">เลือกเดือน (เดือน/ปี)</div>
     <div id="periodSelect" class="period-select"></div>
     <div id="monthlyContent">
       <div class="loading-state">
@@ -735,6 +751,16 @@ function periodLabel(p) {
   const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   return `${months[parseInt(month)-1]} ${parseInt(year) + 543}`;
 }
+// ป้ายสั้น เช่น 2026-03 -> "3/69"
+function periodLabelShort(p) {
+  const [year, month] = p.split('-');
+  const be2 = (parseInt(year) + 543) % 100;        // พ.ศ. 2 หลัก
+  return `${parseInt(month)}/${String(be2).padStart(2,'0')}`;
+}
+// คืนปี ค.ศ. ของรอบจ่าย (จาก period string "YYYY-MM")
+function periodYear(p) { return parseInt(p.split('-')[0]); }
+// สร้าง period string จากปี ค.ศ. + เดือน
+function makePeriod(year, month) { return `${year}-${String(month).padStart(2,'0')}`; }
 async function fetchWithTimeout(url, options = {}, timeout = 15000) {
   const ctrl = new AbortController();
   const id = setTimeout(() => ctrl.abort(), timeout);
@@ -833,24 +859,11 @@ const APP = {
   async sync(showToast = true) {
     const btn = document.getElementById('syncBtn');
     btn.classList.add('busy');
-    document.getElementById('syncStatus').textContent = 'กำลังซิงค์...';
+    document.getElementById('syncStatus').textContent = 'กำลังโหลด...';
     document.getElementById('liveDot').style.background = '#FBD044';
 
     try {
-      // 1) อัปรายการที่ยังค้าง (pending) ขึ้น Sheets ก่อน
-      const pending = STATE.localRecs.filter(r =>
-        !STATE.sheetRecords.some(s => s.date.toString().split('T')[0] === r.date.toString().split('T')[0])
-      );
-      if (pending.length) {
-        try {
-          await fetchWithTimeout(CONFIG.GAS_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action:'append', records: pending })
-          });
-        } catch(e) { /* อัปไม่ได้ค่อยลองใหม่รอบหน้า */ }
-      }
-
-      // 2) โหลด config + ข้อมูลจริงจาก Sheets
+      // โหลด config + ข้อมูลจริงจาก Sheets (อ่านอย่างเดียว — ไม่เขียนอะไรกลับ)
       const [cfgRes, dataRes] = await Promise.all([
         fetchWithTimeout(CONFIG.GAS_URL, { method:'POST', body:JSON.stringify({action:'getConfig'}) }),
         fetchWithTimeout(CONFIG.GAS_URL)
@@ -866,26 +879,24 @@ const APP = {
       }
       if (Array.isArray(dataJson)) {
         STATE.sheetRecords = dataJson.filter(r => r.date && r.timeIn && r.timeOut);
+        // Sheets = แหล่งข้อมูลหลัก: ล้างสำเนา local ทิ้งทั้งหมด
+        // (ป้องกันการ append ซ้ำขึ้น Sheets ในรอบถัดไป)
+        STATE.localRecs = [];
+        saveLocal();
       }
-
-      // 3) ล้าง local ที่ขึ้น Sheets เรียบร้อยแล้ว เหลือไว้แค่ที่ยังค้างจริง
-      STATE.localRecs = STATE.localRecs.filter(r =>
-        !STATE.sheetRecords.some(s => s.date.toString().split('T')[0] === r.date.toString().split('T')[0])
-      );
-      saveLocal();
 
       STATE.lastSync = new Date(); STATE.syncOK = true;
       document.getElementById('liveDot').style.background = '#34D399';
-      document.getElementById('syncStatus').textContent = `ซิงค์แล้ว ${STATE.sheetRecords.length} รายการ`;
+      document.getElementById('syncStatus').textContent = `โหลดแล้ว ${STATE.sheetRecords.length} รายการ`;
       this._afterSync();
-      if (showToast) toast('ซิงค์สำเร็จ ✓', 'ok');
+      if (showToast) toast(`โหลดจาก Sheets ${STATE.sheetRecords.length} รายการ ✓`, 'ok');
 
     } catch(e) {
       STATE.syncOK = false;
       document.getElementById('liveDot').style.background = '#F87171';
-      document.getElementById('syncStatus').textContent = 'ออฟไลน์ — ใช้ข้อมูล Local';
+      document.getElementById('syncStatus').textContent = 'ออฟไลน์ — ใช้ข้อมูลที่โหลดไว้';
       this._afterSync();
-      if (showToast) toast('ซิงค์ไม่ได้ ใช้ข้อมูล Local', 'err');
+      if (showToast) toast('โหลดไม่ได้ ใช้ข้อมูลที่มีอยู่', 'err');
     }
 
     btn.classList.remove('busy');
@@ -1380,23 +1391,51 @@ function renderDaily() {
 /* ── RENDER: MONTHLY ── */
 function renderMonthly() {
   const records = mergeAll();
+  const ysEl = document.getElementById('yearSelect');
   const psEl = document.getElementById('periodSelect');
   const contEl = document.getElementById('monthlyContent');
 
-  if (!records.length) {
-    psEl.innerHTML = '';
-    contEl.innerHTML = '<div class="empty-state">ยังไม่มีข้อมูล</div>';
-    return;
-  }
-
+  // เดือนที่มีข้อมูลจริง (ใช้แค่ทำเครื่องหมาย ไม่ได้จำกัดการแสดง)
   const periodSet = new Set(records.map(r => getPeriod(r.date)));
-  const periods = [...periodSet].sort().reverse();
-  if (!STATE.selectedPeriod || !periodSet.has(STATE.selectedPeriod)) STATE.selectedPeriod = periods[0];
 
-  psEl.innerHTML = periods.map(p =>
-    `<button class="period-btn ${p===STATE.selectedPeriod?'on':''}" onclick="selectPeriod('${p}')">${periodLabel(p).split('(')[0].trim()}</button>`
-  ).join('');
+  // ── หาช่วงปี (ค.ศ.) ที่จะแสดง: ตั้งแต่ปีแรกที่มีข้อมูล ถึงปีปัจจุบัน ──
+  const nowYear = new Date().getFullYear();
+  let minYear = nowYear, maxYear = nowYear;
+  periodSet.forEach(p => {
+    const y = periodYear(p);
+    if (y < minYear) minYear = y;
+    if (y > maxYear) maxYear = y;
+  });
+  // ปีที่เลือกอยู่ตอนนี้ (ถ้ายังไม่เคยเลือก ใช้ปีของ period ล่าสุดที่มีข้อมูล หรือปีปัจจุบัน)
+  if (!STATE.selectedPeriod) {
+    const sorted = [...periodSet].sort().reverse();
+    STATE.selectedPeriod = sorted[0] || makePeriod(nowYear, new Date().getMonth()+1);
+  }
+  let selYear = periodYear(STATE.selectedPeriod);
+  if (selYear < minYear) minYear = selYear;
+  if (selYear > maxYear) maxYear = selYear;
 
+  // ── แถวปุ่มปี (พ.ศ. 2 หลัก) เรียงจากใหม่ไปเก่า ──
+  const years = [];
+  for (let y = maxYear; y >= minYear; y--) years.push(y);
+  ysEl.innerHTML = years.map(y => {
+    const be2 = String((y + 543) % 100).padStart(2,'0');
+    return `<button class="year-btn ${y===selYear?'on':''}" onclick="selectYear(${y})">${be2}</button>`;
+  }).join('');
+
+  // ── แถวปุ่มเดือน 1-12 ของปีที่เลือก (กดได้เสมอ) ──
+  const monthBtns = [];
+  for (let m = 1; m <= 12; m++) {
+    const p = makePeriod(selYear, m);
+    const hasData = periodSet.has(p);
+    const isOn = (p === STATE.selectedPeriod);
+    monthBtns.push(
+      `<button class="period-btn ${isOn?'on':''} ${hasData?'':'empty'}" onclick="selectPeriod('${p}')">${periodLabelShort(p)}</button>`
+    );
+  }
+  psEl.innerHTML = monthBtns.join('');
+
+  // ── สรุปยอดของเดือนที่เลือก ──
   const recs = records.filter(r => getPeriod(r.date) === STATE.selectedPeriod);
   let tot100=0,tot150=0,tot200=0,totCustom=0,totTrans=0,totSpecial=0;
   let hr100=0,hr150=0,hr200=0,transCnt=0,specialCnt=0;
@@ -1414,6 +1453,15 @@ function renderMonthly() {
     else holDays++;
     totalOTHours += c.t100+c.t150+c.t200;
   });
+
+  // เดือนที่เลือกยังไม่มีข้อมูล — แสดงข้อความ (ปุ่มปี/เดือนด้านบนยังอยู่)
+  if (recs.length === 0) {
+    contEl.innerHTML = `<div class="empty-state" style="padding:40px 20px;text-align:center;color:var(--n400);">
+      ยังไม่มีข้อมูลของรอบ ${periodLabel(STATE.selectedPeriod)}
+    </div>`;
+    return;
+  }
+
   const C2 = STATE.config;
   const TRANSPORT_RATE = +C2.TRANSPORT||200;
 
@@ -1517,6 +1565,12 @@ function renderMonthly() {
 
 /* ── HELPERS ── */
 function selectPeriod(p) { STATE.selectedPeriod = p; renderMonthly(); }
+// เลือกปี: คงเดือนเดิมไว้ แต่เปลี่ยนปี (เช่น กำลังดู 3/69 กดปี 70 -> 3/70)
+function selectYear(year) {
+  const curMonth = parseInt(STATE.selectedPeriod.split('-')[1]) || 1;
+  STATE.selectedPeriod = makePeriod(year, curMonth);
+  renderMonthly();
+}
 
 let _toastTimer = null;
 function toast(msg, type='ok') {
@@ -1532,7 +1586,7 @@ function toast(msg, type='ok') {
   document.getElementById('fDate').value = todayStr();
   renderList(); renderDaily(); renderMonthly();
   await APP.sync(false);
-  STATE.autoSyncTimer = setInterval(() => APP.sync(false), CONFIG.SYNC_INTERVAL_MS);
+  // ไม่มีการ sync อัตโนมัติเบื้องหลังอีกต่อไป — โหลดเฉพาะตอนเปิดแอป + ตอนกดปุ่ม Sync เท่านั้น
 
   ['fDate','fIn','fOut'].forEach(id => {
     document.getElementById(id).addEventListener('change', () => APP.updatePreview());
@@ -1542,32 +1596,8 @@ function toast(msg, type='ok') {
   });
   APP.updatePreview();
 
-  // ── ข้อ 2: เขียนบันทึกขึ้น Sheets ทุกครั้งที่ปิด/ซ่อนหน้า (รองรับย้ายเครื่อง) ──
-  let _flushing = false;
-  async function flushOnExit() {
-    if (_flushing) return;
-    // ส่งเฉพาะรายการ local ที่ยังไม่ขึ้น Sheets
-    const pending = STATE.localRecs.filter(r =>
-      !STATE.sheetRecords.some(s => s.date.toString().split('T')[0] === r.date.toString().split('T')[0])
-    );
-    if (!pending.length) return;
-    _flushing = true;
-    try {
-      // sendBeacon ส่งได้แม้หน้ากำลังปิด (ดีกว่า fetch ตอน unload)
-      const body = JSON.stringify({ action:'append', records: pending });
-      if (navigator.sendBeacon) {
-        navigator.sendBeacon(CONFIG.GAS_URL, body);
-      } else {
-        await fetch(CONFIG.GAS_URL, { method:'POST', body, keepalive:true });
-      }
-    } catch(e) {}
-    _flushing = false;
-  }
-
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') flushOnExit();
-  });
-  window.addEventListener('pagehide', flushOnExit);
+  // หมายเหตุ: ไม่มีการเขียนขึ้น Sheets อัตโนมัติตอนปิด/ซ่อนหน้าอีกต่อไป
+  // การบันทึกขึ้น Sheets เกิดขึ้นเฉพาะตอนกดปุ่ม Save เท่านั้น (ป้องกันข้อมูลซ้ำ)
 })();
 </script>
 </body>

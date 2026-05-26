@@ -409,7 +409,7 @@ body { font-family:var(--font); background:var(--bg); color:var(--n800); min-hei
         <span id="capIco">📸</span> แคป
       </button>
       <button class="btn-sync" id="syncBtn" onclick="APP.sync()">
-        <span id="syncIco">↻</span> Sync
+        Sync
       </button>
     </div>
   </div>
@@ -450,8 +450,8 @@ body { font-family:var(--font); background:var(--bg); color:var(--n800); min-hei
       </div>
 
       <div class="row1">
-        <div class="fg"><label>หมายเหตุ OT เพิ่มเติม (เช่น AIYA)</label>
-          <input type="text" id="fNote" placeholder="เว้นว่างได้ — ถ้าใส่ จะแสดงแทนคำว่า Custom" oninput="APP.updatePreview()">
+        <div class="fg"><label>หมายเหตุ</label>
+          <input type="text" id="fNote" placeholder="Custom" oninput="APP.updatePreview()">
         </div>
       </div>
 
@@ -467,8 +467,8 @@ body { font-family:var(--font); background:var(--bg); color:var(--n800); min-hei
       </div>
 
       <button class="btn-main" id="btnSave" onclick="APP.save()">
-        <span id="btnSaveIcon">＋</span>
-        <span id="btnSaveText">บันทึกข้อมูล</span>
+        <span id="btnSaveIcon"></span>
+        <span id="btnSaveText">Save</span>
       </button>
     </div>
 
@@ -767,8 +767,8 @@ async function editRec(date) {
   // Show edit banner
   document.getElementById('editDateLabel').textContent = date;
   document.getElementById('editBanner').classList.add('show');
-  document.getElementById('btnSaveIcon').textContent = '✎';
-  document.getElementById('btnSaveText').textContent = 'บันทึกการแก้ไข';
+  document.getElementById('btnSaveIcon').textContent = '';
+  document.getElementById('btnSaveText').textContent = 'Save (แก้ไข)';
   document.getElementById('btnSave').classList.add('edit-mode');
 
   // Navigate to add tab
@@ -832,8 +832,7 @@ const APP = {
 
   async sync(showToast = true) {
     const btn = document.getElementById('syncBtn');
-    const ico = document.getElementById('syncIco');
-    btn.classList.add('busy'); ico.classList.add('spin');
+    btn.classList.add('busy');
     document.getElementById('syncStatus').textContent = 'กำลังซิงค์...';
     document.getElementById('liveDot').style.background = '#FBD044';
 
@@ -889,7 +888,7 @@ const APP = {
       if (showToast) toast('ซิงค์ไม่ได้ ใช้ข้อมูล Local', 'err');
     }
 
-    btn.classList.remove('busy'); ico.classList.remove('spin');
+    btn.classList.remove('busy');
     this._updateLastSyncBar();
   },
 
@@ -924,8 +923,8 @@ const APP = {
     STATE.editingDate = null;
     document.getElementById('editBanner').classList.remove('show');
     document.getElementById('btnSave').classList.remove('edit-mode');
-    document.getElementById('btnSaveIcon').textContent = '＋';
-    document.getElementById('btnSaveText').textContent = 'บันทึกข้อมูล';
+    document.getElementById('btnSaveIcon').textContent = '';
+    document.getElementById('btnSaveText').textContent = 'Save';
     // reset form
     document.getElementById('fDate').value = todayStr();
     document.getElementById('fIn').value = '09:00';
@@ -1057,8 +1056,8 @@ const APP = {
     STATE.editingDate = null;
     document.getElementById('editBanner').classList.remove('show');
     document.getElementById('btnSave').classList.remove('edit-mode');
-    document.getElementById('btnSaveIcon').textContent = '＋';
-    document.getElementById('btnSaveText').textContent = 'บันทึกข้อมูล';
+    document.getElementById('btnSaveIcon').textContent = '';
+    document.getElementById('btnSaveText').textContent = 'Save';
 
     // Reset form
     document.getElementById('fDate').value = todayStr();

@@ -310,8 +310,6 @@ body { font-family:var(--font); background:var(--bg); color:var(--n800); min-hei
 .pay-table .hi td:last-child { border-radius:0 var(--r-xs) var(--r-xs) 0; color:var(--t600); font-size:15px; }
 
 /* สัดส่วน OT แบบแถบเดียวต่อกัน (stacked) + legend */
-.ot-head { font-size:13px; color:var(--n400); margin-bottom:12px; }
-.ot-head b { color:var(--n800); font-weight:700; font-size:15px; }
 .ot-stack { display:flex; width:100%; height:14px; border-radius:99px; overflow:hidden; background:#EEF4F3; gap:2px; }
 .ot-seg { height:100%; transition:width .7s cubic-bezier(.22,1,.36,1); }
 .ot-seg.c100 { background:#3DBE9E; }
@@ -326,7 +324,9 @@ body { font-family:var(--font); background:var(--bg); color:var(--n800); min-hei
 .ot-leg-dot.c200 { background:#E84C6B; }
 .ot-leg-dot.ccustom { background:#3B6FE0; }
 .ot-leg-name { color:var(--n600); font-weight:600; min-width:60px; }
-.ot-leg-val { color:var(--n800); font-weight:700; margin-left:auto; }
+.ot-leg-val { margin-left:auto; }
+.ot-leg-hr { color:#94A3A1; font-weight:600; }       /* ชั่วโมง = เทา */
+.ot-leg-money { color:#1C3A38; font-weight:700; }    /* เงิน = ดำเข้ม */
 
 .dtype-row {
   display:flex; align-items:center; justify-content:space-between;
@@ -1517,9 +1517,9 @@ function renderMonthly() {
   const secondPmt=netAfterSoc-FIRST_PMT;
   const maxOTVal=Math.max(tot100,tot150,tot200,totCustom,1);
   const otItems=[
-    {label:'OT×1.0',val:tot100,cls:'c100',hrs:hr100.toFixed(2)+' ชม'},
-    {label:'OT×1.5',val:tot150,cls:'c150',hrs:hr150.toFixed(2)+' ชม'},
-    {label:'OT×2.0',val:tot200,cls:'c200',hrs:hr200.toFixed(2)+' ชม'},
+    {label:'OT×1.0',val:tot100,cls:'c100',hrs:hr100>0?hr100.toFixed(2)+' Hr':''},
+    {label:'OT×1.5',val:tot150,cls:'c150',hrs:hr150>0?hr150.toFixed(2)+' Hr':''},
+    {label:'OT×2.0',val:tot200,cls:'c200',hrs:hr200>0?hr200.toFixed(2)+' Hr':''},
     {label:'Custom',val:totCustom,cls:'ccustom',hrs:''},
   ].filter(x=>x.val>0);
 
@@ -1551,7 +1551,6 @@ function renderMonthly() {
     ${otItems.length ? `
     <div class="sec-title">สัดส่วน OT</div>
     <div class="card">
-      <div class="ot-head">OT รวม <b>${fmtBaht(totalOT)}</b></div>
       <div class="ot-stack">
         ${otItems.map(ot=>`<div class="ot-seg ${ot.cls}" style="width:${(ot.val/totalOT*100).toFixed(2)}%"></div>`).join('')}
       </div>
@@ -1560,7 +1559,7 @@ function renderMonthly() {
           <div class="ot-leg-item">
             <span class="ot-leg-dot ${ot.cls}"></span>
             <span class="ot-leg-name">${ot.label}</span>
-            <span class="ot-leg-val">${fmtBaht(ot.val)}${ot.hrs?` · ${ot.hrs}`:''}</span>
+            <span class="ot-leg-val">${ot.hrs?`<span class="ot-leg-hr">${ot.hrs} : </span>`:''}<span class="ot-leg-money">${fmtBaht(ot.val)}</span></span>
           </div>`).join('')}
       </div>
     </div>` : ''}

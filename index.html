@@ -306,8 +306,8 @@ body { font-family:var(--font); background:var(--bg); color:var(--n800); min-hei
 .pay-table .plus { color:var(--success); }
 .pay-table .minus { color:var(--err); }
 .pay-table .hi td { background:var(--t50); padding:8px 10px; }
-.pay-table .hi td:first-child { border-radius:var(--r-xs) 0 0 var(--r-xs); color:var(--t600); font-weight:700; }
-.pay-table .hi td:last-child { border-radius:0 var(--r-xs) var(--r-xs) 0; color:var(--t600); font-size:15px; }
+.pay-table .hi td:first-child { border-radius:var(--r-xs) 0 0 var(--r-xs); color:var(--n800); font-weight:700; }
+.pay-table .hi td:last-child { border-radius:0 var(--r-xs) var(--r-xs) 0; color:var(--n800); font-size:15px; }
 
 /* สัดส่วน OT แบบแถบเดียวต่อกัน (stacked) + legend */
 .ot-stack { display:flex; width:100%; height:14px; border-radius:99px; overflow:hidden; background:#EEF4F3; gap:2px; }
@@ -1539,11 +1539,11 @@ function renderMonthly() {
         <div class="st-val">${fmtBaht(totalTrAll)}</div>
       </div>
       <div class="sum-tile">
-        <div class="st-label">เงินหลังหักประกัน</div>
+        <div class="st-label">ยอดหลังหักประกันสังคม</div>
         <div class="st-val">${fmtBaht(netAfterSoc)}</div>
       </div>
       <div class="sum-tile">
-        <div class="st-label">งวดสอง (คาดการณ์)</div>
+        <div class="st-label">งวดสอง</div>
         <div class="st-val" style="color:var(--t500)">${fmtBaht(secondPmt)}</div>
       </div>
     </div>
@@ -1577,12 +1577,12 @@ function renderMonthly() {
       <table class="pay-table">
         <tr><td>เงินเดือน</td><td class="plus">${fmtBaht(SALARY)}</td></tr>
         <tr><td>เบี้ยขยัน</td><td class="plus">${fmtBaht(ALLOWANCE)}</td></tr>
-        ${tot100>0?`<tr><td style="font-size:12px">OT×${+C2.OT100_RATE||100}×${hr100.toFixed(2)}ชม</td><td class="plus">${fmtBaht(tot100)}</td></tr>`:''}
-        ${tot150>0?`<tr><td style="font-size:12px">OT×${+C2.OT150_RATE||150}×${hr150.toFixed(2)}ชม</td><td class="plus">${fmtBaht(tot150)}</td></tr>`:''}
-        ${tot200>0?`<tr><td style="font-size:12px">OT×${+C2.OT200_RATE||200}×${hr200.toFixed(2)}ชม</td><td class="plus">${fmtBaht(tot200)}</td></tr>`:''}
+        ${tot100>0?`<tr><td style="font-size:12px">OT${+C2.OT100_RATE||100}×${hr100.toFixed(2)}Hr</td><td class="plus">${fmtBaht(tot100)}</td></tr>`:''}
+        ${tot150>0?`<tr><td style="font-size:12px">OT${+C2.OT150_RATE||150}×${hr150.toFixed(2)}Hr</td><td class="plus">${fmtBaht(tot150)}</td></tr>`:''}
+        ${tot200>0?`<tr><td style="font-size:12px">OT${+C2.OT200_RATE||200}×${hr200.toFixed(2)}Hr</td><td class="plus">${fmtBaht(tot200)}</td></tr>`:''}
         ${totCustom>0?`<tr><td style="font-size:12px">OT Custom</td><td class="plus">${fmtBaht(totCustom)}</td></tr>`:''}
-        ${totTrans>0?`<tr><td style="font-size:12px">ค่าเดินทางก่อน-หลังเวลา×${TRANSPORT_RATE}×${transCnt}ครั้ง</td><td class="plus">${fmtBaht(totTrans)}</td></tr>`:''}
-        ${totSpecial>0?`<tr><td style="font-size:12px">ค่าเดินทางพิเศษ×${specialCnt}ครั้ง</td><td class="plus">${fmtBaht(totSpecial)}</td></tr>`:''}
+        ${totTrans>0?`<tr><td style="font-size:12px">ค่าเดินทางก่อน-หลังเวลา : ${TRANSPORT_RATE}×${transCnt} รอบ</td><td class="plus">${fmtBaht(totTrans)}</td></tr>`:''}
+        ${totSpecial>0?`<tr><td style="font-size:12px">ค่าเดินทางพิเศษ : ${specialCnt} รอบ</td><td class="plus">${fmtBaht(totSpecial)}</td></tr>`:''}
         <tr class="hi"><td>รวมทั้งหมด</td><td>${fmtBaht(totalIncome)}</td></tr>
         <tr><td>หักประกันสังคม</td><td class="minus">-${fmtBaht(SOCIAL_SEC)}</td></tr>
         <tr class="hi"><td>คงเหลือหลังหัก</td><td>${fmtBaht(netAfterSoc)}</td></tr>
@@ -1592,14 +1592,13 @@ function renderMonthly() {
     <div class="sec-title">แบ่งงวดจ่าย</div>
     <div class="sum-grid" style="margin-bottom:20px">
       <div class="sum-tile">
-        <div class="st-label">งวดแรก (กำหนด)</div>
+        <div class="st-label">งวดแรก</div>
         <div class="st-val">${fmtBaht(FIRST_PMT)}</div>
-        <div class="st-note">จ่ายตามกำหนด</div>
       </div>
       <div class="sum-tile" style="border-color:var(--t400);">
-        <div class="st-label">งวดสอง (คาดการณ์)</div>
+        <div class="st-label">งวดสอง</div>
         <div class="st-val" style="color:var(--t500)">${fmtBaht(secondPmt)}</div>
-        <div class="st-note">สุทธิ - งวดแรก</div>
+        <div class="st-note">คงเหลือ - งวดแรก</div>
       </div>
     </div>`;
 }

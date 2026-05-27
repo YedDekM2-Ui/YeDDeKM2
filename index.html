@@ -2,7 +2,12 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="color-scheme" content="light only">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="TimeTrack Pro">
+<meta name="theme-color" content="#F2FAFA">
 <title>TimeTrack Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script>
@@ -55,7 +60,7 @@
 }
 
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-html { scroll-behavior:smooth; }
+html { scroll-behavior:smooth; color-scheme:light only; -webkit-text-size-adjust:100%; }
 body { font-family:var(--font); background:var(--bg); color:var(--n800); min-height:100dvh; overflow-x:hidden; }
 
 /* ── LAYOUT ── */
@@ -64,11 +69,14 @@ body { font-family:var(--font); background:var(--bg); color:var(--n800); min-hei
 /* ── TOPBAR ── */
 #topbar {
   position:sticky; top:0; z-index:200;
-  background:rgba(240,250,250,.95);
-  backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+  background:#EAF6F5;
   border-bottom:1px solid var(--t100);
-  padding:12px 16px 10px;
+  padding:calc(12px + env(safe-area-inset-top, 0px)) 16px 10px;
   display:flex; align-items:center; justify-content:space-between;
+}
+/* ใช้ backdrop-filter เฉพาะเบราว์เซอร์ที่รองรับจริง (กันสีหายบน standalone iOS) */
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+  #topbar { background:rgba(240,250,250,.92); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); }
 }
 .tb-left h1 { font-size:18px; font-weight:700; color:var(--t600); letter-spacing:-.3px; }
 .tb-left .tb-sub { font-size:11px; color:var(--n400); margin-top:2px; display:flex; align-items:center; gap:5px; }
@@ -207,12 +215,12 @@ body { font-family:var(--font); background:var(--bg); color:var(--n800); min-hei
 .rec-left .rec-date { font-size:14px; font-weight:700; color:var(--n800); }
 .rec-left .rec-meta { font-size:11px; color:var(--n400); margin-top:2px; display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
 .type-pill {
-  font-size:9.5px; font-weight:700; padding:1px 7px;
-  border-radius:10px; letter-spacing:.3px; white-space:nowrap;
+  font-size:9.5px; font-weight:700; padding:2px 8px;
+  border-radius:99px; letter-spacing:.3px; white-space:nowrap;
 }
-.type-pill.normal { background:var(--t100); color:var(--t600); }
-.type-pill.wednesday { background:var(--amber); color:#8A5F00; }
-.type-pill.holiday { background:var(--rose); color:#9D1761; }
+.type-pill.normal { background:#D6F3EC; color:#1A8C62; }
+.type-pill.wednesday { background:#FCEBD2; color:#C77A12; }
+.type-pill.holiday { background:#FBDDE4; color:#C0395A; }
 .src-pill {
   font-size:9px; font-weight:600; padding:1px 6px;
   border-radius:8px; background:var(--warn-bg); color:var(--warn);
@@ -301,25 +309,34 @@ body { font-family:var(--font); background:var(--bg); color:var(--n800); min-hei
 .pay-table .hi td:first-child { border-radius:var(--r-xs) 0 0 var(--r-xs); color:var(--t600); font-weight:700; }
 .pay-table .hi td:last-child { border-radius:0 var(--r-xs) var(--r-xs) 0; color:var(--t600); font-size:15px; }
 
-.ot-bars { display:flex; flex-direction:column; gap:9px; }
-.ot-row { display:flex; align-items:center; gap:8px; }
-.ot-lbl { font-size:11px; color:var(--n400); width:44px; flex-shrink:0; }
-.ot-track { flex:1; height:7px; background:var(--t50); border-radius:4px; overflow:hidden; border:1px solid var(--t100); }
-.ot-fill { height:100%; border-radius:4px; transition:width .6s cubic-bezier(.22,1,.36,1); }
-.ot-fill.c100 { background:var(--t400); }
-.ot-fill.c150 { background:var(--amberDk); }
-.ot-fill.c200 { background:var(--roseDk); }
-.ot-fill.ccustom { background:var(--lavDk); }
-.ot-val { font-size:11px; font-weight:700; color:var(--n600); width:68px; text-align:right; flex-shrink:0; }
+.ot-bars { display:flex; flex-direction:column; gap:13px; }
+.ot-row { display:flex; align-items:center; gap:10px; }
+.ot-lbl { font-size:12px; font-weight:600; color:var(--n600); width:52px; flex-shrink:0; }
+.ot-track { flex:1; height:10px; background:#EEF4F3; border-radius:99px; overflow:hidden; }
+.ot-fill { height:100%; border-radius:99px; transition:width .7s cubic-bezier(.22,1,.36,1); }
+.ot-fill.c100 { background:linear-gradient(90deg,#5FD4C4,#2AADA1); }
+.ot-fill.c150 { background:linear-gradient(90deg,#FFC149,#F5A623); }
+.ot-fill.c200 { background:linear-gradient(90deg,#FF8FA8,#E84C6B); }
+.ot-fill.ccustom { background:linear-gradient(90deg,#5BA8E8,#3B8ED6); }
+.ot-val { font-size:12px; font-weight:700; color:var(--n800); width:72px; text-align:right; flex-shrink:0; }
 
 .dtype-row {
   display:flex; align-items:center; justify-content:space-between;
-  padding:7px 0; border-bottom:1px solid var(--t100); font-size:13px;
+  padding:9px 0; border-bottom:1px solid var(--t100); font-size:13px;
 }
 .dtype-row:last-child { border-bottom:none; }
 .dtype-left { display:flex; align-items:center; gap:8px; color:var(--n600); }
 .dtype-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
 .dtype-right { font-weight:700; color:var(--n800); }
+/* ป้ายแคปซูลสถานะวัน (สไตล์ pill สีสด) */
+.day-pill {
+  display:inline-flex; align-items:center; padding:5px 14px; border-radius:99px;
+  font-size:13px; font-weight:600; line-height:1.2;
+}
+.day-pill.normal  { background:#D6F3EC; color:#1A8C62; }   /* เขียว */
+.day-pill.wed     { background:#FCEBD2; color:#C77A12; }   /* ส้ม */
+.day-pill.holiday { background:#FBDDE4; color:#C0395A; }   /* แดง */
+.day-pill.total   { background:#ECF0F0; color:#3D6361; }   /* เทา */
 
 .period-select { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
 .period-btn {
@@ -356,8 +373,12 @@ body { font-family:var(--font); background:var(--bg); color:var(--n800); min-hei
 /* ── BOTTOM NAV ── */
 #bottomNav {
   position:fixed; bottom:0; left:0; right:0; z-index:300;
-  background:rgba(255,255,255,.96); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+  background:#FFFFFF;
   border-top:1px solid var(--t100); display:flex; max-width:480px; margin:0 auto;
+  padding-bottom:env(safe-area-inset-bottom, 0px);
+}
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+  #bottomNav { background:rgba(255,255,255,.96); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); }
 }
 .nav-btn {
   flex:1; padding:10px 4px 12px; background:none; border:none; cursor:pointer;
@@ -365,7 +386,8 @@ body { font-family:var(--font); background:var(--bg); color:var(--n800); min-hei
   display:flex; flex-direction:column; align-items:center; gap:3px; transition:color .15s;
 }
 .nav-btn.on { color:var(--t500); }
-.nav-icon { font-size:20px; line-height:1; }
+.nav-icon { font-size:20px; line-height:1; display:flex; align-items:center; justify-content:center; }
+.nav-icon svg { width:22px; height:22px; display:block; }
 .nav-dot {
   width:4px; height:4px; border-radius:50%; background:var(--t400);
   margin-top:1px; opacity:0; transition:opacity .15s;
@@ -569,16 +591,16 @@ body { font-family:var(--font); background:var(--bg); color:var(--n800); min-hei
 <!-- BOTTOM NAV -->
 <div id="bottomNav">
   <button class="nav-btn on" onclick="APP.tab('add')" id="nav-add">
-    <span class="nav-icon">✏️</span><span>บันทึก</span><div class="nav-dot"></div>
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span><span>บันทึก</span><div class="nav-dot"></div>
   </button>
   <button class="nav-btn" onclick="APP.tab('list')" id="nav-list">
-    <span class="nav-icon">📋</span><span>รายการ</span><div class="nav-dot"></div>
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg></span><span>รายการ</span><div class="nav-dot"></div>
   </button>
   <button class="nav-btn" onclick="APP.tab('daily')" id="nav-daily">
-    <span class="nav-icon">📅</span><span>รายวัน</span><div class="nav-dot"></div>
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg></span><span>รายวัน</span><div class="nav-dot"></div>
   </button>
   <button class="nav-btn" onclick="APP.tab('monthly')" id="nav-monthly">
-    <span class="nav-icon">📊</span><span>รายเดือน</span><div class="nav-dot"></div>
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="7" rx="1"/><rect x="12" y="7" width="3" height="11" rx="1"/><rect x="17" y="13" width="3" height="5" rx="1"/></svg></span><span>รายเดือน</span><div class="nav-dot"></div>
   </button>
 </div>
 
@@ -1362,7 +1384,7 @@ function renderDaily() {
     recs.forEach(r => {
       const c = calcOT(r);
       const typeLabel = {normal:'ปกติ',wednesday:'วันพุธ หยุด',holiday:'นักขัตฤกษ์'}[c.type];
-      const typeColor = {normal:'var(--t500)',wednesday:'var(--amberDk)',holiday:'var(--roseDk)'}[c.type];
+      const typeCls = {normal:'normal',wednesday:'wednesday',holiday:'holiday'}[c.type];
       const breakdown = [];
       if (c.t100 > 0) breakdown.push(`OT×1 ${c.t100.toFixed(2)}ชม`);
       if (c.t150 > 0) breakdown.push(`OT×1.5 ${c.t150.toFixed(2)}ชม`);
@@ -1372,7 +1394,7 @@ function renderDaily() {
 
       html += `<div class="daily-item">
         <div class="di-left">
-          <div class="di-date">${r.date} <span style="font-size:11px;color:${typeColor};font-weight:700;">${typeLabel}</span></div>
+          <div class="di-date">${r.date} <span class="type-pill ${typeCls}">${typeLabel}</span></div>
           <div class="di-sub">
             <span>${dayName(r.date)}</span><span>•</span><span>${r.timeIn} – ${r.timeOut}</span>
             ${r._pending ? '<span class="src-pill">รอซิงค์</span>' : ''}
@@ -1536,10 +1558,10 @@ function renderMonthly() {
 
     <div class="sec-title">สัดส่วนวัน</div>
     <div class="card">
-      <div class="dtype-row"><div class="dtype-left"><div class="dtype-dot" style="background:var(--t400)"></div>วันปกติ</div><div class="dtype-right">${normalDays} วัน</div></div>
-      <div class="dtype-row"><div class="dtype-left"><div class="dtype-dot" style="background:var(--amberDk)"></div>วันพุธ (หยุด)</div><div class="dtype-right">${wedDays} วัน</div></div>
-      <div class="dtype-row"><div class="dtype-left"><div class="dtype-dot" style="background:var(--roseDk)"></div>วันหยุดนักขัตฤกษ์</div><div class="dtype-right">${holDays} วัน</div></div>
-      <div class="dtype-row" style="border-bottom:none"><div class="dtype-left"><div class="dtype-dot" style="background:var(--n300)"></div>รวม</div><div class="dtype-right">${recs.length} วัน</div></div>
+      <div class="dtype-row"><span class="day-pill normal">วันปกติ</span><div class="dtype-right">${normalDays} วัน</div></div>
+      <div class="dtype-row"><span class="day-pill wed">วันพุธ หยุด</span><div class="dtype-right">${wedDays} วัน</div></div>
+      <div class="dtype-row"><span class="day-pill holiday">วันหยุดนักขัตฤกษ์</span><div class="dtype-right">${holDays} วัน</div></div>
+      <div class="dtype-row" style="border-bottom:none"><span class="day-pill total">รวม</span><div class="dtype-right">${recs.length} วัน</div></div>
     </div>
 
     <div class="sec-title">รายละเอียดรายได้</div>

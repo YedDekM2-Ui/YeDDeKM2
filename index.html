@@ -1444,10 +1444,10 @@ function renderMonthly() {
   const totalIncome=grossSalary+totalOT+totalTrAll;
   const netAfterSoc=totalIncome-SOCIAL_SEC;
   const secondPmt=netAfterSoc-FIRST_PMT;
-  // ประกอบ label ของ Custom: ถ้ามีหลายชื่อรวม, ถ้าซ้ำมากกว่า 1 ใส่ ×จำนวน
-  // เช่น "Aiya×2", "Aiya", "Aiya×2, Bonus"
+  // ประกอบ label ของ Custom: แสดง "ชื่อ×จำนวนครั้ง" เสมอ
+  // เช่น "Aiya×2", "Custom×1", "Aiya×2, Bonus×1"
   const customLabel = Object.keys(customNotes).length === 0 ? 'Custom'
-    : Object.entries(customNotes).map(([n,c]) => c > 1 ? `${n}×${c}` : n).join(', ');
+    : Object.entries(customNotes).map(([n,c]) => `${n}×${c}`).join(', ');
 
   const maxOTVal=Math.max(tot100,tot150,tot200,totCustom,1);
   const otItems=[

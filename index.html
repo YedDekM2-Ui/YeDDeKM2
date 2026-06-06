@@ -672,12 +672,20 @@ function calcOT(rec) {
   const type = getDayType(rec.date);
   let t100 = 0, t150 = 0, t200 = 0, transport = 0;
 
+  // กฎใหม่: วันพุธตั้งแต่ 26 พ.ค. 2026 (รอบ มิ.ย. 69) เป็นต้นไป
+  // คิดเหมือนวันนักขัตฤกษ์ (×1.5 ช่วงปกติ + ×2.0 ช่วงดึก/เช้ามืด)
+  // วันพุธก่อนหน้านั้นยังคิดแบบเดิม (×1.5 ทั้งวัน ไม่มี ×2.0)
+  const WED_HOLIDAY_FROM = '2026-05-26';
+  const wedAsHoliday = (type === 'wednesday' && rec.date >= WED_HOLIDAY_FROM);
+
   if (type === 'normal') {
     t100 = Math.max(0, Math.min(outTime, 23) - Math.max(inTime, 18));
     t150 = Math.max(0, Math.min(outTime, 9) - inTime) + Math.max(0, outTime - Math.max(inTime, 23));
-  } else if (type === 'wednesday') {
+  } else if (type === 'wednesday' && !wedAsHoliday) {
+    // วันพุธเก่า (ก่อน 26 พ.ค. 69) — คงเดิม
     t150 = outTime - inTime;
-  } else if (type === 'holiday') {
+  } else if (type === 'holiday' || wedAsHoliday) {
+    // วันนักขัตฤกษ์ + วันพุธรอบใหม่ — คิดเหมือนกัน
     t150 = Math.max(0, Math.min(outTime, 23) - Math.max(inTime, 9));
     t200 = Math.max(0, Math.min(outTime, 9) - inTime) + Math.max(0, outTime - Math.max(inTime, 23));
   }

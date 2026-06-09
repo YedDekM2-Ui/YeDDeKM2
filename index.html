@@ -580,6 +580,31 @@ body {
 .holiday-chips { display:flex; flex-wrap:wrap; gap:5px; max-height:100px; overflow-y:auto; }
 .hchip { font-size:10.5px; font-weight:600; padding:3px 9px; border-radius:10px; background:var(--rose); color:#9D1761; }
 
+/* ── DASHBOARD ── */
+.dash-bars { display:flex; flex-direction:column; gap:13px; }
+.dash-bar-row {
+  display:flex; align-items:center; gap:10px; cursor:pointer;
+  padding:6px 4px; border-radius:10px; transition:background .15s;
+}
+.dash-bar-row:active { background:rgba(0,0,0,.04); }
+.dash-bar-label {
+  font-size:12px; font-weight:700; color:var(--n800);
+  width:54px; flex-shrink:0; letter-spacing:.2px;
+}
+.dash-bar-track {
+  flex:1; height:12px; border-radius:99px; overflow:hidden;
+  box-shadow:var(--neu-inset);
+}
+.dash-bar-fill {
+  height:100%; border-radius:99px;
+  background:linear-gradient(90deg, var(--accent-2), var(--accent));
+  transition:width .6s cubic-bezier(.22,1,.36,1);
+}
+.dash-bar-val {
+  font-size:12px; font-weight:700; color:var(--n800);
+  width:78px; text-align:right; flex-shrink:0;
+}
+
 /* ── STATES ── */
 .loading-state { text-align:center; padding:40px 20px; color:var(--n300); }
 .loading-dots { display:inline-flex; gap:5px; margin-bottom:12px; }
@@ -789,6 +814,16 @@ body {
       </div>
     </div>
   </div>
+
+  <!-- PAGE: DASHBOARD -->
+  <div id="page-dashboard" class="page">
+    <div id="dashboardContent">
+      <div class="loading-state">
+        <div class="loading-dots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
+        <div>กำลังสรุปภาพรวม...</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Toast -->
@@ -819,6 +854,9 @@ body {
   </button>
   <button class="nav-btn" onclick="APP.tab('monthly')" id="nav-monthly">
     <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="7" rx="1"/><rect x="12" y="7" width="3" height="11" rx="1"/><rect x="17" y="13" width="3" height="5" rx="1"/></svg></span><span>รายเดือน</span><div class="nav-dot"></div>
+  </button>
+  <button class="nav-btn" onclick="APP.tab('dashboard')" id="nav-dashboard">
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span><span>สรุป</span><div class="nav-dot"></div>
   </button>
 </div>
 
@@ -1198,6 +1236,7 @@ const APP = {
     if (name === 'list') renderList();
     if (name === 'daily') renderDaily();
     if (name === 'monthly') renderMonthly();
+    if (name === 'dashboard') renderDashboard();
   },
 
   cancelEdit() {
@@ -1793,6 +1832,125 @@ function renderMonthly() {
     </div>`;
 }
 
+/* ── RENDER: DASHBOARD (สรุปภาพรวมทั้งหมด) ── */
+function renderDashboard() {
+  const records = mergeAll();
+  const el = document.getElementById('dashboardContent');
+
+  if (!records.length) {
+    el.innerHTML = '<div class="empty-state" style="padding:60px 20px;text-align:center;color:var(--n400);">ยังไม่มีข้อมูล<br><span style="font-size:12px;">กดบันทึกเพื่อเริ่มต้น</span></div>';
+    return;
+  }
+
+  // จัดกลุ่มตามรอบจ่าย
+  const byPeriod = {};
+  records.forEach(r => {
+    const p = getPeriod(r.date);
+    if (!byPeriod[p]) byPeriod[p] = [];
+    byPeriod[p].push(r);
+  });
+  const periods = Object.keys(byPeriod).sort();
+
+  // คำนวณยอดแต่ละรอบ (ใช้ logic เดียวกับ renderMonthly)
+  const C = STATE.config || DEFAULT_CFG;
+  const SALARY = +C.SALARY || 17000;
+  const ALLOW  = +C.ALLOWANCE || 2000;
+  const SOC    = +C.SOCIAL_SEC || 850;
+
+  let totalGross = 0, totalNet = 0, totalOTPaid = 0, totalTransPaid = 0;
+  let totalDays = 0, totalOTHours = 0;
+  let totalNormalDays = 0, totalWedDays = 0, totalHolDays = 0;
+  const periodTotals = [];  // {period, gross, net, days, ot}
+
+  periods.forEach(p => {
+    const recs = byPeriod[p];
+    let ot = 0, tr = 0, sp = 0, otHr = 0;
+    let nd = 0, wd = 0, hd = 0;
+    recs.forEach(r => {
+      const c = calcOT(r);
+      ot += c.otTotal; tr += c.tr; sp += c.special;
+      otHr += c.t100 + c.t150 + c.t200;
+      if (c.type==='normal') nd++;
+      else if (c.type==='wednesday') wd++;
+      else hd++;
+    });
+    const gross = SALARY + ALLOW + ot + tr + sp;
+    const net = gross - SOC;
+    totalGross += gross; totalNet += net;
+    totalOTPaid += ot; totalTransPaid += (tr + sp);
+    totalDays += recs.length; totalOTHours += otHr;
+    totalNormalDays += nd; totalWedDays += wd; totalHolDays += hd;
+    periodTotals.push({ period: p, gross, net, days: recs.length, ot, otHr });
+  });
+
+  // เดือนสูงสุด/ต่ำสุด
+  const sortedByGross = [...periodTotals].sort((a,b)=>b.gross-a.gross);
+  const best = sortedByGross[0];
+  const avg = totalGross / periods.length;
+
+  // ──── render ────
+  // หา max สำหรับ bar chart
+  const maxBar = Math.max(...periodTotals.map(p=>p.gross), 1);
+
+  let html = `
+    <!-- HERO: รวมรายได้สะสมทั้งหมด -->
+    <div class="card sum-tile accent full" style="margin-bottom:14px">
+      <div class="st-label">รวมรายได้สะสมทั้งหมด (สุทธิ)</div>
+      <div class="st-val xl">${fmtBaht(totalNet)}</div>
+      <div class="st-note">${periods.length} รอบ · ${totalDays} วันทำงาน · OT รวม ${totalOTHours.toFixed(1)} ชม</div>
+    </div>
+
+    <!-- สถิติย่อย -->
+    <div class="sum-grid">
+      <div class="sum-tile">
+        <div class="st-label">OT สะสมทั้งหมด</div>
+        <div class="st-val">${fmtBaht(totalOTPaid)}</div>
+      </div>
+      <div class="sum-tile">
+        <div class="st-label">ค่าเดินทางสะสม</div>
+        <div class="st-val">${fmtBaht(totalTransPaid)}</div>
+      </div>
+      <div class="sum-tile">
+        <div class="st-label">เฉลี่ยต่อรอบ</div>
+        <div class="st-val">${fmtBaht(Math.round(avg))}</div>
+      </div>
+      <div class="sum-tile">
+        <div class="st-label">รอบที่ทำเงินสูงสุด</div>
+        <div class="st-val" style="font-size:18px">${best ? periodLabelShort(best.period) : '-'}/${best ? String((periodYear(best.period)+543)%100).padStart(2,'0') : ''}</div>
+        <div class="st-note">${best ? fmtBaht(best.gross) : ''}</div>
+      </div>
+    </div>
+
+    <!-- กราฟแท่งรายเดือน -->
+    <div class="sec-title">รายได้แต่ละรอบ</div>
+    <div class="card">
+      <div class="dash-bars">
+        ${periodTotals.map(pt => {
+          const pct = (pt.gross / maxBar * 100).toFixed(1);
+          return `
+            <div class="dash-bar-row" onclick="STATE.selectedPeriod='${pt.period}'; STATE.expandedYear=periodYear('${pt.period}'); APP.tab('monthly');">
+              <div class="dash-bar-label">${periodLabelShort(pt.period)}/${String((periodYear(pt.period)+543)%100).padStart(2,'0')}</div>
+              <div class="dash-bar-track">
+                <div class="dash-bar-fill" style="width:${pct}%"></div>
+              </div>
+              <div class="dash-bar-val">${fmtBaht(pt.gross)}</div>
+            </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <!-- สรุปสัดส่วนวัน -->
+    <div class="sec-title">สัดส่วนวันทำงานสะสม</div>
+    <div class="card">
+      <div class="dtype-row"><span class="day-pill normal">วันปกติ</span><div class="dtype-right">${totalNormalDays} วัน</div></div>
+      <div class="dtype-row"><span class="day-pill wed">วันพุธ หยุด</span><div class="dtype-right">${totalWedDays} วัน</div></div>
+      <div class="dtype-row"><span class="day-pill holiday">วันหยุดนักขัตฤกษ์</span><div class="dtype-right">${totalHolDays} วัน</div></div>
+      <div class="dtype-row" style="border-bottom:none"><span class="day-pill total">รวมทั้งหมด</span><div class="dtype-right">${totalDays} วัน</div></div>
+    </div>
+  `;
+  el.innerHTML = html;
+}
+
 /* ── HELPERS ── */
 function selectPeriod(p) { STATE.selectedPeriod = p; renderMonthly(); }
 // กดปี: ถ้ากางปีนั้นอยู่แล้วให้ยุบ, ถ้ายัง/ปีอื่นให้กางปีนั้น
@@ -1819,7 +1977,7 @@ function toast(msg, type='ok') {
 
   loadLocal();
   document.getElementById('fDate').value = todayStr();
-  renderList(); renderDaily(); renderMonthly();
+  renderList(); renderDaily(); renderMonthly(); renderDashboard();
   await APP.sync(false);
   // ไม่มีการ sync อัตโนมัติเบื้องหลังอีกต่อไป — โหลดเฉพาะตอนเปิดแอป + ตอนกดปุ่ม Sync เท่านั้น
 

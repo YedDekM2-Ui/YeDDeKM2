@@ -904,7 +904,7 @@ body {
 .nav-icon svg { width:22px; height:22px; display:block; }
 #nav-list .nav-icon svg { width:24px; height:24px; }
 .nav-dot { display:none; }
-/* ปุ่มกลาง = พวงมาลัย ขยายใหญ่ขึ้นนิดๆ + ยกขึ้นเล็กน้อย */
+/* ปุ่มกลาง = บันทึก ขยายใหญ่ขึ้นนิดๆ + ยกขึ้นเล็กน้อย */
 .nav-btn.nav-center { transform:translateY(-3px); }
 .nav-btn.nav-center .nav-icon svg { width:31px; height:31px; }
 .nav-btn.nav-center.on { box-shadow:0 6px 18px color-mix(in srgb, var(--accent) 50%, transparent); }
@@ -1243,7 +1243,7 @@ body {
   </div>
 </div>
 
-<!-- BOTTOM NAV — ลำดับ: รายการ · รายวัน · พวงมาลัย(บันทึก) · รายเดือน · สรุป -->
+<!-- BOTTOM NAV — ลำดับ: รายการ · รายวัน · บันทึก · รายเดือน · สรุป -->
 <div id="bottomNav">
   <button class="nav-btn" onclick="APP.tab('list')" id="nav-list">
     <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="8" y1="16" x2="8" y2="11"/><line x1="12" y1="16" x2="12" y2="8"/><line x1="16" y1="16" x2="16" y2="13"/></svg></span><span>รายการ</span><div class="nav-dot"></div>
@@ -1252,7 +1252,7 @@ body {
     <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg></span><span>รายวัน</span><div class="nav-dot"></div>
   </button>
   <button class="nav-btn nav-center on" onclick="APP.tab('add')" id="nav-add">
-    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.4"/><path d="M12 3.2v6.4M5.6 18.4l4.3-4.3M18.4 18.4l-4.3-4.3"/></svg></span><span>พวงมาลัย</span><div class="nav-dot"></div>
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.4"/><path d="M12 3.2v6.4M5.6 18.4l4.3-4.3M18.4 18.4l-4.3-4.3"/></svg></span><span>บันทึก</span><div class="nav-dot"></div>
   </button>
   <button class="nav-btn" onclick="APP.tab('monthly')" id="nav-monthly">
     <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M21 12h-6a2 2 0 0 0 0 4h6v-4Z"/></svg></span><span>รายเดือน</span><div class="nav-dot"></div>

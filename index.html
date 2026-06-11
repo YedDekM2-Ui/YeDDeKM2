@@ -268,19 +268,36 @@ body {
 }
 @keyframes roadlines { to { background-position:-20px 0; } }
 
-/* ไฟจราจรที่ 50% — มีเสาสวยๆ (SVG) แดงก่อน 50%, เขียวหลัง 50% */
-.gauge-traffic {
-  position:absolute; left:50%; bottom:100%;
-  transform:translateX(-50%);
-  width:14px; height:28px;
-  pointer-events:none; z-index:5;
+/* หญ้า + ดอกไม้ข้างถนน วางตำแหน่งสุ่ม */
+.gauge-grass {
+  position:absolute; left:0; right:0; top:100%;
+  height:14px; pointer-events:none; overflow:visible;
 }
-.gauge-traffic svg { width:100%; height:100%; display:block; }
-.gauge-traffic .tf-light-red,
-.gauge-traffic .tf-light-green { transition:opacity .3s, filter .3s; }
-.gauge-traffic .tf-light-green { opacity:0; }
-.gauge-track.passed .gauge-traffic .tf-light-red { opacity:.2; filter:none; }
-.gauge-track.passed .gauge-traffic .tf-light-green { opacity:1; }
+.gauge-grass .gr {
+  position:absolute; bottom:0;
+  width:12px; height:14px;
+  opacity:.9;
+}
+.gauge-grass .gr svg { width:100%; height:100%; display:block; overflow:visible; }
+/* หญ้า: เขียวหลายเฉด */
+.gauge-grass .gr-grass1 path { fill:#4A8C5F; }
+.gauge-grass .gr-grass2 path { fill:#6BA374; }
+.gauge-grass .gr-grass3 path { fill:#5E9B68; }
+.gauge-grass .gr-grass4 path { fill:#7DB389; }
+/* ดอกไม้: ก้านเขียว กลีบสี */
+.gauge-grass .gr-flower path.stem { fill:#5E9B68; }
+.gauge-grass .gr-f1 path.petal { fill:#F472B6; }
+.gauge-grass .gr-f1 path.center { fill:#FBBF24; }
+.gauge-grass .gr-f2 path.petal { fill:#A78BFA; }
+.gauge-grass .gr-f2 path.center { fill:#FBBF24; }
+.gauge-grass .gr-f3 path.petal { fill:#FB923C; }
+.gauge-grass .gr-f3 path.center { fill:#FCD34D; }
+/* Slate */
+[data-theme="slate"] .gauge-grass .gr-grass1 path,
+[data-theme="slate"] .gauge-grass .gr-grass2 path,
+[data-theme="slate"] .gauge-grass .gr-grass3 path,
+[data-theme="slate"] .gauge-grass .gr-grass4 path { fill:#7DD3A1; }
+[data-theme="slate"] .gauge-grass .gr-flower path.stem { fill:#7DD3A1; }
 .gauge-fill { display:none; }
 .gauge-van {
   position:absolute; top:50%; left:0;
@@ -681,6 +698,49 @@ body {
 
 /* ── DASHBOARD ── */
 .dash-hero-meta { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-top:8px; font-size:12px; color:rgba(255,255,255,.85); }
+
+/* การ์ดลอย 2 ชั้น (ใช้กับ "ทำงานมาแล้ว" + "ปกส.") */
+.dash-stack { display:flex; flex-direction:column; gap:12px; margin-bottom:14px; }
+.float-card {
+  background:var(--card); border-radius:var(--r-lg);
+  padding:14px 16px;
+  box-shadow: 0 14px 36px rgba(40,60,80,.14), 0 2px 6px rgba(40,60,80,.06);
+  backdrop-filter:saturate(160%) blur(12px); -webkit-backdrop-filter:saturate(160%) blur(12px);
+  transition:transform .2s;
+}
+.float-card:hover { transform:translateY(-2px); }
+.float-card-label {
+  font-size:11px; font-weight:700; color:var(--n400);
+  letter-spacing:.5px; text-transform:uppercase; margin-bottom:10px;
+}
+.float-card-row { display:flex; gap:10px; }
+.float-cell {
+  flex:1; background:var(--card); border-radius:var(--r-sm);
+  padding:10px 12px; text-align:center;
+  box-shadow: inset 0 2px 6px rgba(40,60,80,.10), 0 1px 3px rgba(40,60,80,.05);
+}
+.fc-val { font-size:20px; font-weight:800; color:var(--n800); letter-spacing:-.4px; line-height:1.1; }
+.fc-val.sm { font-size:15px; }
+.fc-unit { font-size:10px; color:var(--n400); font-weight:600; margin-top:3px; }
+[data-theme="slate"] .float-cell { box-shadow: inset 0 2px 6px rgba(0,0,0,.30), 0 1px 3px rgba(0,0,0,.20); background:rgba(20,28,36,.6); }
+[data-theme="slate"] .fc-val { color:#F0F3F8; }
+
+/* รายได้รายเดือน (history) */
+.monthly-history { display:flex; flex-direction:column; gap:8px; }
+.mh-row {
+  display:grid; grid-template-columns:84px 1fr auto; gap:10px; align-items:center;
+  padding:8px 10px; border-radius:var(--r-sm);
+  background:var(--card);
+  box-shadow: inset 0 1px 4px rgba(40,60,80,.06);
+}
+.mh-label { font-size:12px; font-weight:700; color:var(--n800); }
+.mh-net { font-size:14px; font-weight:800; color:var(--accent-ink); text-align:right; }
+.mh-ss { font-size:10px; color:var(--n400); font-weight:600; text-align:right; min-width:80px; }
+.mh-ss-tag { color:#10B981; font-weight:700; }
+[data-theme="slate"] .mh-row { box-shadow:inset 0 1px 4px rgba(0,0,0,.25); background:rgba(20,28,36,.5); }
+[data-theme="slate"] .mh-label { color:#F0F3F8; }
+[data-theme="slate"] .mh-net { color:#5FE3C7; }
+[data-theme="slate"] .mh-ss { color:#A6B3C2; }
 .dash-trend {
   display:inline-flex; align-items:center; gap:4px;
   padding:4px 10px; border-radius:99px; font-weight:700; font-size:11px;
@@ -950,24 +1010,8 @@ body {
     <!-- เกจรถตู้ -->
     <div class="tb-gauge" id="tbGauge">
       <div class="gauge-track">
-        <!-- ไฟจราจร (เสา + ตู้ไฟ 2 ดวง) -->
-        <div class="gauge-traffic" aria-hidden="true">
-          <svg viewBox="0 0 14 28" fill="none">
-            <!-- เสา -->
-            <line x1="7" y1="14" x2="7" y2="28" stroke="#475569" stroke-width="1.4" stroke-linecap="round"/>
-            <!-- ฐานเสา -->
-            <ellipse cx="7" cy="27.5" rx="3" ry=".8" fill="#475569"/>
-            <!-- ตู้ไฟ -->
-            <rect x="2" y="1" width="10" height="14" rx="2.5" fill="#334155" stroke="#1E293B" stroke-width=".5"/>
-            <!-- ดวงแดง (บน) -->
-            <circle class="tf-light-red" cx="7" cy="5" r="2.6" fill="#EF4444" style="filter:drop-shadow(0 0 3px rgba(239,68,68,.9))"/>
-            <!-- จุดสะท้อนแสงดวงแดง -->
-            <circle class="tf-light-red" cx="6" cy="4" r=".8" fill="rgba(255,255,255,.7)"/>
-            <!-- ดวงเขียว (ล่าง) -->
-            <circle class="tf-light-green" cx="7" cy="11" r="2.6" fill="#10B981" style="filter:drop-shadow(0 0 3px rgba(16,185,129,.9))"/>
-            <circle class="tf-light-green" cx="6" cy="10" r=".8" fill="rgba(255,255,255,.7)"/>
-          </svg>
-        </div>
+        <!-- ต้นหญ้าเล็กๆ ข้างถนน สลับ 2 แบบ -->
+        <div class="gauge-grass" aria-hidden="true"><span class="gr gr-grass4" style="left:45%"><svg viewBox="0 0 10 12"><path d="M5 12 Q3 9 2 5 Q3 8 4 12 Z M5 12 L5 4 Q5 8 5 12 Z M5 12 Q7 9 8 5 Q7 8 6 12 Z"/></svg></span><span class="gr gr-grass2" style="left:56%"><svg viewBox="0 0 10 12"><path d="M3 12 L4 5 Q3 7 2 9 Q4 6 4 12 Z M6 12 L7 4 Q6 7 5 9 Q7 6 7 12 Z"/></svg></span><span class="gr gr-grass3" style="left:78%"><svg viewBox="0 0 10 12"><path d="M5 12 L5 3 Q4 5 3 6 Q5 4 5 12 Q5 4 7 6 Q6 5 5 3 Z M2 12 L3 7 Q4 9 3 12 Z M8 12 L7 7 Q6 9 7 12 Z"/></svg></span><span class="gr gr-flower gr-f3" style="left:89%"><svg viewBox="0 0 10 14"><path class="stem" d="M5 14 L5 7 Q5 10 5 14 Z M5 10 Q3 11 2 12 Q4 11.5 5 11 Z"/><path class="petal" d="M5 1.5 Q3 2.5 3.5 4.5 Q5 4.5 5 3.5 Q5 4.5 6.5 4.5 Q7 2.5 5 1.5 Z M3.5 4.5 Q2 5 2 7 Q3 7 3.5 6 Z M6.5 4.5 Q8 5 8 7 Q7 7 6.5 6 Z M3.5 5 Q3 7 4.5 7.5 Q4.5 6.5 4 5.5 Z M6.5 5 Q7 7 5.5 7.5 Q5.5 6.5 6 5.5 Z"/><circle class="center" cx="5" cy="5" r=".8"/></svg></span><span class="gr gr-flower gr-f1" style="left:34%"><svg viewBox="0 0 10 14"><path class="stem" d="M5 14 L5 7 Q4 9 3 10 Q5 8 5 14 Z"/><path class="petal" d="M5 2 Q3 3 3 5 Q4 6 5 5 Q6 6 7 5 Q7 3 5 2 Z M5 5 Q3 5 2.5 6.5 Q3.5 7 5 6.5 Z M5 5 Q7 5 7.5 6.5 Q6.5 7 5 6.5 Z M5 5 Q4 6 4 7.5 Q5 7 5 6 Z M5 5 Q6 6 6 7.5 Q5 7 5 6 Z"/><circle class="center" cx="5" cy="5" r="1"/></svg></span><span class="gr gr-grass1" style="left:67%"><svg viewBox="0 0 10 12"><path d="M5 12 L5 4 Q4 6 3 8 Q5 5 5 12 Q5 6 7 8 Q6 6 5 4 Z"/></svg></span><span class="gr gr-flower gr-f2" style="left:12%"><svg viewBox="0 0 10 14"><path class="stem" d="M5 14 L5 8 Q6 10 7 11 Q5 9 5 14 Z"/><path class="petal" d="M5 1 Q3.5 2 4 4 Q5 4 5 3 Q5 4 6 4 Q6.5 2 5 1 Z M5 4 Q3 4 2 5.5 Q3 6 4 5.5 Q4 6.5 5 6 Z M5 4 Q7 4 8 5.5 Q7 6 6 5.5 Q6 6.5 5 6 Z M5 6 Q4 7 4 8.5 Q5 8 5 7 Q5 8 6 8.5 Q6 7 5 6 Z"/><circle class="center" cx="5" cy="4.5" r=".9"/></svg></span></div>
         <div class="gauge-fill" id="gaugeFill"></div>
         <div class="gauge-van" id="gaugeVan">
           <div class="van-dust" id="vanDust"></div>
@@ -1469,8 +1513,18 @@ const APP = {
       if (cfgJson.success) {
         STATE.holidays = cfgJson.data.holidays || [];
         STATE.wedSub   = cfgJson.data.wedSub   || [];
-        const { holidays:_, wedSub:__, ...cfgOnly } = cfgJson.data;
+        const { holidays:_, wedSub:__, monthlyHistory:___, settings:____, ...cfgOnly } = cfgJson.data;
         STATE.config = { ...DEFAULT_CFG, ...cfgOnly };
+
+        // อัปเดตข้อมูล Dashboard จาก Sheet ใหม่
+        if (Array.isArray(cfgJson.data.monthlyHistory)) {
+          MONTHLY_HISTORY = cfgJson.data.monthlyHistory;
+        }
+        const s = cfgJson.data.settings || {};
+        if (s.WORK_START_DATE) WORK_START_DATE = s.WORK_START_DATE;
+        if (typeof s.SS_TOTAL_PERIODS === 'number') SS_TOTAL_PERIODS = s.SS_TOTAL_PERIODS;
+        if (typeof s.SS_PAID_PERIODS  === 'number') SS_PAID_PERIODS  = s.SS_PAID_PERIODS;
+        if (typeof s.SS_TOTAL_PAID    === 'number') SS_TOTAL_PAID    = s.SS_TOTAL_PAID;
       }
       if (Array.isArray(dataJson)) {
         STATE.sheetRecords = dataJson.filter(r => r.date && r.timeIn && r.timeOut);
@@ -1786,7 +1840,7 @@ function renderConfigCard() {
   const C = STATE.config;
   const rows = [
     ['เงินเดือน', fmtBaht(C.SALARY)], ['เบี้ยขยัน', fmtBaht(C.ALLOWANCE)],
-    ['ประกันสังคม', fmtBaht(C.SOCIAL_SEC)], ['งวดแรก', fmtBaht(C.FIRST_PAYMENT)],
+    ['ปกส.', fmtBaht(C.SOCIAL_SEC)], ['งวดแรก', fmtBaht(C.FIRST_PAYMENT)],
     ['ค่าเดินทาง (ก่อน-หลังเวลา)', fmtBaht(C.TRANSPORT)], ['OT×1.0 ต่อชม', fmtBaht(C.OT100_RATE)],
     ['OT×1.5 ต่อชม', fmtBaht(C.OT150_RATE)], ['OT×2.0 ต่อชม', fmtBaht(C.OT200_RATE)],
     ['OT เริ่มที่', C.OT100_START + ':00 น.'],
@@ -2064,7 +2118,7 @@ function renderMonthly() {
   contEl.innerHTML = `
     <div class="sum-grid">
       <div class="sum-tile accent full">
-        <div class="st-label">รวมรายได้ทั้งหมด (ก่อนหักประกันสังคม)</div>
+        <div class="st-label">รวมรายได้ทั้งหมด (ก่อนหัก ปกส.)</div>
         <div class="st-val xl">${fmtBaht(totalIncome)}</div>
         <div style="color:rgba(255,255,255,.6);font-size:10.5px;margin-top:4px;">${recs.length} วันทำงาน · OT รวม ${totalOTHours.toFixed(2)} ชม</div>
       </div>
@@ -2122,7 +2176,7 @@ function renderMonthly() {
         ${totTrans>0?`<tr><td style="font-size:12px">ค่าเดินทางก่อน-หลังเวลา : ${TRANSPORT_RATE}×${transCnt} รอบ</td><td class="plus">${fmtBaht(totTrans)}</td></tr>`:''}
         ${totSpecial>0?`<tr><td style="font-size:12px">ค่าเดินทางพิเศษ : ${specialCnt} รอบ</td><td class="plus">${fmtBaht(totSpecial)}</td></tr>`:''}
         <tr class="hi"><td>รวมทั้งหมด</td><td>${fmtBaht(totalIncome)}</td></tr>
-        <tr><td>หักประกันสังคม</td><td class="minus">-${fmtBaht(SOCIAL_SEC)}</td></tr>
+        <tr><td>หัก ปกส.</td><td class="minus">-${fmtBaht(SOCIAL_SEC)}</td></tr>
         <tr class="hi"><td>คงเหลือหลังหัก</td><td>${fmtBaht(netAfterSoc)}</td></tr>
       </table>
     </div>
@@ -2139,6 +2193,89 @@ function renderMonthly() {
         <div class="st-note">คงเหลือ - งวดแรก</div>
       </div>
     </div>`;
+}
+
+/* ── DASHBOARD HELPERS: ข้อมูล/ฟังก์ชันเสริม ── */
+
+// ค่าตั้งต้น Dashboard — โหลดจาก Google Sheet ตอน sync
+// ถ้า Sheet ว่าง/ดึงไม่ได้ ใช้ค่า fallback ด้านล่าง
+let WORK_START_DATE = '2025-01-19';
+let MONTHLY_HISTORY = [];
+let SS_TOTAL_PERIODS = 180;
+let SS_PAID_PERIODS = 0;
+let SS_TOTAL_PAID = 0;
+
+// คำนวณวันทำงานนับจาก WORK_START_DATE ถึงวันนี้
+function daysWorking() {
+  const start = new Date(WORK_START_DATE + 'T00:00:00');
+  const now = new Date();
+  return Math.max(0, Math.floor((now - start) / 86400000));
+}
+
+// การ์ดลอย "ทำงานมาแล้ว ___ วัน"
+function renderWorkDaysCard() {
+  const d = daysWorking();
+  const years = Math.floor(d / 365);
+  const remainDays = d % 365;
+  const months = Math.floor(remainDays / 30);
+  const days = remainDays % 30;
+  let summary = '';
+  if (years > 0) summary += `${years} ปี `;
+  if (months > 0) summary += `${months} เดือน `;
+  if (days > 0 || (!years && !months)) summary += `${days} วัน`;
+  return `
+    <div class="float-card wd-card">
+      <div class="float-card-label">ทำงานมาแล้ว</div>
+      <div class="float-card-row">
+        <div class="float-cell">
+          <div class="fc-val">${d.toLocaleString('th-TH')}</div>
+          <div class="fc-unit">วัน</div>
+        </div>
+        <div class="float-cell fc-divider">
+          <div class="fc-val sm">${summary.trim()}</div>
+          <div class="fc-unit">เริ่ม 19/1/68</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// การ์ดลอย ปกส.
+function renderSocialSecCard() {
+  const remain = SS_TOTAL_PERIODS - SS_PAID_PERIODS;
+  return `
+    <div class="float-card ss-card">
+      <div class="float-card-label">ปกส. (ม.33)</div>
+      <div class="float-card-row ss-row">
+        <div class="float-cell">
+          <div class="fc-val">${SS_PAID_PERIODS}</div>
+          <div class="fc-unit">งวดที่ส่ง</div>
+        </div>
+        <div class="float-cell fc-divider">
+          <div class="fc-val sm">${fmtBaht(SS_TOTAL_PAID)}</div>
+          <div class="fc-unit">ยอดรวมส่ง</div>
+        </div>
+        <div class="float-cell fc-divider">
+          <div class="fc-val">${remain}</div>
+          <div class="fc-unit">เหลือ/${SS_TOTAL_PERIODS}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// แสดง 15 เดือน — เดือน, รายได้สุทธิ, ปกส.ตัวเอง, ปกส.นายจ้าง
+function renderMonthlyHistory() {
+  return MONTHLY_HISTORY.map(m => {
+    const ssTotal = m.ssSelf + m.ssEmployer;
+    return `
+      <div class="mh-row">
+        <div class="mh-label">${m.label}</div>
+        <div class="mh-net">${fmtBaht(m.net)}</div>
+        <div class="mh-ss">ปกส. ${ssTotal}฿${m.ssEmployer > 0 ? ` <span class="mh-ss-tag">(+นายจ้าง ${m.ssEmployer})</span>` : ''}</div>
+      </div>
+    `;
+  }).join('');
 }
 
 /* ── RENDER: DASHBOARD (สรุปภาพรวมทั้งหมด) ── */
@@ -2251,6 +2388,20 @@ function renderDashboard() {
         ${periodTotals.length >= 2 ? `<span class="dash-trend" style="background:${trendUp?'rgba(16,185,129,.18)':'rgba(239,68,68,.18)'}; color:${trendColor};">
           <span style="font-size:9px;">${trendArrow}</span> ${Math.abs(trendPct).toFixed(1)}%
         </span>` : ''}
+      </div>
+    </div>
+
+    <!-- การ์ดลอย 2 ชั้น: ทำงานมาแล้ว + ปกส. -->
+    <div class="dash-stack">
+      ${renderWorkDaysCard()}
+      ${renderSocialSecCard()}
+    </div>
+
+    <!-- รายได้เฉลี่ย/เดือน (ย้อนหลัง) -->
+    <div class="sec-title">รายได้รายเดือน (ย้อนหลัง)</div>
+    <div class="card">
+      <div class="monthly-history">
+        ${renderMonthlyHistory()}
       </div>
     </div>
 

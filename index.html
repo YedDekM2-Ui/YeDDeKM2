@@ -268,36 +268,38 @@ body {
 }
 @keyframes roadlines { to { background-position:-20px 0; } }
 
-/* หญ้า + ดอกไม้ข้างถนน วางตำแหน่งสุ่ม */
+/* หญ้า + ดอกไม้ข้างถนน — แถวเดียววิ่งตามถนน (clip ไม่ให้ล้นไปการ์ดอื่น) */
 .gauge-grass {
   position:absolute; left:0; right:0; top:100%;
-  height:14px; pointer-events:none; overflow:visible;
+  height:13px; pointer-events:none; overflow:hidden;
 }
+.grass-run {
+  position:absolute; left:0; top:0; height:100%;
+  display:flex; align-items:flex-end; gap:34px; padding-left:10px;
+  will-change:transform;
+}
+.gauge-track.loading .grass-run { animation:grassrun 6s linear infinite; }
+.gauge-track.online  .grass-run { animation:grassrun 3.4s linear infinite; }
+@keyframes grassrun { from { transform:translateX(0); } to { transform:translateX(-180px); } }
 .gauge-grass .gr {
-  position:absolute; bottom:0;
-  width:12px; height:14px;
-  opacity:.9;
+  position:relative; flex:0 0 auto;
+  width:11px; height:13px; opacity:.92;
 }
 .gauge-grass .gr svg { width:100%; height:100%; display:block; overflow:visible; }
-/* หญ้า: เขียวหลายเฉด */
-.gauge-grass .gr-grass1 path { fill:#4A8C5F; }
+/* หญ้า: เขียวสองเฉด */
 .gauge-grass .gr-grass2 path { fill:#6BA374; }
 .gauge-grass .gr-grass3 path { fill:#5E9B68; }
-.gauge-grass .gr-grass4 path { fill:#7DB389; }
-/* ดอกไม้: ก้านเขียว กลีบสี */
-.gauge-grass .gr-flower path.stem { fill:#5E9B68; }
-.gauge-grass .gr-f1 path.petal { fill:#F472B6; }
-.gauge-grass .gr-f1 path.center { fill:#FBBF24; }
-.gauge-grass .gr-f2 path.petal { fill:#A78BFA; }
-.gauge-grass .gr-f2 path.center { fill:#FBBF24; }
-.gauge-grass .gr-f3 path.petal { fill:#FB923C; }
-.gauge-grass .gr-f3 path.center { fill:#FCD34D; }
-/* Slate */
-[data-theme="slate"] .gauge-grass .gr-grass1 path,
+/* ดอกไม้: ก้านเขียว + กลีบสี */
+.gauge-grass .gr-fy path.stem, .gauge-grass .gr-fp path.stem { fill:#5E9B68; }
+.gauge-grass .gr-fy path.petal { fill:#FBBF24; }   /* เหลือง */
+.gauge-grass .gr-fy circle.center { fill:#FB923C; }
+.gauge-grass .gr-fp path.petal { fill:#F472B6; }   /* ชมพู */
+.gauge-grass .gr-fp circle.center { fill:#FBBF24; }
+/* Slate: หญ้าสว่างขึ้น */
 [data-theme="slate"] .gauge-grass .gr-grass2 path,
-[data-theme="slate"] .gauge-grass .gr-grass3 path,
-[data-theme="slate"] .gauge-grass .gr-grass4 path { fill:#7DD3A1; }
-[data-theme="slate"] .gauge-grass .gr-flower path.stem { fill:#7DD3A1; }
+[data-theme="slate"] .gauge-grass .gr-grass3 path { fill:#7DD3A1; }
+[data-theme="slate"] .gauge-grass .gr-fy path.stem,
+[data-theme="slate"] .gauge-grass .gr-fp path.stem { fill:#7DD3A1; }
 .gauge-fill { display:none; }
 .gauge-van {
   position:absolute; top:50%; left:0;
@@ -813,6 +815,63 @@ body {
   font-size:11px; color:var(--n400); font-weight:600; margin-left:6px;
 }
 
+/* ══ DASHBOARD: ตัวกรองปี ══ */
+.dash-yearbar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+.dash-ychip {
+  padding:7px 16px; border-radius:99px; font-size:12.5px; font-weight:700;
+  border:none; background:transparent; color:var(--n800);
+  cursor:pointer; font-family:var(--font); transition:all .2s;
+  box-shadow:var(--neu-inset); white-space:nowrap;
+}
+.dash-ychip.on { background:linear-gradient(135deg, var(--accent-2), var(--accent)); color:#fff; box-shadow:var(--neu-shadow-sm); }
+
+/* ══ DASHBOARD: การ์ดลอยซ้อนชั้น + ไอคอนหัวข้อ (สไตล์ neumorphic ตามตัวอย่าง) ══ */
+.dash-sec {
+  background:var(--card); border:1px solid var(--card-border); border-radius:var(--r-lg);
+  padding:16px; margin-bottom:14px; box-shadow:var(--neu-shadow);
+  backdrop-filter:saturate(160%) blur(12px); -webkit-backdrop-filter:saturate(160%) blur(12px);
+}
+.dash-sec-head { display:flex; align-items:center; gap:11px; }
+.dash-sec-head.clickable { cursor:pointer; user-select:none; }
+.dash-sec-head.clickable:active { opacity:.7; }
+/* ชิปไอคอนวงกลมนูน (neumorphic) — สีตามหัวข้อ */
+.dash-ico {
+  width:40px; height:40px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--card); box-shadow:var(--neu-shadow-sm);
+}
+.dash-ico svg { width:19px; height:19px; }
+.dash-ico.c-green,  .fc-ico.c-green  { color:#16A34A; }
+.dash-ico.c-red,    .fc-ico.c-red    { color:#E11D48; }
+.dash-ico.c-blue,   .fc-ico.c-blue   { color:#2563EB; }
+.dash-ico.c-orange, .fc-ico.c-orange { color:#F97316; }
+[data-theme="slate"] .dash-ico { background:rgba(20,28,36,.55); }
+.dash-sec-title { font-size:14px; font-weight:800; color:var(--n800); letter-spacing:-.2px; flex:1; }
+.dash-sec-caret { font-size:12px; color:var(--n400); margin-left:auto; }
+/* การ์ดชั้นใน (ยุบลง) ห่อเนื้อหาตัวเลข/กราฟ */
+.dash-inner {
+  background:var(--card); border-radius:var(--r); padding:14px; margin-top:13px;
+  box-shadow:var(--neu-inset);
+}
+[data-theme="slate"] .dash-inner { background:rgba(20,28,36,.45); }
+.dash-sec-body { overflow:hidden; transition:max-height .28s ease, opacity .2s ease; }
+.dash-sec-body.collapsed { max-height:0; opacity:0; margin:0; }
+
+/* ชิปไอคอนในการ์ดลอย ทำงานมาแล้ว / ปกส. */
+.fc-ico {
+  width:38px; height:38px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--card); box-shadow:var(--neu-shadow-sm); margin-right:10px;
+}
+.fc-ico svg { width:18px; height:18px; }
+.float-card-head { display:flex; align-items:center; margin-bottom:12px; }
+
+/* แท่งกราฟ overview แยกสีต่อแถว (เขียว→แดง→น้ำเงิน→ส้ม วนไป) */
+.dash-bar-fill.v0 { background:linear-gradient(90deg,#22C55E,#16A34A); }
+.dash-bar-fill.v1 { background:linear-gradient(90deg,#FB7185,#E11D48); }
+.dash-bar-fill.v2 { background:linear-gradient(90deg,#60A5FA,#2563EB); }
+.dash-bar-fill.v3 { background:linear-gradient(90deg,#FDBA74,#F97316); }
+
 /* ── STATES ── */
 .loading-state { text-align:center; padding:40px 20px; color:var(--n300); }
 .loading-dots { display:inline-flex; gap:5px; margin-bottom:12px; }
@@ -845,6 +904,18 @@ body {
 .nav-icon svg { width:22px; height:22px; display:block; }
 #nav-list .nav-icon svg { width:24px; height:24px; }
 .nav-dot { display:none; }
+/* ปุ่มกลาง = พวงมาลัย ขยายใหญ่ขึ้นนิดๆ + ยกขึ้นเล็กน้อย */
+.nav-btn.nav-center { transform:translateY(-3px); }
+.nav-btn.nav-center .nav-icon svg { width:31px; height:31px; }
+.nav-btn.nav-center.on { box-shadow:0 6px 18px color-mix(in srgb, var(--accent) 50%, transparent); }
+
+/* ── ธีมมืด (Slate): เส้นขอบสีขาวรอบรายการทุกวัน + เมนู ── */
+[data-theme="slate"] .rec { border-color:rgba(255,255,255,.65); border-left-width:4px; }
+[data-theme="slate"] .rec.wednesday { border-color:rgba(255,255,255,.65); border-left-color:var(--amberDk); }
+[data-theme="slate"] .rec.holiday   { border-color:rgba(255,255,255,.65); border-left-color:var(--roseDk); }
+[data-theme="slate"] .daily-item { border:1px solid rgba(255,255,255,.65); }
+[data-theme="slate"] #bottomNav { border-color:rgba(255,255,255,.45); }
+[data-theme="slate"] .nav-btn:not(.on) { border:1px solid rgba(255,255,255,.22); }
 
 /* ── MISC ── */
 .last-sync-bar {
@@ -1010,8 +1081,8 @@ body {
     <!-- เกจรถตู้ -->
     <div class="tb-gauge" id="tbGauge">
       <div class="gauge-track">
-        <!-- ต้นหญ้าเล็กๆ ข้างถนน สลับ 2 แบบ -->
-        <div class="gauge-grass" aria-hidden="true"><span class="gr gr-grass4" style="left:45%"><svg viewBox="0 0 10 12"><path d="M5 12 Q3 9 2 5 Q3 8 4 12 Z M5 12 L5 4 Q5 8 5 12 Z M5 12 Q7 9 8 5 Q7 8 6 12 Z"/></svg></span><span class="gr gr-grass2" style="left:56%"><svg viewBox="0 0 10 12"><path d="M3 12 L4 5 Q3 7 2 9 Q4 6 4 12 Z M6 12 L7 4 Q6 7 5 9 Q7 6 7 12 Z"/></svg></span><span class="gr gr-grass3" style="left:78%"><svg viewBox="0 0 10 12"><path d="M5 12 L5 3 Q4 5 3 6 Q5 4 5 12 Q5 4 7 6 Q6 5 5 3 Z M2 12 L3 7 Q4 9 3 12 Z M8 12 L7 7 Q6 9 7 12 Z"/></svg></span><span class="gr gr-flower gr-f3" style="left:89%"><svg viewBox="0 0 10 14"><path class="stem" d="M5 14 L5 7 Q5 10 5 14 Z M5 10 Q3 11 2 12 Q4 11.5 5 11 Z"/><path class="petal" d="M5 1.5 Q3 2.5 3.5 4.5 Q5 4.5 5 3.5 Q5 4.5 6.5 4.5 Q7 2.5 5 1.5 Z M3.5 4.5 Q2 5 2 7 Q3 7 3.5 6 Z M6.5 4.5 Q8 5 8 7 Q7 7 6.5 6 Z M3.5 5 Q3 7 4.5 7.5 Q4.5 6.5 4 5.5 Z M6.5 5 Q7 7 5.5 7.5 Q5.5 6.5 6 5.5 Z"/><circle class="center" cx="5" cy="5" r=".8"/></svg></span><span class="gr gr-flower gr-f1" style="left:34%"><svg viewBox="0 0 10 14"><path class="stem" d="M5 14 L5 7 Q4 9 3 10 Q5 8 5 14 Z"/><path class="petal" d="M5 2 Q3 3 3 5 Q4 6 5 5 Q6 6 7 5 Q7 3 5 2 Z M5 5 Q3 5 2.5 6.5 Q3.5 7 5 6.5 Z M5 5 Q7 5 7.5 6.5 Q6.5 7 5 6.5 Z M5 5 Q4 6 4 7.5 Q5 7 5 6 Z M5 5 Q6 6 6 7.5 Q5 7 5 6 Z"/><circle class="center" cx="5" cy="5" r="1"/></svg></span><span class="gr gr-grass1" style="left:67%"><svg viewBox="0 0 10 12"><path d="M5 12 L5 4 Q4 6 3 8 Q5 5 5 12 Q5 6 7 8 Q6 6 5 4 Z"/></svg></span><span class="gr gr-flower gr-f2" style="left:12%"><svg viewBox="0 0 10 14"><path class="stem" d="M5 14 L5 8 Q6 10 7 11 Q5 9 5 14 Z"/><path class="petal" d="M5 1 Q3.5 2 4 4 Q5 4 5 3 Q5 4 6 4 Q6.5 2 5 1 Z M5 4 Q3 4 2 5.5 Q3 6 4 5.5 Q4 6.5 5 6 Z M5 4 Q7 4 8 5.5 Q7 6 6 5.5 Q6 6.5 5 6 Z M5 6 Q4 7 4 8.5 Q5 8 5 7 Q5 8 6 8.5 Q6 7 5 6 Z"/><circle class="center" cx="5" cy="4.5" r=".9"/></svg></span></div>
+        <!-- ทิวทัศน์ข้างถนน: หญ้าโค้ง 2 + ดอกเหลือง 1 + ดอกชมพู 1 — วิ่งตามถนนตอนรถแล่น -->
+        <div class="gauge-grass" aria-hidden="true"><div class="grass-run" id="grassRun"><span class="gr gr-grass2"><svg viewBox="0 0 10 12"><path d="M3 12 L4 5 Q3 7 2 9 Q4 6 4 12 Z M6 12 L7 4 Q6 7 5 9 Q7 6 7 12 Z"/></svg></span><span class="gr gr-fy"><svg viewBox="0 0 10 14"><path class="stem" d="M5 14 L5 7 Q4 9 3 10 Q5 8 5 14 Z"/><path class="petal" d="M5 2 Q3 3 3 5 Q4 6 5 5 Q6 6 7 5 Q7 3 5 2 Z M5 5 Q3 5 2.5 6.5 Q3.5 7 5 6.5 Z M5 5 Q7 5 7.5 6.5 Q6.5 7 5 6.5 Z M5 5 Q4 6 4 7.5 Q5 7 5 6 Z M5 5 Q6 6 6 7.5 Q5 7 5 6 Z"/><circle class="center" cx="5" cy="5" r="1"/></svg></span><span class="gr gr-grass3"><svg viewBox="0 0 10 12"><path d="M5 12 L5 3 Q4 5 3 6 Q5 4 5 12 Q5 4 7 6 Q6 5 5 3 Z M2 12 L3 7 Q4 9 3 12 Z M8 12 L7 7 Q6 9 7 12 Z"/></svg></span><span class="gr gr-fp"><svg viewBox="0 0 10 14"><path class="stem" d="M5 14 L5 8 Q6 10 7 11 Q5 9 5 14 Z"/><path class="petal" d="M5 1 Q3.5 2 4 4 Q5 4 5 3 Q5 4 6 4 Q6.5 2 5 1 Z M5 4 Q3 4 2 5.5 Q3 6 4 5.5 Q4 6.5 5 6 Z M5 4 Q7 4 8 5.5 Q7 6 6 5.5 Q6 6.5 5 6 Z M5 6 Q4 7 4 8.5 Q5 8 5 7 Q5 8 6 8.5 Q6 7 5 6 Z"/><circle class="center" cx="5" cy="4.5" r=".9"/></svg></span><span class="gr gr-grass2"><svg viewBox="0 0 10 12"><path d="M3 12 L4 5 Q3 7 2 9 Q4 6 4 12 Z M6 12 L7 4 Q6 7 5 9 Q7 6 7 12 Z"/></svg></span><span class="gr gr-fy"><svg viewBox="0 0 10 14"><path class="stem" d="M5 14 L5 7 Q4 9 3 10 Q5 8 5 14 Z"/><path class="petal" d="M5 2 Q3 3 3 5 Q4 6 5 5 Q6 6 7 5 Q7 3 5 2 Z M5 5 Q3 5 2.5 6.5 Q3.5 7 5 6.5 Z M5 5 Q7 5 7.5 6.5 Q6.5 7 5 6.5 Z M5 5 Q4 6 4 7.5 Q5 7 5 6 Z M5 5 Q6 6 6 7.5 Q5 7 5 6 Z"/><circle class="center" cx="5" cy="5" r="1"/></svg></span><span class="gr gr-grass3"><svg viewBox="0 0 10 12"><path d="M5 12 L5 3 Q4 5 3 6 Q5 4 5 12 Q5 4 7 6 Q6 5 5 3 Z M2 12 L3 7 Q4 9 3 12 Z M8 12 L7 7 Q6 9 7 12 Z"/></svg></span><span class="gr gr-fp"><svg viewBox="0 0 10 14"><path class="stem" d="M5 14 L5 8 Q6 10 7 11 Q5 9 5 14 Z"/><path class="petal" d="M5 1 Q3.5 2 4 4 Q5 4 5 3 Q5 4 6 4 Q6.5 2 5 1 Z M5 4 Q3 4 2 5.5 Q3 6 4 5.5 Q4 6.5 5 6 Z M5 4 Q7 4 8 5.5 Q7 6 6 5.5 Q6 6.5 5 6 Z M5 6 Q4 7 4 8.5 Q5 8 5 7 Q5 8 6 8.5 Q6 7 5 6 Z"/><circle class="center" cx="5" cy="4.5" r=".9"/></svg></span></div></div>
         <div class="gauge-fill" id="gaugeFill"></div>
         <div class="gauge-van" id="gaugeVan">
           <div class="van-dust" id="vanDust"></div>
@@ -1172,22 +1243,22 @@ body {
   </div>
 </div>
 
-<!-- BOTTOM NAV -->
+<!-- BOTTOM NAV — ลำดับ: รายการ · รายวัน · พวงมาลัย(บันทึก) · รายเดือน · สรุป -->
 <div id="bottomNav">
-  <button class="nav-btn on" onclick="APP.tab('add')" id="nav-add">
-    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span><span>บันทึก</span><div class="nav-dot"></div>
-  </button>
   <button class="nav-btn" onclick="APP.tab('list')" id="nav-list">
-    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></span><span>รายการ</span><div class="nav-dot"></div>
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="8" y1="16" x2="8" y2="11"/><line x1="12" y1="16" x2="12" y2="8"/><line x1="16" y1="16" x2="16" y2="13"/></svg></span><span>รายการ</span><div class="nav-dot"></div>
   </button>
   <button class="nav-btn" onclick="APP.tab('daily')" id="nav-daily">
-    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg></span><span>รายวัน</span><div class="nav-dot"></div>
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg></span><span>รายวัน</span><div class="nav-dot"></div>
+  </button>
+  <button class="nav-btn nav-center on" onclick="APP.tab('add')" id="nav-add">
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.4"/><path d="M12 3.2v6.4M5.6 18.4l4.3-4.3M18.4 18.4l-4.3-4.3"/></svg></span><span>พวงมาลัย</span><div class="nav-dot"></div>
   </button>
   <button class="nav-btn" onclick="APP.tab('monthly')" id="nav-monthly">
-    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="7" rx="1"/><rect x="12" y="7" width="3" height="11" rx="1"/><rect x="17" y="13" width="3" height="5" rx="1"/></svg></span><span>รายเดือน</span><div class="nav-dot"></div>
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M21 12h-6a2 2 0 0 0 0 4h6v-4Z"/></svg></span><span>รายเดือน</span><div class="nav-dot"></div>
   </button>
   <button class="nav-btn" onclick="APP.tab('dashboard')" id="nav-dashboard">
-    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span><span>สรุป</span><div class="nav-dot"></div>
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.2 15.9A10 10 0 1 1 8 2.8"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg></span><span>สรุป</span><div class="nav-dot"></div>
   </button>
 </div>
 
@@ -1199,7 +1270,7 @@ const CONFIG = {
   GAS_URL: 'https://script.google.com/macros/s/AKfycbwrEXPBYCTrfeUtw9pTd_w7FQxOIj_nHs30BQ1cz-LiyvmioovuE8u9rR5jFNIFF10a/exec',
   SYNC_INTERVAL_MS: 30000,
   LOCAL_KEY: 'ttp_v2',
-  VERSION: '2.2.0'
+  VERSION: '2.5.0'
 };
 
 const DEFAULT_CFG = {
@@ -1218,7 +1289,9 @@ let STATE = {
   collapsedDailyPeriods: {}, // หน้ารายวัน: เดือนไหนถูกพับเก็บอยู่ (กดตัวเลขซ้ำเพื่อสลับ)
   collapsedListPeriods: {},  // หน้ารายการ: เดือนไหนถูกพับเก็บอยู่
   editingDate: null,   // date being edited (original date before delete)
-  autoSyncTimer: null
+  autoSyncTimer: null,
+  dashYear: 'all',     // ตัวกรองปีหน้า Dashboard: 'all' = รวมทุกปี, หรือเลข ค.ศ.
+  dashCollapsed: { history:false, overview:false }  // การ์ดที่หุบ-กางได้
 };
 
 /* ── STORAGE ── */
@@ -2212,6 +2285,33 @@ function daysWorking() {
   return Math.max(0, Math.floor((now - start) / 86400000));
 }
 
+/* ── DASHBOARD: ตัวกรองปี + การ์ดหุบ-กาง ── */
+function setDashYear(y) { STATE.dashYear = y; renderDashboard(); }
+function toggleDashSec(k) { STATE.dashCollapsed[k] = !STATE.dashCollapsed[k]; renderDashboard(); }
+
+// ชุดไอคอน SVG สำหรับหัวข้อการ์ด
+const DASH_ICONS = {
+  work:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>',
+  ss:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>',
+  history: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.5 2.8L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>',
+  avg:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 9 11l4 4 8-8"/><path d="M14 7h7v7"/></svg>',
+  pie:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.2 15.9A10 10 0 1 1 8 2.8"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>',
+  bars:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="7" rx="1"/><rect x="12" y="7" width="3" height="11" rx="1"/><rect x="17" y="13" width="3" height="5" rx="1"/></svg>',
+  zap:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
+  days:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="9"/></svg>'
+};
+
+// สร้างหัวข้อการ์ด: ไอคอนวงกลม + ชื่อ (+ ปุ่มหุบ-กางถ้าระบุ key)
+function dashHead(icon, color, title, collapseKey) {
+  const clickable = collapseKey ? ' clickable' : '';
+  const onclick = collapseKey ? ` onclick="toggleDashSec('${collapseKey}')"` : '';
+  const caret = collapseKey ? `<span class="dash-sec-caret">${STATE.dashCollapsed[collapseKey] ? '▸' : '▾'}</span>` : '';
+  return `<div class="dash-sec-head${clickable}"${onclick}>
+    <span class="dash-ico c-${color}">${DASH_ICONS[icon]}</span>
+    <span class="dash-sec-title">${title}</span>${caret}
+  </div>`;
+}
+
 // การ์ดลอย "ทำงานมาแล้ว ___ วัน"
 function renderWorkDaysCard() {
   const d = daysWorking();
@@ -2225,7 +2325,10 @@ function renderWorkDaysCard() {
   if (days > 0 || (!years && !months)) summary += `${days} วัน`;
   return `
     <div class="float-card wd-card">
-      <div class="float-card-label">ทำงานมาแล้ว</div>
+      <div class="float-card-head">
+        <span class="fc-ico c-green">${DASH_ICONS.work}</span>
+        <div class="float-card-label" style="margin-bottom:0">ทำงานมาแล้ว</div>
+      </div>
       <div class="float-card-row">
         <div class="float-cell">
           <div class="fc-val">${d.toLocaleString('th-TH')}</div>
@@ -2245,7 +2348,10 @@ function renderSocialSecCard() {
   const remain = SS_TOTAL_PERIODS - SS_PAID_PERIODS;
   return `
     <div class="float-card ss-card">
-      <div class="float-card-label">ปกส. (ม.33)</div>
+      <div class="float-card-head">
+        <span class="fc-ico c-blue">${DASH_ICONS.ss}</span>
+        <div class="float-card-label" style="margin-bottom:0">ปกส. (ม.33)</div>
+      </div>
       <div class="float-card-row ss-row">
         <div class="float-cell">
           <div class="fc-val">${SS_PAID_PERIODS}</div>
@@ -2265,8 +2371,8 @@ function renderSocialSecCard() {
 }
 
 // แสดง 15 เดือน — เดือน, รายได้สุทธิ, ปกส.ตัวเอง, ปกส.นายจ้าง
-function renderMonthlyHistory() {
-  return MONTHLY_HISTORY.map(m => {
+function renderMonthlyHistory(list) {
+  return (list || MONTHLY_HISTORY).map(m => {
     const ssTotal = m.ssSelf + m.ssEmployer;
     return `
       <div class="mh-row">
@@ -2288,9 +2394,36 @@ function renderDashboard() {
     return;
   }
 
-  // จัดกลุ่มตามรอบจ่าย
+  // ── ตัวกรองปี: รวบรวมปีจากข้อมูลทั้งหมด (records + ประวัติ) ──
+  const yearSet = new Set();
+  records.forEach(r => yearSet.add(periodYear(getPeriod(r.date))));
+  MONTHLY_HISTORY.forEach(m => { const pp=(m.period||'').split('/'); if(pp[1]) yearSet.add(2000+parseInt(pp[1],10)); });
+  const curYear = new Date().getFullYear();
+  yearSet.add(curYear);
+  const years = [...yearSet].filter(y=>!isNaN(y)).sort((a,b)=>a-b);
+  const yf = STATE.dashYear;
+  const inYf = (p) => yf==='all' || periodYear(p)===yf;
+
+  let yearBar = '<div class="dash-yearbar">';
+  yearBar += `<button class="dash-ychip ${yf==='all'?'on':''}" onclick="setDashYear('all')">รวมทุกปี</button>`;
+  years.forEach(y => { yearBar += `<button class="dash-ychip ${yf===y?'on':''}" onclick="setDashYear(${y})">${y+543}${y===curYear?' • ปีนี้':''}</button>`; });
+  yearBar += '</div>';
+
+  // กรองตามปีที่เลือก
+  const yrRecords = records.filter(r => inYf(getPeriod(r.date)));
+  const histFiltered = MONTHLY_HISTORY.filter(m => {
+    if (yf==='all') return true;
+    const pp=(m.period||'').split('/'); const hy = pp[1] ? 2000+parseInt(pp[1],10) : null;
+    return hy === yf;
+  });
+  if (!yrRecords.length) {
+    el.innerHTML = yearBar + '<div class="empty-state" style="padding:50px 20px;text-align:center;color:var(--n400);">ไม่มีข้อมูลในปีที่เลือก</div>';
+    return;
+  }
+
+  // จัดกลุ่มตามรอบจ่าย (เฉพาะปีที่เลือก)
   const byPeriod = {};
-  records.forEach(r => {
+  yrRecords.forEach(r => {
     const p = getPeriod(r.date);
     if (!byPeriod[p]) byPeriod[p] = [];
     byPeriod[p].push(r);
@@ -2373,94 +2506,76 @@ function renderDashboard() {
 
   // donut: conic-gradient css
   const donutBg = `conic-gradient(
-    var(--accent) 0% ${pctBase.toFixed(2)}%,
-    #F5A623 ${pctBase.toFixed(2)}% ${(pctBase+pctOT).toFixed(2)}%,
-    #5B8DEF ${(pctBase+pctOT).toFixed(2)}% 100%
+    #16A34A 0% ${pctBase.toFixed(2)}%,
+    #E11D48 ${pctBase.toFixed(2)}% ${(pctBase+pctOT).toFixed(2)}%,
+    #2563EB ${(pctBase+pctOT).toFixed(2)}% 100%
   )`;
 
-  let html = `
+  let html = yearBar + `
     <!-- HERO -->
     <div class="card sum-tile accent full dash-hero" style="margin-bottom:14px">
-      <div class="st-label">รายได้สุทธิสะสมทั้งหมด</div>
+      <div class="st-label">รายได้สุทธิสะสม${yf==='all'?'ทั้งหมด':' ปี '+(yf+543)}</div>
       <div class="st-val xl">${fmtBaht(totalNet)}</div>
       <div class="dash-hero-meta">
         <span>${periods.length} รอบ · ${totalDays} วัน · OT ${totalOTHours.toFixed(1)} ชม.</span>
-        ${periodTotals.length >= 2 ? `<span class="dash-trend" style="background:${trendUp?'rgba(16,185,129,.18)':'rgba(239,68,68,.18)'}; color:${trendColor};">
-          <span style="font-size:9px;">${trendArrow}</span> ${Math.abs(trendPct).toFixed(1)}%
-        </span>` : ''}
+        ${periodTotals.length >= 2 ? `<span class="dash-trend" style="background:${trendUp?'rgba(16,185,129,.18)':'rgba(239,68,68,.18)'}; color:${trendColor};"><span style="font-size:9px;">${trendArrow}</span> ${Math.abs(trendPct).toFixed(1)}%</span>` : ''}
       </div>
     </div>
 
-    <!-- การ์ดลอย 2 ชั้น: ทำงานมาแล้ว + ปกส. -->
+    <!-- การ์ดลอย: ทำงานมาแล้ว + ปกส. -->
     <div class="dash-stack">
       ${renderWorkDaysCard()}
       ${renderSocialSecCard()}
     </div>
 
-    <!-- รายได้เฉลี่ย/เดือน (ย้อนหลัง) -->
-    <div class="sec-title">รายได้รายเดือน (ย้อนหลัง)</div>
-    <div class="card">
-      <div class="monthly-history">
-        ${renderMonthlyHistory()}
-      </div>
-    </div>
-
-    <!-- รายได้เฉลี่ย: ต่อนาที/ชม./วัน -->
-    <div class="sec-title">รายได้เฉลี่ย</div>
-    <div class="card dash-avg-card">
-      <div class="dash-avg-row">
-        <div class="dash-avg-item">
-          <div class="dash-avg-icon" style="background:#FEF3C7;color:#D97706;">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          </div>
-          <div class="dash-avg-text">
-            <div class="dash-avg-label">ต่อนาที</div>
-            <div class="dash-avg-val">${fmtBaht(Math.round(avgPerMin*100)/100)}</div>
-          </div>
-        </div>
-        <div class="dash-avg-item">
-          <div class="dash-avg-icon" style="background:#DBEAFE;color:#2563EB;">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-          </div>
-          <div class="dash-avg-text">
-            <div class="dash-avg-label">ต่อชั่วโมง</div>
-            <div class="dash-avg-val">${fmtBaht(Math.round(avgPerHour))}</div>
-          </div>
-        </div>
-        <div class="dash-avg-item">
-          <div class="dash-avg-icon" style="background:#D1FAE5;color:#059669;">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-          </div>
-          <div class="dash-avg-text">
-            <div class="dash-avg-label">ต่อวัน</div>
-            <div class="dash-avg-val">${fmtBaht(Math.round(avgPerDay))}</div>
+    <!-- รายได้ย้อนหลัง (หุบ-กางได้) -->
+    <div class="dash-sec">
+      ${dashHead('history','blue','รายได้ย้อนหลัง','history')}
+      <div class="dash-sec-body ${STATE.dashCollapsed.history?'collapsed':''}">
+        <div class="dash-inner">
+          <div class="monthly-history">
+            ${histFiltered.length ? renderMonthlyHistory(histFiltered) : '<div style="text-align:center;color:var(--n400);font-size:12px;padding:8px;">ยังไม่มีข้อมูลย้อนหลัง</div>'}
           </div>
         </div>
       </div>
     </div>
 
-    <!-- สัดส่วนรายได้ (donut) -->
-    <div class="sec-title">สัดส่วนรายได้</div>
-    <div class="card">
-      <div class="dash-donut-wrap">
-        <div class="dash-donut" style="background:${donutBg};">
-          <div class="dash-donut-hole">
-            <div class="dash-donut-val">${fmtBaht(totalForDonut)}</div>
-            <div class="dash-donut-sub">รวม</div>
+    <!-- รายได้เฉลี่ย -->
+    <div class="dash-sec">
+      ${dashHead('avg','green','รายได้เฉลี่ย')}
+      <div class="dash-inner">
+        <div class="dash-avg-row">
+          <div class="dash-avg-item">
+            <div class="dash-avg-icon" style="background:rgba(22,163,74,.14);color:#16A34A;">${DASH_ICONS.avg}</div>
+            <div class="dash-avg-text"><div class="dash-avg-label">ต่อนาที</div><div class="dash-avg-val">${fmtBaht(Math.round(avgPerMin*100)/100)}</div></div>
+          </div>
+          <div class="dash-avg-item">
+            <div class="dash-avg-icon" style="background:rgba(225,29,72,.14);color:#E11D48;">${DASH_ICONS.history}</div>
+            <div class="dash-avg-text"><div class="dash-avg-label">ต่อชั่วโมง</div><div class="dash-avg-val">${fmtBaht(Math.round(avgPerHour))}</div></div>
+          </div>
+          <div class="dash-avg-item">
+            <div class="dash-avg-icon" style="background:rgba(37,99,235,.14);color:#2563EB;">${DASH_ICONS.work}</div>
+            <div class="dash-avg-text"><div class="dash-avg-label">ต่อวัน</div><div class="dash-avg-val">${fmtBaht(Math.round(avgPerDay))}</div></div>
           </div>
         </div>
-        <div class="dash-donut-legend">
-          <div class="dash-leg-item"><span class="dash-leg-dot" style="background:var(--accent)"></span>
-            <span class="dash-leg-name">ฐาน (เงินเดือน+เบี้ย)</span>
-            <span class="dash-leg-pct">${pctBase.toFixed(1)}%</span>
+      </div>
+    </div>
+
+    <!-- สัดส่วนรายได้ -->
+    <div class="dash-sec">
+      ${dashHead('pie','orange','สัดส่วนรายได้')}
+      <div class="dash-inner">
+        <div class="dash-donut-wrap">
+          <div class="dash-donut" style="background:${donutBg};">
+            <div class="dash-donut-hole">
+              <div class="dash-donut-val">${fmtBaht(totalForDonut)}</div>
+              <div class="dash-donut-sub">รวม</div>
+            </div>
           </div>
-          <div class="dash-leg-item"><span class="dash-leg-dot" style="background:#F5A623"></span>
-            <span class="dash-leg-name">OT</span>
-            <span class="dash-leg-pct">${pctOT.toFixed(1)}%</span>
-          </div>
-          <div class="dash-leg-item"><span class="dash-leg-dot" style="background:#5B8DEF"></span>
-            <span class="dash-leg-name">ค่าเดินทาง</span>
-            <span class="dash-leg-pct">${pctTrans.toFixed(1)}%</span>
+          <div class="dash-donut-legend">
+            <div class="dash-leg-item"><span class="dash-leg-dot" style="background:#16A34A"></span><span class="dash-leg-name">ฐาน (เงินเดือน+เบี้ย)</span><span class="dash-leg-pct">${pctBase.toFixed(1)}%</span></div>
+            <div class="dash-leg-item"><span class="dash-leg-dot" style="background:#E11D48"></span><span class="dash-leg-name">OT</span><span class="dash-leg-pct">${pctOT.toFixed(1)}%</span></div>
+            <div class="dash-leg-item"><span class="dash-leg-dot" style="background:#2563EB"></span><span class="dash-leg-name">ค่าเดินทาง</span><span class="dash-leg-pct">${pctTrans.toFixed(1)}%</span></div>
           </div>
         </div>
       </div>
@@ -2468,66 +2583,56 @@ function renderDashboard() {
 
     <!-- 3 สถิติย่อย -->
     <div class="sum-grid" style="grid-template-columns:1fr 1fr 1fr;gap:10px">
-      <div class="sum-tile" style="padding:14px 12px">
-        <div class="st-label">OT สะสม</div>
-        <div class="st-val" style="font-size:17px">${fmtBaht(totalOTPaid)}</div>
-      </div>
-      <div class="sum-tile" style="padding:14px 12px">
-        <div class="st-label">เฉลี่ย/รอบ</div>
-        <div class="st-val" style="font-size:17px">${fmtBaht(Math.round(avg))}</div>
-      </div>
-      <div class="sum-tile" style="padding:14px 12px">
-        <div class="st-label">รอบ</div>
-        <div class="st-val" style="font-size:17px">${periods.length}</div>
-      </div>
+      <div class="sum-tile" style="padding:14px 12px"><div class="st-label">OT สะสม</div><div class="st-val" style="font-size:17px">${fmtBaht(totalOTPaid)}</div></div>
+      <div class="sum-tile" style="padding:14px 12px"><div class="st-label">เฉลี่ย/รอบ</div><div class="st-val" style="font-size:17px">${fmtBaht(Math.round(avg))}</div></div>
+      <div class="sum-tile" style="padding:14px 12px"><div class="st-label">รอบ</div><div class="st-val" style="font-size:17px">${periods.length}</div></div>
     </div>
 
-    <!-- กราฟแท่ง overview -->
-    <div class="sec-title">Overview รายรอบ</div>
-    <div class="card">
-      <div class="dash-bars">
-        ${periodTotals.map((pt, i) => {
-          const pct = (pt.gross / maxBar * 100).toFixed(1);
-          const prev = i > 0 ? periodTotals[i-1].gross : pt.gross;
-          const change = prev > 0 ? ((pt.gross - prev)/prev*100) : 0;
-          const changeUp = change >= 0;
-          const showChange = i > 0;
-          return `
-            <div class="dash-bar-row" onclick="STATE.selectedPeriod='${pt.period}'; STATE.expandedYear=periodYear('${pt.period}'); APP.tab('monthly');">
-              <div class="dash-bar-label">${periodShortTH(pt.period)}</div>
-              <div class="dash-bar-track">
-                <div class="dash-bar-fill" style="width:${pct}%"></div>
-              </div>
-              <div class="dash-bar-val">${fmtBaht(pt.gross)}</div>
-              ${showChange ? `<div class="dash-bar-chg" style="color:${changeUp?'#10B981':'#EF4444'}">${changeUp?'▲':'▼'}${Math.abs(change).toFixed(0)}%</div>` : '<div class="dash-bar-chg"></div>'}
-            </div>`;
-        }).join('')}
-      </div>
-    </div>
-
-    <!-- รายการ Custom OT ทั้งหมด (replace ค่าเดินทาง) -->
-    ${Object.keys(allCustoms).length > 0 ? `
-    <div class="sec-title">รายการ OT พิเศษสะสม</div>
-    <div class="card">
-      ${Object.entries(allCustoms).sort((a,b)=>b[1].total-a[1].total).map(([name, info]) => `
-        <div class="dtype-row">
-          <div class="dtype-left">
-            <span class="dash-custom-tag">${name}</span>
-            <span class="dash-custom-count">×${info.count}</span>
+    <!-- ภาพรวม (หุบ-กางได้) -->
+    <div class="dash-sec">
+      ${dashHead('bars','red','ภาพรวม','overview')}
+      <div class="dash-sec-body ${STATE.dashCollapsed.overview?'collapsed':''}">
+        <div class="dash-inner">
+          <div class="dash-bars">
+            ${periodTotals.map((pt, i) => {
+              const pct = (pt.gross / maxBar * 100).toFixed(1);
+              const prev = i > 0 ? periodTotals[i-1].gross : pt.gross;
+              const change = prev > 0 ? ((pt.gross - prev)/prev*100) : 0;
+              const changeUp = change >= 0;
+              const showChange = i > 0;
+              return `
+                <div class="dash-bar-row" onclick="STATE.selectedPeriod='${pt.period}'; STATE.expandedYear=periodYear('${pt.period}'); APP.tab('monthly');">
+                  <div class="dash-bar-label">${periodShortTH(pt.period)}</div>
+                  <div class="dash-bar-track"><div class="dash-bar-fill v${i%4}" style="width:${pct}%"></div></div>
+                  <div class="dash-bar-val">${fmtBaht(pt.gross)}</div>
+                  ${showChange ? `<div class="dash-bar-chg" style="color:${changeUp?'#10B981':'#EF4444'}">${changeUp?'▲':'▼'}${Math.abs(change).toFixed(0)}%</div>` : '<div class="dash-bar-chg"></div>'}
+                </div>`;
+            }).join('')}
           </div>
-          <div class="dtype-right">${fmtBaht(info.total)}</div>
         </div>
-      `).join('')}
+      </div>
     </div>
-    ` : ''}
 
-    <!-- รวมทำงาน -->
-    <div class="sec-title">รวมทำงาน</div>
-    <div class="card">
-      <div class="dtype-row"><span class="day-pill normal">วันปกติ</span><div class="dtype-right">${totalNormalDays} วัน</div></div>
-      <div class="dtype-row"><span class="day-pill wed">วันพุธ หยุด</span><div class="dtype-right">${totalWedDays} วัน</div></div>
-      <div class="dtype-row"><span class="day-pill holiday">วันหยุดนักขัตฤกษ์</span><div class="dtype-right">${totalHolDays} วัน</div></div>
-      <div class="dtype-row" style="border-bottom:none"><span class="day-pill total">รวมทั้งหมด</span><div class="dtype-right">${totalDays} วัน</div></div>
+    <!-- รายการ OT พิเศษสะสม -->
+    ${Object.keys(allCustoms).length > 0 ? `
+    <div class="dash-sec">
+      ${dashHead('zap','orange','รายการ OT พิเศษสะสม')}
+      <div class="dash-inner">
+        ${Object.entries(allCustoms).sort((a,b)=>b[1].total-a[1].total).map(([name, info]) => `
+          <div class="dtype-row"><div class="dtype-left"><span class="dash-custom-tag">${name}</span><span class="dash-custom-count">×${info.count}</span></div><div class="dtype-right">${fmtBaht(info.total)}</div></div>
+        `).join('')}
+      </div>
+    </div>` : ''}
+
+    <!-- รวมวันทำงาน -->
+    <div class="dash-sec">
+      ${dashHead('days','green','รวมวันทำงาน')}
+      <div class="dash-inner">
+        <div class="dtype-row"><span class="day-pill normal">วันปกติ</span><div class="dtype-right">${totalNormalDays} วัน</div></div>
+        <div class="dtype-row"><span class="day-pill wed">วันพุธ หยุด</span><div class="dtype-right">${totalWedDays} วัน</div></div>
+        <div class="dtype-row"><span class="day-pill holiday">วันหยุดนักขัตฤกษ์</span><div class="dtype-right">${totalHolDays} วัน</div></div>
+        <div class="dtype-row" style="border-bottom:none"><span class="day-pill total">รวมทั้งหมด</span><div class="dtype-right">${totalDays} วัน</div></div>
+      </div>
     </div>
   `;
   el.innerHTML = html;
@@ -2635,6 +2740,8 @@ function pinPress(n) {
     setTimeout(() => {
       if (_pinBuffer === getPin()) {
         hidePinLock();
+        // ออโต้โหลดทุกชีตใหม่ทุกครั้งหลังปลดล็อกเข้าแอป
+        try { APP.sync(false); } catch(e) {}
       } else {
         const err = document.getElementById('pinErr');
         err.textContent = 'รหัสผ่านไม่ถูกต้อง ลองอีกครั้ง';

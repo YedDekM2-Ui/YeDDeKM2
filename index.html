@@ -754,6 +754,7 @@ body {
   width:36px; height:36px; border-radius:12px;
   display:flex; align-items:center; justify-content:center; flex-shrink:0;
 }
+.dash-avg-icon svg { width:18px; height:18px; }
 .dash-avg-text { display:flex; flex-direction:column; min-width:0; }
 .dash-avg-label { font-size:10px; color:var(--n400); font-weight:600; }
 .dash-avg-val { font-size:14px; color:var(--n800); font-weight:800; letter-spacing:-.3px; }
@@ -904,7 +905,7 @@ body {
 .nav-icon svg { width:22px; height:22px; display:block; }
 #nav-list .nav-icon svg { width:24px; height:24px; }
 .nav-dot { display:none; }
-/* ปุ่มกลาง = บันทึก ขยายใหญ่ขึ้นนิดๆ + ยกขึ้นเล็กน้อย */
+/* ปุ่มกลาง = พวงมาลัย ขยายใหญ่ขึ้นนิดๆ + ยกขึ้นเล็กน้อย */
 .nav-btn.nav-center { transform:translateY(-3px); }
 .nav-btn.nav-center .nav-icon svg { width:31px; height:31px; }
 .nav-btn.nav-center.on { box-shadow:0 6px 18px color-mix(in srgb, var(--accent) 50%, transparent); }
@@ -1243,7 +1244,7 @@ body {
   </div>
 </div>
 
-<!-- BOTTOM NAV — ลำดับ: รายการ · รายวัน · บันทึก · รายเดือน · สรุป -->
+<!-- BOTTOM NAV — ลำดับ: รายการ · รายวัน · พวงมาลัย(บันทึก) · รายเดือน · สรุป -->
 <div id="bottomNav">
   <button class="nav-btn" onclick="APP.tab('list')" id="nav-list">
     <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="8" y1="16" x2="8" y2="11"/><line x1="12" y1="16" x2="12" y2="8"/><line x1="16" y1="16" x2="16" y2="13"/></svg></span><span>รายการ</span><div class="nav-dot"></div>
@@ -1252,7 +1253,7 @@ body {
     <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg></span><span>รายวัน</span><div class="nav-dot"></div>
   </button>
   <button class="nav-btn nav-center on" onclick="APP.tab('add')" id="nav-add">
-    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.4"/><path d="M12 3.2v6.4M5.6 18.4l4.3-4.3M18.4 18.4l-4.3-4.3"/></svg></span><span>บันทึก</span><div class="nav-dot"></div>
+    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.4"/><path d="M12 3.2v6.4M5.6 18.4l4.3-4.3M18.4 18.4l-4.3-4.3"/></svg></span><span>พวงมาลัย</span><div class="nav-dot"></div>
   </button>
   <button class="nav-btn" onclick="APP.tab('monthly')" id="nav-monthly">
     <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M21 12h-6a2 2 0 0 0 0 4h6v-4Z"/></svg></span><span>รายเดือน</span><div class="nav-dot"></div>
@@ -2417,6 +2418,43 @@ function renderDashboard() {
     return hy === yf;
   });
   if (!yrRecords.length) {
+    // ปีนี้ไม่มี Records รายวัน — แต่ถ้ามี "รายได้ย้อนหลัง" (ประวัติ) ให้แสดงสรุปจากประวัติแทน
+    if (histFiltered.length) {
+      const hNet = histFiltered.reduce((s,m)=>s+(+m.net||0),0);
+      const hSS  = histFiltered.reduce((s,m)=>s+(+m.ssSelf||0)+(+m.ssEmployer||0),0);
+      const hAvg = hNet / histFiltered.length;
+      el.innerHTML = yearBar + `
+        <div class="card sum-tile accent full dash-hero" style="margin-bottom:14px">
+          <div class="st-label">รายได้สุทธิรวม${yf==='all'?'':' ปี '+(yf+543)} (จากประวัติ)</div>
+          <div class="st-val xl">${fmtBaht(hNet)}</div>
+          <div class="dash-hero-meta"><span>${histFiltered.length} เดือน · ปกส. ${fmtBaht(hSS)}</span></div>
+        </div>
+        <div class="dash-sec">
+          ${dashHead('avg','green','รายได้เฉลี่ย/เดือน')}
+          <div class="dash-inner">
+            <div class="dash-avg-row" style="grid-template-columns:1fr 1fr">
+              <div class="dash-avg-item">
+                <div class="dash-avg-icon" style="background:rgba(22,163,74,.14);color:#16A34A;">${DASH_ICONS.avg}</div>
+                <div class="dash-avg-text"><div class="dash-avg-label">เฉลี่ย/เดือน</div><div class="dash-avg-val">${fmtBaht(hAvg)}</div></div>
+              </div>
+              <div class="dash-avg-item">
+                <div class="dash-avg-icon" style="background:rgba(37,99,235,.14);color:#2563EB;">${DASH_ICONS.ss}</div>
+                <div class="dash-avg-text"><div class="dash-avg-label">ปกส. รวม</div><div class="dash-avg-val">${fmtBaht(hSS)}</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="dash-sec">
+          ${dashHead('history','blue','รายได้ย้อนหลัง','history')}
+          <div class="dash-sec-body ${STATE.dashCollapsed.history?'collapsed':''}">
+            <div class="dash-inner"><div class="monthly-history">${renderMonthlyHistory(histFiltered)}</div></div>
+          </div>
+        </div>
+        <div style="text-align:center;color:var(--n400);font-size:11.5px;padding:6px 10px 2px;line-height:1.6;">
+          ปีนี้ยังไม่มีบันทึกรายวัน — สถิติ OT/วันทำงาน จะคำนวณได้เมื่อมีข้อมูลรายวัน
+        </div>`;
+      return;
+    }
     el.innerHTML = yearBar + '<div class="empty-state" style="padding:50px 20px;text-align:center;color:var(--n400);">ไม่มีข้อมูลในปีที่เลือก</div>';
     return;
   }
@@ -2581,11 +2619,12 @@ function renderDashboard() {
       </div>
     </div>
 
-    <!-- 3 สถิติย่อย -->
-    <div class="sum-grid" style="grid-template-columns:1fr 1fr 1fr;gap:10px">
-      <div class="sum-tile" style="padding:14px 12px"><div class="st-label">OT สะสม</div><div class="st-val" style="font-size:17px">${fmtBaht(totalOTPaid)}</div></div>
+    <!-- สถิติย่อย (รวม OT ชั่วโมงทั้งหมดของปีที่เลือก) -->
+    <div class="sum-grid" style="grid-template-columns:1fr 1fr;gap:10px">
+      <div class="sum-tile" style="padding:14px 12px"><div class="st-label">OT สะสม (เงิน)</div><div class="st-val" style="font-size:17px">${fmtBaht(totalOTPaid)}</div></div>
+      <div class="sum-tile" style="padding:14px 12px"><div class="st-label">OT รวม (ชม.)${yf==='all'?'':' · '+(yf+543)}</div><div class="st-val" style="font-size:17px">${totalOTHours.toFixed(1)} ชม.</div></div>
       <div class="sum-tile" style="padding:14px 12px"><div class="st-label">เฉลี่ย/รอบ</div><div class="st-val" style="font-size:17px">${fmtBaht(Math.round(avg))}</div></div>
-      <div class="sum-tile" style="padding:14px 12px"><div class="st-label">รอบ</div><div class="st-val" style="font-size:17px">${periods.length}</div></div>
+      <div class="sum-tile" style="padding:14px 12px"><div class="st-label">จำนวนรอบ</div><div class="st-val" style="font-size:17px">${periods.length}</div></div>
     </div>
 
     <!-- ภาพรวม (หุบ-กางได้) -->

@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="TimeTrack Pro">
 <meta name="theme-color" content="#F2FAFA">
 <title>TimeTrack Pro</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════
    DESIGN TOKENS
@@ -1005,6 +1005,62 @@ body {
 }
 .change-pin-modal.show { display:flex; }
 .change-pin-modal .modal-box { background:var(--card); }
+
+/* ════════════════════════════════════════════
+   REFINEMENT PASS — distill · typeset · polish · animate
+   เลเยอร์ปรับความเนียน (เพิ่มเติม ไม่แก้โครงเดิม)
+   ════════════════════════════════════════════ */
+:root { --ease: cubic-bezier(.22,.61,.36,1); --dur: .2s; }
+
+/* typeset — เรนเดอร์ฟอนต์คมขึ้น, ปิดไฮไลต์แตะบนมือถือ, จัด tracking หัวข้อ */
+* { -webkit-tap-highlight-color: transparent; }
+html { -webkit-text-size-adjust:100%; }
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1;
+}
+.sec-title, .dash-sec-title, .float-card-label, .st-label { letter-spacing:-0.012em; }
+.st-val.xl, .dash-donut-val { letter-spacing:-0.02em; }
+
+/* polish — ตัวเลขเงิน/เวลา ใช้ความกว้างเท่ากัน (tabular) คอลัมน์ตรงสวยทุกแถว */
+.st-val, .dash-avg-val, .dash-bar-val, .dash-bar-chg, .dash-donut-val,
+.dash-leg-pct, .dash-custom-count, .dtype-right, .di-right, .di-total,
+.fc-val, .mh-net, .mh-ss, .ot-leg-val, .pv-nums, .pv-total,
+.rec-right, .rec-total {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* animate — จังหวะ transition เดียวกันทั้งแอป + กดแล้วยุบนิดๆ ให้รู้สึกตอบสนอง */
+.nav-btn, .dash-ychip, .sum-tile, .rec, .daily-item, .card,
+.float-card, .dash-sec, .dash-bar-row, .mh-row, button {
+  transition: transform var(--dur) var(--ease),
+              box-shadow var(--dur) var(--ease),
+              background var(--dur) var(--ease),
+              border-color var(--dur) var(--ease),
+              opacity var(--dur) var(--ease);
+}
+.nav-btn:active, .dash-ychip:active, .sum-tile:active,
+.dash-bar-row:active, .mh-row:active { transform: scale(.975); }
+.nav-btn.nav-center:active { transform: translateY(-3px) scale(.95); }
+
+/* quality floor — โฟกัสคีย์บอร์ดมองเห็นชัด (ไม่กระทบการคลิกเมาส์) */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+button:focus:not(:focus-visible),
+input:focus:not(:focus-visible) { outline: none; }
+
+/* quality floor — เคารพ prefers-reduced-motion: หยุดฉากวิ่ง/แอนิเมชัน */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .grass-run { animation: none !important; }
+}
 </style>
 </head>
 <body>

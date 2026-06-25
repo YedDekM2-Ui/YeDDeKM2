@@ -689,7 +689,7 @@ body {
 }
 /* ปีที่เลือก = นูน + พื้นเข้ม */
 .year-btn.on {
-  background:linear-gradient(135deg, var(--n600), var(--n800));
+  background:linear-gradient(135deg, var(--accent-2), var(--accent));
   color:#fff;
   box-shadow:var(--neu-shadow-sm);
 }
@@ -906,15 +906,9 @@ body {
 #nav-list .nav-icon svg { width:15px; height:15px; }
 .nav-dot { display:none; }
 /* ปุ่มกลาง = พวงมาลัย ขยายใหญ่ขึ้นนิดๆ + ยกขึ้นเล็กน้อย */
-.nav-btn.nav-center { transform:translateY(-13px); }
-.nav-btn.nav-center .nav-icon {
-  width:46px; height:46px; border-radius:50%;
-  background:var(--accent); color:#fff;
-  box-shadow:0 8px 18px color-mix(in srgb, var(--accent) 50%, transparent), 0 0 0 5px var(--card);
-  margin-bottom:2px;
-}
-.nav-btn.nav-center .nav-icon svg { width:24px; height:24px; }
-.nav-btn.nav-center.on { background:none; box-shadow:none; color:var(--accent); }
+.nav-btn.nav-center { transform:translateY(-2px); }
+.nav-btn.nav-center .nav-icon svg { width:16px; height:16px; }
+.nav-btn.nav-center.on { box-shadow:0 4px 14px color-mix(in srgb, var(--accent) 40%, transparent); }
 
 /* ── ธีมมืด (Slate): เส้นขอบสีขาวรอบรายการทุกวัน + เมนู ── */
 [data-theme="slate"] .rec { border-color:rgba(255,255,255,.65); border-left-width:4px; }
@@ -1050,7 +1044,7 @@ body {
 }
 .nav-btn:active, .dash-ychip:active, .sum-tile:active,
 .dash-bar-row:active, .mh-row:active { transform: scale(.975); }
-.nav-btn.nav-center:active { transform: translateY(-13px) scale(.95); }
+.nav-btn.nav-center:active { transform: translateY(-2px) scale(.95); }
 
 /* quality floor — โฟกัสคีย์บอร์ดมองเห็นชัด (ไม่กระทบการคลิกเมาส์) */
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }

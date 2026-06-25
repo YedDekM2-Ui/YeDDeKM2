@@ -906,14 +906,14 @@ body {
 #nav-list .nav-icon svg { width:15px; height:15px; }
 .nav-dot { display:none; }
 /* ปุ่มกลาง = พวงมาลัย ขยายใหญ่ขึ้นนิดๆ + ยกขึ้นเล็กน้อย */
-.nav-btn.nav-center { transform:translateY(-10px); }
+.nav-btn.nav-center { transform:translateY(-6px); }
 .nav-btn.nav-center .nav-icon {
-  width:42px; height:42px; border-radius:50%;
+  width:34px; height:34px; border-radius:50%;
   background:linear-gradient(135deg, var(--accent-2), var(--accent)); color:#fff;
-  box-shadow:0 7px 16px color-mix(in srgb, var(--accent) 45%, transparent), 0 0 0 4px var(--card);
+  box-shadow:0 5px 12px color-mix(in srgb, var(--accent) 40%, transparent), 0 0 0 3px var(--card);
   margin-bottom:1px;
 }
-.nav-btn.nav-center .nav-icon svg { width:21px; height:21px; }
+.nav-btn.nav-center .nav-icon svg { width:17px; height:17px; }
 .nav-btn.nav-center.on { background:none; box-shadow:none; color:var(--accent); }
 
 /* ── ธีมมืด (Slate): เส้นขอบสีขาวรอบรายการทุกวัน + เมนู ── */
@@ -1050,7 +1050,7 @@ body {
 }
 .nav-btn:active, .dash-ychip:active, .sum-tile:active,
 .dash-bar-row:active, .mh-row:active { transform: scale(.975); }
-.nav-btn.nav-center:active { transform: translateY(-10px) scale(.95); }
+.nav-btn.nav-center:active { transform: translateY(-6px) scale(.95); }
 
 /* quality floor — โฟกัสคีย์บอร์ดมองเห็นชัด (ไม่กระทบการคลิกเมาส์) */
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
@@ -1271,7 +1271,7 @@ input:focus:not(:focus-visible) { outline: none; }
       <div id="cfgContent" style="font-size:12px;color:var(--n400)">กำลังโหลด...</div>
     </div>
 
-    <div class="card">
+    <div class="card" style="display:none">
       <div class="card-head">สำรองข้อมูล / ย้ายเครื่อง</div>
       <div style="font-size:11.5px;color:var(--n400);line-height:1.6;margin-bottom:12px;">
         ข้อมูลซิงค์กับ Google Sheets อัตโนมัติอยู่แล้ว (กด Sync บนเครื่องใหม่เพื่อดึงข้อมูลกลับ)

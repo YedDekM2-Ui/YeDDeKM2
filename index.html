@@ -906,9 +906,15 @@ body {
 #nav-list .nav-icon svg { width:15px; height:15px; }
 .nav-dot { display:none; }
 /* ปุ่มกลาง = พวงมาลัย ขยายใหญ่ขึ้นนิดๆ + ยกขึ้นเล็กน้อย */
-.nav-btn.nav-center { transform:translateY(-2px); }
-.nav-btn.nav-center .nav-icon svg { width:16px; height:16px; }
-.nav-btn.nav-center.on { box-shadow:0 4px 14px color-mix(in srgb, var(--accent) 40%, transparent); }
+.nav-btn.nav-center { transform:translateY(-15px); }
+.nav-btn.nav-center .nav-icon {
+  width:52px; height:52px; border-radius:50%;
+  background:linear-gradient(135deg, var(--accent-2), var(--accent)); color:#fff;
+  box-shadow:0 10px 22px color-mix(in srgb, var(--accent) 50%, transparent), 0 0 0 6px var(--card);
+  margin-bottom:1px;
+}
+.nav-btn.nav-center .nav-icon svg { width:26px; height:26px; }
+.nav-btn.nav-center.on { background:none; box-shadow:none; color:var(--accent); }
 
 /* ── ธีมมืด (Slate): เส้นขอบสีขาวรอบรายการทุกวัน + เมนู ── */
 [data-theme="slate"] .rec { border-color:rgba(255,255,255,.65); border-left-width:4px; }
@@ -1044,7 +1050,7 @@ body {
 }
 .nav-btn:active, .dash-ychip:active, .sum-tile:active,
 .dash-bar-row:active, .mh-row:active { transform: scale(.975); }
-.nav-btn.nav-center:active { transform: translateY(-2px) scale(.95); }
+.nav-btn.nav-center:active { transform: translateY(-15px) scale(.95); }
 
 /* quality floor — โฟกัสคีย์บอร์ดมองเห็นชัด (ไม่กระทบการคลิกเมาส์) */
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
@@ -1087,6 +1093,19 @@ input:focus:not(:focus-visible) { outline: none; }
 .an-i-ic.pj { background:rgba(74,108,247,.15); color:#4A6CF7; }
 .an-i-tx { flex:1; }
 .an-i-v { font-weight:800; color:var(--n800); font-variant-numeric:tabular-nums; white-space:nowrap; }
+/* รายการรายเดือน (dashboard) — theme-aware */
+.dm-list{display:flex;flex-direction:column;}
+.dm-row{display:flex;align-items:center;gap:12px;padding:11px 2px;border-bottom:1px solid var(--accent-soft);cursor:pointer;}
+.dm-row:last-child{border-bottom:none;}
+.dm-row:active{opacity:.6;}
+.dm-ic{width:42px;height:42px;border-radius:13px;background:var(--accent-soft);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;flex:0 0 auto;}
+.dm-main{flex:1;min-width:0;}
+.dm-nm{font-weight:700;font-size:13.5px;color:var(--n800);}
+.dm-sub{font-size:11px;color:var(--n400);margin-top:2px;}
+.dm-right{text-align:right;}
+.dm-net{font-weight:800;font-size:15px;color:var(--n800);font-variant-numeric:tabular-nums;}
+.dm-chg{font-size:11px;font-weight:800;margin-top:1px;}
+.dm-chg.up{color:#10B981;}.dm-chg.down{color:#EF4444;}
 </style>
 </head>
 <body>
@@ -2548,6 +2567,23 @@ function dashAnalysisHTML(periodTotals, totalOTPaid, totalGross, labelFn) {
   return `<div class="an-verdict an-${mood}"><div class="an-hl">${hl}</div><div class="an-items">${items.join('')}</div></div>`;
 }
 
+// รายการรายเดือน: เดือน · วัน · OT รวม · รายได้สุทธิ + %เทียบรอบก่อน (ใหม่→เก่า)
+function dashMonthListHTML(pts) {
+  if (!pts || !pts.length) return '';
+  const rev = pts.slice().reverse();
+  const rows = rev.map((p, i) => {
+    const prev = rev[i + 1];
+    const chg = prev && prev.net ? ((p.net - prev.net) / prev.net * 100) : null;
+    const up = chg != null && chg >= 0;
+    return `<div class="dm-row" onclick="STATE.selectedPeriod='${p.period}'; STATE.expandedYear=periodYear('${p.period}'); APP.tab('monthly');">
+      <div class="dm-ic">${periodShortTH(p.period)}</div>
+      <div class="dm-main"><div class="dm-nm">${periodLabel(p.period)}</div><div class="dm-sub">${p.days} วัน · OT ${p.otHr.toFixed(1)} ชม.</div></div>
+      <div class="dm-right"><div class="dm-net">${fmtBaht(p.net)}</div>${chg != null ? `<div class="dm-chg ${up?'up':'down'}">${up?'▲':'▼'} ${Math.abs(chg).toFixed(0)}%</div>` : ''}</div>
+    </div>`;
+  }).join('');
+  return `<div class="dash-sec">${dashHead('days','green','รายเดือน')}<div class="dash-inner"><div class="dm-list">${rows}</div></div></div>`;
+}
+
 /* ── RENDER: DASHBOARD (สรุปภาพรวมทั้งหมด) ── */
 function renderDashboard() {
   const records = mergeAll();
@@ -2732,6 +2768,9 @@ function renderDashboard() {
       </div>
     </div>
 
+    <!-- รายเดือน: net · วัน · OT รวม (ใหม่→เก่า) -->
+    ${dashMonthListHTML(periodTotals)}
+
     <!-- การ์ดลอย: ทำงานมาแล้ว + ปกส. -->
     <div class="dash-stack">
       ${renderWorkDaysCard()}
@@ -2799,30 +2838,7 @@ function renderDashboard() {
       <div class="sum-tile" style="padding:14px 12px"><div class="st-label">จำนวนรอบ</div><div class="st-val" style="font-size:17px">${periods.length}</div></div>
     </div>
 
-    <!-- ภาพรวม (หุบ-กางได้) -->
-    <div class="dash-sec">
-      ${dashHead('bars','red','ภาพรวม','overview')}
-      <div class="dash-sec-body ${STATE.dashCollapsed.overview?'collapsed':''}">
-        <div class="dash-inner">
-          <div class="dash-bars">
-            ${periodTotals.map((pt, i) => {
-              const pct = (pt.gross / maxBar * 100).toFixed(1);
-              const prev = i > 0 ? periodTotals[i-1].gross : pt.gross;
-              const change = prev > 0 ? ((pt.gross - prev)/prev*100) : 0;
-              const changeUp = change >= 0;
-              const showChange = i > 0;
-              return `
-                <div class="dash-bar-row" onclick="STATE.selectedPeriod='${pt.period}'; STATE.expandedYear=periodYear('${pt.period}'); APP.tab('monthly');">
-                  <div class="dash-bar-label">${periodShortTH(pt.period)}</div>
-                  <div class="dash-bar-track"><div class="dash-bar-fill v${i%4}" style="width:${pct}%"></div></div>
-                  <div class="dash-bar-val">${fmtBaht(pt.gross)}</div>
-                  ${showChange ? `<div class="dash-bar-chg" style="color:${changeUp?'#10B981':'#EF4444'}">${changeUp?'▲':'▼'}${Math.abs(change).toFixed(0)}%</div>` : '<div class="dash-bar-chg"></div>'}
-                </div>`;
-            }).reverse().join('')}
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- (กราฟแท่ง "ภาพรวม" ลบออก — ซ้ำกับกราฟเส้นแนวโน้ม + รายการรายเดือน) -->
 
     <!-- รายการ OT พิเศษสะสม -->
     ${Object.keys(allCustoms).length > 0 ? `

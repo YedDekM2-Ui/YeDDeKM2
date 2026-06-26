@@ -2341,7 +2341,7 @@ function renderMonthly() {
     </div>`;
 
   // ── สเต็ปเปอร์เลือกเดือน ‹ มิถุนายน (6) › บรรทัดเดียว สีตามธีม — ปัดซ้าย-ขวาได้ ──
-  const TH_MONTHS=['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const TH_MONTHS=['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   const selMonth = parseInt(STATE.selectedPeriod.split('-')[1], 10);
   const selHasData = periodSet.has(STATE.selectedPeriod);
   psEl.innerHTML = `

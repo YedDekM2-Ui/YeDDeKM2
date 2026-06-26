@@ -860,7 +860,7 @@ body {
 .dash-avg-val { font-size:14px; color:var(--n800); font-weight:800; letter-spacing:-.3px; }
 
 /* Donut chart */
-.dash-donut-wrap { display:flex; align-items:center; gap:18px; }
+.dash-donut-wrap { display:flex; flex-direction:column; align-items:center; gap:14px; }
 .dash-donut {
   width:120px; height:120px; border-radius:50%; flex-shrink:0; position:relative;
   box-shadow:var(--neu-shadow-sm);
@@ -876,11 +876,13 @@ body {
 /* วงแหวน SVG (สีฝังจริง — แคปทั้งหน้าแล้วสีไม่หาย) */
 .dash-donut-svgwrap { position:relative; width:112px; height:112px; flex-shrink:0; }
 .donut-svg { width:112px; height:112px; display:block; overflow:visible; }
-.dash-donut-legend { display:flex; flex-direction:column; gap:9px; flex:1; min-width:0; }
+.dash-donut-legend { display:flex; flex-direction:column; gap:9px; width:100%; }
 .dash-leg-item { display:flex; align-items:center; gap:8px; font-size:12px; }
 .dash-leg-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
 .dash-leg-name { color:var(--n600); font-weight:600; flex:1; }
 .dash-leg-pct { color:var(--n800); font-weight:800; font-size:11px; }
+.dash-leg-pct .leg-hr { color:var(--n400); font-weight:600; }      /* ชั่วโมง = เทา */
+.dash-leg-pct .leg-money { color:var(--n800); font-weight:800; }   /* เงิน = ตามธีม */
 
 .dash-bars { display:flex; flex-direction:column; gap:13px; }
 .dash-bar-row {
@@ -1773,6 +1775,9 @@ const APP = {
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta && top) meta.setAttribute('content', top);
     toast('ธีม: ' + names[next], 'info');
+    // re-render วงแหวน (donut) ของหน้าปัจจุบัน — สีฝังเป็น hex ตอนวาด ต้องวาดใหม่ให้ตรงธีม (แคปทั้งหน้าก็สีไม่หาย)
+    if (STATE.currentPage === 'monthly') renderMonthly();
+    else if (STATE.currentPage === 'dashboard') renderDashboard();
   },
 
   async sync(showToast = true) {
@@ -2406,7 +2411,7 @@ function renderMonthly() {
     {label:customLabel,val:totCustom,cls:'ccustom',hrs:''},
   ].filter(x=>x.val>0);
   const otRingMap={c100:'var(--ring-1)',c150:'var(--ring-2)',c200:'var(--ring-3)',ccustom:'var(--ring-4)'};
-  const otSegs=otItems.map(ot=>({name:ot.label,val:ot.val,ring:otRingMap[ot.cls],right:`${ot.hrs?ot.hrs+' · ':''}${fmtBaht(ot.val)}`}));
+  const otSegs=otItems.map(ot=>({name:ot.label,val:ot.val,ring:otRingMap[ot.cls],right:`${ot.hrs?`<span class="leg-hr">${ot.hrs}</span> · `:''}<span class="leg-money">${fmtBaht(ot.val)}</span>`}));
 
   contEl.innerHTML = `
     <div class="sum-grid">
@@ -2743,7 +2748,7 @@ function dashMonthListHTML(pts) {
     const up = chg != null && chg >= 0;
     return `<div class="dm-row" onclick="STATE.selectedPeriod='${p.period}'; STATE.expandedYear=periodYear('${p.period}'); APP.tab('monthly');">
       <div class="dm-ic">${periodShortTH(p.period)}</div>
-      <div class="dm-main"><div class="dm-nm">${periodLabel(p.period)}</div><div class="dm-sub">${p.days} วัน · OT ${p.otHr.toFixed(1)} ชม.</div></div>
+      <div class="dm-main"><div class="dm-nm">${p.days} วันทำงาน · OT ${p.otHr.toFixed(1)} ชม.</div></div>
       <div class="dm-right"><div class="dm-net">${fmtBaht(p.net)}</div>${chg != null ? `<div class="dm-chg ${up?'up':'down'}">${up?'▲':'▼'} ${Math.abs(chg).toFixed(0)}%</div>` : ''}</div>
     </div>`;
   }).join('');
@@ -2921,10 +2926,10 @@ function renderDashboard() {
   const dTotOT = dTot100 + dTot150 + dTot200 + dTotCustom;
   const dHrOT  = dHr100 + dHr150 + dHr200;
   const otTypeSegs = [
-    {name:'OT×1.0', val:dTot100, ring:'var(--ring-1)', right:`${dHr100.toFixed(2)} ชม. · ${fmtBaht(dTot100)}`},
-    {name:'OT×1.5', val:dTot150, ring:'var(--ring-2)', right:`${dHr150.toFixed(2)} ชม. · ${fmtBaht(dTot150)}`},
-    {name:'OT×2.0', val:dTot200, ring:'var(--ring-3)', right:`${dHr200.toFixed(2)} ชม. · ${fmtBaht(dTot200)}`},
-    {name:'OT Custom', val:dTotCustom, ring:'var(--ring-4)', right:fmtBaht(dTotCustom)},
+    {name:'OT×1.0', val:dTot100, ring:'var(--ring-1)', right:`<span class="leg-hr">${dHr100.toFixed(2)} ชม.</span> · <span class="leg-money">${fmtBaht(dTot100)}</span>`},
+    {name:'OT×1.5', val:dTot150, ring:'var(--ring-2)', right:`<span class="leg-hr">${dHr150.toFixed(2)} ชม.</span> · <span class="leg-money">${fmtBaht(dTot150)}</span>`},
+    {name:'OT×2.0', val:dTot200, ring:'var(--ring-3)', right:`<span class="leg-hr">${dHr200.toFixed(2)} ชม.</span> · <span class="leg-money">${fmtBaht(dTot200)}</span>`},
+    {name:'OT Custom', val:dTotCustom, ring:'var(--ring-4)', right:`<span class="leg-money">${fmtBaht(dTotCustom)}</span>`},
   ];
 
   // ── ข้อมูล/อัปเดต (section 1) ──
@@ -2945,14 +2950,6 @@ function renderDashboard() {
       ${dashHead('zap','orange','สัดส่วน OT (แยกประเภท)')}
       <div class="dash-inner">
         ${buildDonut(otTypeSegs, `${totalOTHours.toFixed(1)} ชม.`, 'OT รวม')}
-        <table class="sum-table" style="margin-top:14px">
-          <tr><th>ประเภท OT</th><th>ชั่วโมง</th><th>จำนวนเงิน</th></tr>
-          ${dTot100>0?`<tr><td><span class="dot" style="background:var(--ring-1)"></span>OT×1.0</td><td>${dHr100.toFixed(2)}</td><td>${fmtBaht(dTot100)}</td></tr>`:''}
-          ${dTot150>0?`<tr><td><span class="dot" style="background:var(--ring-2)"></span>OT×1.5</td><td>${dHr150.toFixed(2)}</td><td>${fmtBaht(dTot150)}</td></tr>`:''}
-          ${dTot200>0?`<tr><td><span class="dot" style="background:var(--ring-3)"></span>OT×2.0</td><td>${dHr200.toFixed(2)}</td><td>${fmtBaht(dTot200)}</td></tr>`:''}
-          ${dTotCustom>0?`<tr><td><span class="dot" style="background:var(--ring-4)"></span>OT Custom</td><td>-</td><td>${fmtBaht(dTotCustom)}</td></tr>`:''}
-          <tr class="tot"><td>รวม</td><td>${dHrOT.toFixed(2)}</td><td>${fmtBaht(dTotOT)}</td></tr>
-        </table>
       </div>
     </div>` : '';
 

@@ -240,7 +240,7 @@
 [data-theme="royal"] .icon-btn { background:rgba(255,255,255,.9); border-color:transparent; color:var(--accent-ink); }
 /* การ์ด hero/highlight ใช้กรมท่า→ทอง ให้ดูพรีเมียม */
 [data-theme="royal"] .sum-tile.accent, [data-theme="royal"] .dash-hero {
-  background:linear-gradient(135deg,#2C496F 0%,#1F3654 55%,#B8965F 200%) !important;
+  background:linear-gradient(135deg,#D0AE72 0%,#B8965F 55%,#9C7E46 100%) !important;
 }
 
 /* ── Donut ring palettes — สลับโทนตามธีมทุกธีม (3 เฉดธีม + 1 ตัดสีอุ่น) ── */
@@ -777,6 +777,10 @@ body {
 .ms-status { font-size:10.5px; font-weight:600; margin-top:1px; }
 .ms-status.has { color:var(--success); }
 .ms-status.no { color:var(--n300); }
+.ms-month.ms-accent { color:var(--accent-ink); }
+.ms-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:7px; vertical-align:middle; }
+.ms-dot.has { background:var(--success); }
+.ms-dot.no { background:var(--n300); }
 
 .holiday-chips { display:flex; flex-wrap:wrap; gap:5px; max-height:100px; overflow-y:auto; }
 .hchip { font-size:10.5px; font-weight:600; padding:3px 9px; border-radius:10px; background:var(--rose); color:#9D1761; }
@@ -2306,14 +2310,15 @@ function renderMonthly() {
   // ค่าเริ่มต้น: กางปีที่มีเดือนถูกเลือกอยู่ (เฉพาะครั้งแรกสุดที่ยังไม่เคยตั้งค่า)
   if (STATE.expandedYear === undefined) STATE.expandedYear = selYear;
 
-  // ── แถวปุ่มปี (พ.ศ.) เรียงจากใหม่ไปเก่า — กดเพื่อเลือกปี ──
-  const years = [];
-  for (let y = maxYear; y >= minYear; y--) years.push(y);
-  ysEl.innerHTML = years.map(y =>
-    `<button class="year-btn ${y===selYear?'on':''}" onclick="selectYear(${y})">${y+543}</button>`
-  ).join('');
+  // ── สเต็ปเปอร์เลือกปี (พ.ศ.) ‹ 2568 › — เลื่อน/ปัดได้ ──
+  ysEl.innerHTML = `
+    <div class="month-stepper" style="flex:1" ontouchstart="ysTouchStart(event)" ontouchend="ysTouchEnd(event)">
+      <button class="ms-arrow" onclick="stepYear(-1)" aria-label="ปีก่อนหน้า">‹</button>
+      <div class="ms-mid"><div class="ms-month ms-accent">${selYear+543}</div></div>
+      <button class="ms-arrow" onclick="stepYear(1)" aria-label="ปีถัดไป">›</button>
+    </div>`;
 
-  // ── สเต็ปเปอร์เลือกเดือน ‹ มิถุนายน (6) › — ปัดซ้าย-ขวาได้ ──
+  // ── สเต็ปเปอร์เลือกเดือน ‹ มิถุนายน (6) › บรรทัดเดียว สีตามธีม — ปัดซ้าย-ขวาได้ ──
   const TH_MONTHS=['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
   const selMonth = parseInt(STATE.selectedPeriod.split('-')[1], 10);
   const selHasData = periodSet.has(STATE.selectedPeriod);
@@ -2321,8 +2326,7 @@ function renderMonthly() {
     <div class="month-stepper" ontouchstart="msTouchStart(event)" ontouchend="msTouchEnd(event)">
       <button class="ms-arrow" onclick="stepMonth(-1)" aria-label="เดือนก่อนหน้า">‹</button>
       <div class="ms-mid">
-        <div class="ms-month">${TH_MONTHS[selMonth]} <span class="ms-num">(${selMonth})</span></div>
-        <div class="ms-status ${selHasData?'has':'no'}">${selHasData?'● มีข้อมูล':'○ ยังไม่มีข้อมูล'}</div>
+        <div class="ms-month ms-accent"><span class="ms-dot ${selHasData?'has':'no'}"></span>${TH_MONTHS[selMonth]} <span class="ms-num">(${selMonth})</span></div>
       </div>
       <button class="ms-arrow" onclick="stepMonth(1)" aria-label="เดือนถัดไป">›</button>
     </div>`;
@@ -3081,7 +3085,18 @@ function stepMonth(delta) {
   STATE.expandedYear = y;
   renderMonthly();
 }
-// ปัดนิ้วบนสเต็ปเปอร์: ซ้าย=เดือนถัดไป, ขวา=เดือนก่อนหน้า
+// เลื่อนปี ±1 (พ.ศ.) — คงเดือนเดิม
+function stepYear(delta) {
+  const parts = (STATE.selectedPeriod||'').split('-');
+  let y = parseInt(parts[0],10), m = parseInt(parts[1],10);
+  if (isNaN(y)||isNaN(m)) { const d=new Date(); y=d.getFullYear(); m=d.getMonth()+1; }
+  y += delta;
+  if (y < 2000) y = 2000; else if (y > 2100) y = 2100;
+  STATE.selectedPeriod = makePeriod(y, m);
+  STATE.expandedYear = y;
+  renderMonthly();
+}
+// ปัดนิ้วบนสเต็ปเปอร์เดือน: ซ้าย=เดือนถัดไป, ขวา=เดือนก่อนหน้า
 let _msTouchX = null;
 function msTouchStart(e) { _msTouchX = e.changedTouches[0].clientX; }
 function msTouchEnd(e) {
@@ -3089,6 +3104,15 @@ function msTouchEnd(e) {
   const dx = e.changedTouches[0].clientX - _msTouchX;
   _msTouchX = null;
   if (Math.abs(dx) > 40) stepMonth(dx < 0 ? 1 : -1);
+}
+// ปัดนิ้วบนสเต็ปเปอร์ปี: ซ้าย=ปีถัดไป, ขวา=ปีก่อนหน้า
+let _ysTouchX = null;
+function ysTouchStart(e) { _ysTouchX = e.changedTouches[0].clientX; }
+function ysTouchEnd(e) {
+  if (_ysTouchX == null) return;
+  const dx = e.changedTouches[0].clientX - _ysTouchX;
+  _ysTouchX = null;
+  if (Math.abs(dx) > 40) stepYear(dx < 0 ? 1 : -1);
 }
 // กดปี: ถ้ากางปีนั้นอยู่แล้วให้ยุบ, ถ้ายัง/ปีอื่นให้กางปีนั้น
 function toggleYear(year) {

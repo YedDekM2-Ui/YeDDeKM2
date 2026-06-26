@@ -462,6 +462,8 @@ body {
 .fg input::placeholder { color:var(--n300); }
 .fg input:focus { outline:none; box-shadow:var(--neu-inset), 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
 .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+/* แถวค่าเดินทาง+สถานที่: ค่าเดินทางแคบ (พอ 5 หลัก) สถานที่กว้าง */
+.row2.row-trans { grid-template-columns:38% 1fr; }
 .row1 { margin-bottom:10px; }
 
 /* ── PREVIEW ── */
@@ -1366,21 +1368,21 @@ input:focus:not(:focus-visible) { outline: none; }
       </div>
       <!-- customOT เก็บค่าเงินงานพิเศษ (คำนวณอัตโนมัติจากเวลากะ) — ซ่อนไว้ -->
       <input type="hidden" id="fCustom" value="">
-      <div class="row1">
-        <div class="fg"><label>ค่าเดินทางพิเศษ (฿)</label>
-          <input type="number" id="fSpecial" placeholder="0" oninput="APP.updatePreview()">
+      <div class="row2 row-trans">
+        <div class="fg fg-trans"><label>ค่าเดินทาง (฿)</label>
+          <input type="number" id="fSpecial" placeholder="0" min="0" max="99999" inputmode="numeric" oninput="APP.updatePreview()">
         </div>
-      </div>
-
-      <div class="row1">
-        <div class="fg"><label id="lblNote">หมายเหตุ</label>
-          <input type="text" id="fNote" placeholder="Custom" oninput="APP.updatePreview()">
+        <div class="fg"><label id="lblNote">สถานที่ / หมายเหตุ</label>
+          <input type="text" id="fNote" placeholder="เซเรนิตี้" oninput="APP.updatePreview()">
         </div>
       </div>
 
       <!-- คำอธิบายงานพิเศษ (โชว์เมื่อติ๊ก) -->
       <div id="spHint" class="sp-hint" style="display:none">
-        ⚡ <b>งานเหมา</b> — กรอกเวลาจริง + ชื่อสถานที่ · <b>วันปกติ:</b> เช้ามืด(ก่อน 09:00) ฿150 · 09:00–18:00 งานหลัก(ไม่นับ) · 18:00+ ฿200 · <b>วันพุธ/นักขัต:</b> เช้า ฿200 · 09–18 ฿150 · 18:00+ ฿200 · ค่าเดินทาง ฿200 เมื่อเลิกช่วง 23:00–09:00
+        ⚡ <b>งานเหมา</b> (ใส่เวลาจริง+สถานที่)<br>
+        <b>ปกติ:</b> ก่อน 9โมง <b>×150</b> · 9–18 ไม่นับ · 6pm+ <b>×200</b><br>
+        <b>พุธ/นักขัต:</b> ก่อน 9โมง <b>×200</b> · 9–18 <b>×150</b> · 6pm+ <b>×200</b><br>
+        เดินทาง +฿200 (เลิก 5ทุ่ม–9โมงเช้า)
       </div>
 
       <!-- แถวปุ่ม: ติ๊กงานพิเศษ (ซ้าย เล็ก) + บันทึก -->
@@ -2019,8 +2021,8 @@ const APP = {
     document.getElementById('spHint').style.display = on ? 'block' : 'none';
     const lbl = document.getElementById('lblNote');
     const note = document.getElementById('fNote');
-    if (on) { lbl.textContent = 'สถานที่ / งาน (จำเป็น)'; note.placeholder = 'เช่น Aiya, Garrison'; }
-    else    { lbl.textContent = 'หมายเหตุ'; note.placeholder = 'Custom'; }
+    if (on) { lbl.textContent = 'สถานที่ (จำเป็น)'; note.placeholder = 'เซเรนิตี้'; }
+    else    { lbl.textContent = 'สถานที่ / หมายเหตุ'; note.placeholder = 'เซเรนิตี้'; }
   },
   toggleSpecial() {
     const on = !document.getElementById('spToggle').classList.contains('on');

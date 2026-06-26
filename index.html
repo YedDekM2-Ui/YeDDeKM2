@@ -873,6 +873,9 @@ body {
 }
 .dash-donut-val { font-size:13px; font-weight:800; color:var(--n800); letter-spacing:-.2px; }
 .dash-donut-sub { font-size:9px; color:var(--n400); margin-top:1px; }
+/* วงแหวน SVG (สีฝังจริง — แคปทั้งหน้าแล้วสีไม่หาย) */
+.dash-donut-svgwrap { position:relative; width:120px; height:120px; flex-shrink:0; }
+.donut-svg { width:120px; height:120px; display:block; }
 .dash-donut-legend { display:flex; flex-direction:column; gap:9px; flex:1; min-width:0; }
 .dash-leg-item { display:flex; align-items:center; gap:8px; font-size:12px; }
 .dash-leg-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
@@ -2600,21 +2603,36 @@ function renderMonthlyHistory(list) {
 function buildDonut(segs, centerVal, centerSub) {
   const items = segs.filter(s => (+s.val) > 0);
   const total = items.reduce((s, x) => s + (+x.val), 0) || 1;
-  let acc = 0;
-  const stops = items.map(s => {
-    const a = acc / total * 100, b = (acc + (+s.val)) / total * 100;
-    acc += (+s.val);
-    return `${s.ring} ${a.toFixed(2)}% ${b.toFixed(2)}%`;
-  });
-  const bg = items.length ? `conic-gradient(${stops.join(',')})` : 'var(--n100)';
+  // แปลง var(--ring-x) เป็นสี hex จริง ณ ตอนสร้าง — กันแคปทั้งหน้าแล้วสีหาย
+  const cs = getComputedStyle(document.documentElement);
+  const resolve = c => {
+    const m = /var\((--[\w-]+)\)/.exec(c || '');
+    return m ? (cs.getPropertyValue(m[1]).trim() || '#cccccc') : (c || '#cccccc');
+  };
+  const trackCol = resolve('var(--n100)');
+  // วาดวงแหวนเป็น SVG (stroke-dasharray) ฝังสีจริง — แคปยังไงก็อยู่ครบ
+  const R = 54, CIRC = 2 * Math.PI * R, SW = 18;
+  let off = 0;
+  const arcs = items.map(s => {
+    const len = (+s.val) / total * CIRC;
+    const col = resolve(s.ring);
+    const seg = `<circle cx="60" cy="60" r="${R}" fill="none" stroke="${col}" stroke-width="${SW}" stroke-dasharray="${len.toFixed(2)} ${(CIRC - len).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 60 60)"/>`;
+    off += len;
+    return seg;
+  }).join('');
+  const ring = `<svg viewBox="0 0 120 120" class="donut-svg">
+    <circle cx="60" cy="60" r="${R}" fill="none" stroke="${trackCol}" stroke-width="${SW}"/>
+    ${arcs}
+  </svg>`;
   const legend = items.map(s => `
     <div class="dash-leg-item">
-      <span class="dash-leg-dot" style="background:${s.ring}"></span>
+      <span class="dash-leg-dot" style="background:${resolve(s.ring)}"></span>
       <span class="dash-leg-name">${s.name}</span>
       <span class="dash-leg-pct">${s.right != null ? s.right : ((+s.val) / total * 100).toFixed(1) + '%'}</span>
     </div>`).join('');
   return `<div class="dash-donut-wrap">
-    <div class="dash-donut" style="background:${bg};">
+    <div class="dash-donut-svgwrap">
+      ${ring}
       <div class="dash-donut-hole">
         <div class="dash-donut-val">${centerVal}</div>
         <div class="dash-donut-sub">${centerSub}</div>

@@ -972,6 +972,11 @@ body {
   box-shadow:var(--neu-inset);
 }
 [data-theme="slate"] .dash-inner { background:rgba(20,28,36,.45); }
+/* การ์ด "สัดส่วน OT (แยกประเภท)" — ตัดแผงจมชั้นใน + ย่อวงแหวน ให้ legend กว้างพอ บรรทัดเดียวเท่าหน้ารายเดือน */
+.ot-flat { padding:4px 2px 2px; background:transparent; box-shadow:none; }
+[data-theme="slate"] .ot-flat { background:transparent; }
+.ot-flat .dash-donut-wrap { gap:12px; }
+.ot-flat .dash-donut-svgwrap, .ot-flat .donut-svg { width:100px; height:100px; }
 .dash-sec-body { overflow:hidden; transition:max-height .28s ease, opacity .2s ease; }
 .dash-sec-body.collapsed { max-height:0; opacity:0; margin:0; }
 
@@ -2984,7 +2989,7 @@ function renderDashboard() {
   const otDonutSec = dTotOT > 0 ? `
     <div class="dash-sec">
       ${dashHead('zap','orange','สัดส่วน OT (แยกประเภท)')}
-      <div class="dash-inner">
+      <div class="dash-inner ot-flat">
         ${buildDonut(otTypeSegs, `${totalOTHours.toFixed(1)} ชม.`, 'OT รวม')}
       </div>
     </div>` : '';

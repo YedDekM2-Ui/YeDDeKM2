@@ -513,6 +513,28 @@ body {
   box-shadow:0 4px 14px rgba(59,130,246,.25);
 }
 
+/* ── ปุ่มติ๊ก "งานพิเศษ" (ซ้ายของปุ่มบันทึก) — จมแบบ neumorphic, ติ๊กแล้วนูน+ทอง ── */
+.save-row { display:flex; gap:10px; align-items:stretch; }
+.save-row .btn-main { flex:1; width:auto; }
+.sp-toggle {
+  flex:0 0 auto; min-width:62px; padding:0 14px; border-radius:99px;
+  border:none; background:var(--card); color:var(--n400);
+  font-family:var(--font); font-size:11.5px; font-weight:800; cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+  box-shadow:var(--neu-inset); transition:all .2s; line-height:1.05;
+}
+.sp-toggle .sp-toggle-ic { font-size:18px; line-height:1; }
+.sp-toggle:active { transform:scale(.97); }
+.sp-toggle.on {
+  background:linear-gradient(135deg, var(--ring-4), #C9962F);
+  color:#fff; box-shadow:var(--neu-shadow-sm);
+}
+.sp-hint {
+  font-size:11px; color:var(--accent-ink); line-height:1.5;
+  background:var(--accent-soft); border-radius:var(--r-sm);
+  padding:9px 12px; margin:2px 0 10px;
+}
+
 /* ── TOAST ── */
 #toast {
   position:fixed; bottom:96px; left:50%; transform:translateX(-50%) translateY(20px);
@@ -1342,21 +1364,37 @@ input:focus:not(:focus-visible) { outline: none; }
           <input type="time" id="fOut" step="300" value="18:00" oninput="APP.updatePreview()">
         </div>
       </div>
-      <div class="row2">
-        <div class="fg"><label>OT เพิ่มเติม (฿)</label>
-          <input type="number" id="fCustom" placeholder="0" oninput="APP.updatePreview()">
-        </div>
+      <!-- customOT เก็บค่าเงินงานพิเศษ (คำนวณอัตโนมัติจากเวลากะ) — ซ่อนไว้ -->
+      <input type="hidden" id="fCustom" value="">
+      <div class="row1">
         <div class="fg"><label>ค่าเดินทางพิเศษ (฿)</label>
           <input type="number" id="fSpecial" placeholder="0" oninput="APP.updatePreview()">
         </div>
       </div>
 
       <div class="row1">
-        <div class="fg"><label>หมายเหตุ</label>
+        <div class="fg"><label id="lblNote">หมายเหตุ</label>
           <input type="text" id="fNote" placeholder="Custom" oninput="APP.updatePreview()">
         </div>
       </div>
 
+      <!-- คำอธิบายงานพิเศษ (โชว์เมื่อติ๊ก) -->
+      <div id="spHint" class="sp-hint" style="display:none">
+        ⚡ <b>งานพิเศษ</b> — คิด OT เหมา ฿200/ชม. ตั้งแต่ 18:00 ถึงเวลาออกของวันถัดไป · กรอก “เวลาเข้า–ออก” ด้านบนเป็นเวลากะพิเศษ และใส่ชื่อสถานที่ในช่องหมายเหตุ
+      </div>
+
+      <!-- แถวปุ่ม: ติ๊กงานพิเศษ (ซ้าย เล็ก) + บันทึก -->
+      <div class="save-row">
+        <button type="button" id="spToggle" class="sp-toggle" aria-pressed="false" onclick="APP.toggleSpecial()" title="งานพิเศษ — OT เหมา ฿200/ชม.">
+          <span class="sp-toggle-ic">⚡</span><span>พิเศษ</span>
+        </button>
+        <button class="btn-main" id="btnSave" onclick="APP.save()">
+          <span id="btnSaveIcon"></span>
+          <span id="btnSaveText">บันทึก</span>
+        </button>
+      </div>
+
+      <!-- รายงานยอด (ใต้ปุ่มบันทึก) -->
       <div id="previewBox">
         <div class="pv-row">
           <span class="pv-type" id="pvType">-</span>
@@ -1367,11 +1405,6 @@ input:focus:not(:focus-visible) { outline: none; }
         </div>
         <div class="pv-detail" id="pvDetail"></div>
       </div>
-
-      <button class="btn-main" id="btnSave" onclick="APP.save()">
-        <span id="btnSaveIcon"></span>
-        <span id="btnSaveText">บันทึก</span>
-      </button>
     </div>
 
     <div class="card">
@@ -1597,6 +1630,11 @@ function calcOT(rec) {
 
   const custom  = parseFloat(rec.customOT)         || 0;
   const special = parseFloat(rec.specialTransport) || 0;
+  // ── งานพิเศษ (OT เหมา ฿200/ชม.) ──
+  // customOT>0 = วันงานพิเศษ → ข้ามการคิด OT ขั้นบันได (กันคิดซ้ำกับเวลากะพิเศษ)
+  // ชั่วโมงพิเศษ = customOT / เรท OT200  (ของเก่า=ก้อนเงิน÷200, ของใหม่=ชม.×200÷200=ชม.จริง)
+  let customHours = 0;
+  if (custom > 0) { t100 = 0; t150 = 0; t200 = 0; customHours = custom / OT200; }
   const b100 = t100 * OT100;
   const b150 = t150 * OT150;
   const b200 = t200 * OT200;
@@ -1608,6 +1646,7 @@ function calcOT(rec) {
     b100, b150, b200,
     tr: transport,
     custom,
+    customHours,
     special,
     otTotal,
     total: otTotal + transport + special
@@ -1710,6 +1749,8 @@ async function editRec(date) {
   document.getElementById('fCustom').value = rec.customOT || '';
   document.getElementById('fSpecial').value = rec.specialTransport || '';
   document.getElementById('fNote').value = rec.note || '';
+  // วันงานพิเศษ (มี customOT) → เปิดโหมดงานพิเศษ
+  APP.applySpecialUI((+rec.customOT || 0) > 0);
 
   // Mark as editing
   STATE.editingDate = date;
@@ -1889,6 +1930,7 @@ const APP = {
     document.getElementById('fCustom').value = '';
     document.getElementById('fSpecial').value = '';
     document.getElementById('fNote').value = '';
+    this.applySpecialUI(false);
     document.getElementById('previewBox').style.display = 'none';
     // Restore from sheet
     APP.sync(false);
@@ -1910,8 +1952,9 @@ const APP = {
     if (!date || !tin || !tout) return;
 
     const noteVal = (document.getElementById('fNote').value || '').trim();
+    const isSpecial = document.getElementById('spToggle').classList.contains('on');
     const rec = { date, timeIn:tin, timeOut:tout,
-      customOT: document.getElementById('fCustom').value,
+      customOT: isSpecial ? this.specialCustomOT(tin, tout) : 0,
       specialTransport: document.getElementById('fSpecial').value,
       note: noteVal };
     const c = calcOT(rec);
@@ -1927,9 +1970,34 @@ const APP = {
     if (c.t150 > 0) details.push(`OT×1.5 ${fmtHr(c.t150)} = ${fmtBaht(c.b150)}`);
     if (c.t200 > 0) details.push(`OT×2 ${fmtHr(c.t200)} = ${fmtBaht(c.b200)}`);
     if (c.tr > 0) details.push(`🚗 ${fmtBaht(c.tr)}`);
-    if (c.custom > 0) details.push(`${noteVal || 'Custom'} ${fmtBaht(c.custom)}`);
+    if (c.custom > 0) details.push(`⚡ ${noteVal || 'Custom'} ${c.customHours.toFixed(1)} ชม.×200 = ${fmtBaht(c.custom)}`);
     document.getElementById('pvDetail').textContent = details.join('  ·  ');
     document.getElementById('previewBox').style.display = 'block';
+  },
+
+  // ── งานพิเศษ (OT เหมา ฿200/ชม.) ──
+  applySpecialUI(on) {
+    const btn = document.getElementById('spToggle');
+    btn.classList.toggle('on', on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    document.getElementById('spHint').style.display = on ? 'block' : 'none';
+    const lbl = document.getElementById('lblNote');
+    const note = document.getElementById('fNote');
+    if (on) { lbl.textContent = 'สถานที่ / งาน (จำเป็น)'; note.placeholder = 'เช่น Aiya, Garrison'; }
+    else    { lbl.textContent = 'หมายเหตุ'; note.placeholder = 'Custom'; }
+  },
+  toggleSpecial() {
+    const on = !document.getElementById('spToggle').classList.contains('on');
+    this.applySpecialUI(on);
+    this.updatePreview();
+  },
+  // เงินงานพิเศษ = ชม.(18:00→ออก ข้ามคืน) × เรท OT200
+  specialCustomOT(tin, tout) {
+    const OT200 = +(STATE.config && STATE.config.OT200_RATE) || 200;
+    let inT = toDecimal(tin), outT = toDecimal(tout);
+    if (outT <= inT) outT += 24;
+    const hrs = Math.max(0, outT - Math.max(inT, 18));
+    return Math.round(hrs * OT200);
   },
 
   async save() {
@@ -1946,11 +2014,17 @@ const APP = {
       toast(`วันที่ ${date} มีข้อมูลอยู่แล้ว`, 'err'); return;
     }
 
+    const isSpecial = document.getElementById('spToggle').classList.contains('on');
+    const placeNote = (document.getElementById('fNote').value || '').trim();
+    if (isSpecial && !placeNote) { toast('ใส่ชื่อสถานที่/งาน ก่อนบันทึกงานพิเศษ', 'err'); return; }
+    const customOT = isSpecial ? this.specialCustomOT(tin, tout) : 0;
+    if (isSpecial && customOT <= 0) { toast('เวลากะพิเศษต้องเลย 18:00 ถึงจะคิด OT', 'err'); return; }
+
     const rec = {
       id: Date.now(), date, timeIn: tin, timeOut: tout,
-      customOT: +document.getElementById('fCustom').value || 0,
+      customOT,
       specialTransport: +document.getElementById('fSpecial').value || 0,
-      note: (document.getElementById('fNote').value || '').trim()
+      note: placeNote
     };
 
     const btn = document.getElementById('btnSave');
@@ -2023,6 +2097,7 @@ const APP = {
     document.getElementById('fCustom').value = '';
     document.getElementById('fSpecial').value = '';
     document.getElementById('fNote').value = '';
+    this.applySpecialUI(false);
     document.getElementById('previewBox').style.display = 'none';
   },
 
@@ -2372,7 +2447,7 @@ function renderMonthly() {
   // ── สรุปยอดของเดือนที่เลือก ──
   const recs = records.filter(r => getPeriod(r.date) === STATE.selectedPeriod);
   let tot100=0,tot150=0,tot200=0,totCustom=0,totTrans=0,totSpecial=0;
-  let hr100=0,hr150=0,hr200=0,transCnt=0,specialCnt=0;
+  let hr100=0,hr150=0,hr200=0,transCnt=0,specialCnt=0,totCustomHr=0;
   let normalDays=0,wedDays=0,holDays=0,totalOTHours=0;
   const customNotes = {};  // นับจำนวนครั้งของแต่ละชื่อ note ในเดือนนี้
 
@@ -2386,7 +2461,8 @@ function renderMonthly() {
     if (c.type==='normal') normalDays++;
     else if (c.type==='wednesday') wedDays++;
     else holDays++;
-    totalOTHours += c.t100+c.t150+c.t200;
+    totalOTHours += c.t100+c.t150+c.t200+c.customHours;
+    totCustomHr += c.customHours;
     // นับวันที่มี Custom OT แยกตามชื่อหมายเหตุ
     if (c.custom > 0) {
       const name = (r.note && r.note.trim()) ? r.note.trim() : 'Custom';
@@ -2424,7 +2500,7 @@ function renderMonthly() {
     {label:'OT×1.0',val:tot100,cls:'c100',hrs:hr100>0?hr100.toFixed(2)+' ชม.':''},
     {label:'OT×1.5',val:tot150,cls:'c150',hrs:hr150>0?hr150.toFixed(2)+' ชม.':''},
     {label:'OT×2.0',val:tot200,cls:'c200',hrs:hr200>0?hr200.toFixed(2)+' ชม.':''},
-    {label:customLabel,val:totCustom,cls:'ccustom',hrs:''},
+    {label:customLabel,val:totCustom,cls:'ccustom',hrs:totCustomHr>0?totCustomHr.toFixed(2)+' ชม.':''},
   ].filter(x=>x.val>0);
   const otRingMap={c100:'var(--ring-1)',c150:'var(--ring-2)',c200:'var(--ring-3)',ccustom:'var(--ring-4)'};
   const otSegs=otItems.map(ot=>({name:ot.label,val:ot.val,ring:otRingMap[ot.cls],right:`${ot.hrs?`<span class="leg-hr">${ot.hrs}</span> · `:''}<span class="leg-money">${fmtBaht(ot.val)}</span>`}));
@@ -2890,7 +2966,7 @@ function renderDashboard() {
   const periodTotals = [];
   const allCustoms = {};   // ชื่อ custom -> {count, total}
   // OT แยกประเภทรวมทั้งช่วง (สำหรับ donut + ตารางรายละเอียด)
-  let dTot100=0, dTot150=0, dTot200=0, dTotCustom=0, dHr100=0, dHr150=0, dHr200=0;
+  let dTot100=0, dTot150=0, dTot200=0, dTotCustom=0, dHr100=0, dHr150=0, dHr200=0, dHrCustom=0;
 
   periods.forEach(p => {
     const recs = byPeriod[p];
@@ -2899,9 +2975,9 @@ function renderDashboard() {
     recs.forEach(r => {
       const c = calcOT(r);
       ot += c.otTotal; tr += c.tr; sp += c.special;
-      otHr += c.t100 + c.t150 + c.t200;
+      otHr += c.t100 + c.t150 + c.t200 + c.customHours;
       dTot100+=c.b100; dTot150+=c.b150; dTot200+=c.b200; dTotCustom+=c.custom;
-      dHr100+=c.t100; dHr150+=c.t150; dHr200+=c.t200;
+      dHr100+=c.t100; dHr150+=c.t150; dHr200+=c.t200; dHrCustom+=c.customHours;
       // ชั่วโมงทำงานรวม (เวลาออก - เวลาเข้า)
       const [inH,inM] = (r.timeIn||'09:00').split(':').map(Number);
       const [outH,outM] = (r.timeOut||'18:00').split(':').map(Number);
@@ -2964,12 +3040,12 @@ function renderDashboard() {
 
   // ── สัดส่วน OT แยกประเภท (donut) ──
   const dTotOT = dTot100 + dTot150 + dTot200 + dTotCustom;
-  const dHrOT  = dHr100 + dHr150 + dHr200;
+  const dHrOT  = dHr100 + dHr150 + dHr200 + dHrCustom;
   const otTypeSegs = [
     {name:'OT×1.0', val:dTot100, ring:'var(--ring-1)', right:`<span class="leg-hr">${dHr100.toFixed(2)} ชม.</span> · <span class="leg-money">${fmtBaht(dTot100)}</span>`},
     {name:'OT×1.5', val:dTot150, ring:'var(--ring-2)', right:`<span class="leg-hr">${dHr150.toFixed(2)} ชม.</span> · <span class="leg-money">${fmtBaht(dTot150)}</span>`},
     {name:'OT×2.0', val:dTot200, ring:'var(--ring-3)', right:`<span class="leg-hr">${dHr200.toFixed(2)} ชม.</span> · <span class="leg-money">${fmtBaht(dTot200)}</span>`},
-    {name:'OT Custom', val:dTotCustom, ring:'var(--ring-4)', right:`<span class="leg-money">${fmtBaht(dTotCustom)}</span>`},
+    {name:'OT Custom', val:dTotCustom, ring:'var(--ring-4)', right:`${dHrCustom>0?`<span class="leg-hr">${dHrCustom.toFixed(2)} ชม.</span> · `:''}<span class="leg-money">${fmtBaht(dTotCustom)}</span>`},
   ];
 
   // ── ข้อมูล/อัปเดต (section 1) ──

@@ -781,14 +781,19 @@ body {
 .ms-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:7px; vertical-align:middle; }
 .ms-dot.has { background:var(--success); }
 .ms-dot.no { background:var(--n300); }
-/* ปี + เดือน บรรทัดเดียวกัน */
+/* ปี + เดือน บรรทัดเดียวกัน — ปีพิลล์เล็กซ้าย, เดือนบาร์เต็มขวา */
 .ym-row { display:flex; gap:8px; align-items:stretch; margin-bottom:6px; }
-.ym-row #yearSelect { flex:0 0 36%; }
+.ym-row #yearSelect { flex:0 0 31%; }
 .ym-row #periodSelect { flex:1 1 auto; min-width:0; }
 .ym-row .month-stepper { width:100%; margin-bottom:0; gap:4px; padding:5px; }
 .ym-row .ms-arrow { width:34px; height:34px; font-size:20px; }
 .ym-row .ms-month { font-size:15px; }
-.ym-row .ms-month .ms-num { font-size:11.5px; }
+/* เดือน = บาร์เต็มสีตามธีม ตัวอักษรขาว (ตามรูปตัวอย่าง) */
+.month-stepper.ms-filled { background:linear-gradient(135deg, var(--accent-2), var(--accent)); border-color:transparent; }
+.month-stepper.ms-filled .ms-month { color:#fff; }
+.month-stepper.ms-filled .ms-arrow { color:#fff; background:rgba(255,255,255,.14); box-shadow:none; }
+.month-stepper.ms-filled .ms-dot.has { background:#fff; }
+.month-stepper.ms-filled .ms-dot.no { background:rgba(255,255,255,.5); }
 
 .holiday-chips { display:flex; flex-wrap:wrap; gap:5px; max-height:100px; overflow-y:auto; }
 .hchip { font-size:10.5px; font-weight:600; padding:3px 9px; border-radius:10px; background:var(--rose); color:#9D1761; }
@@ -1402,7 +1407,7 @@ input:focus:not(:focus-visible) { outline: none; }
   <!-- PAGE: MONTHLY -->
   <div id="page-monthly" class="page">
     <div id="monthlyClock" class="monthly-clock"></div>
-    <div class="period-label">เลือกปีและเดือน</div>
+    <div class="period-label">เลือกปี, เดือน</div>
     <div class="ym-row">
       <div id="yearSelect"></div>
       <div id="periodSelect"></div>
@@ -2332,10 +2337,10 @@ function renderMonthly() {
   const selMonth = parseInt(STATE.selectedPeriod.split('-')[1], 10);
   const selHasData = periodSet.has(STATE.selectedPeriod);
   psEl.innerHTML = `
-    <div class="month-stepper" ontouchstart="msTouchStart(event)" ontouchend="msTouchEnd(event)">
+    <div class="month-stepper ms-filled" ontouchstart="msTouchStart(event)" ontouchend="msTouchEnd(event)">
       <button class="ms-arrow" onclick="stepMonth(-1)" aria-label="เดือนก่อนหน้า">‹</button>
       <div class="ms-mid">
-        <div class="ms-month ms-accent"><span class="ms-dot ${selHasData?'has':'no'}"></span>${TH_MONTHS[selMonth]} <span class="ms-num">(${selMonth})</span></div>
+        <div class="ms-month"><span class="ms-dot ${selHasData?'has':'no'}"></span>${TH_MONTHS[selMonth]}</div>
       </div>
       <button class="ms-arrow" onclick="stepMonth(1)" aria-label="เดือนถัดไป">›</button>
     </div>`;

@@ -1380,7 +1380,7 @@ input:focus:not(:focus-visible) { outline: none; }
 
       <!-- คำอธิบายงานพิเศษ (โชว์เมื่อติ๊ก) -->
       <div id="spHint" class="sp-hint" style="display:none">
-        ⚡ <b>งานพิเศษ</b> — OT เหมา ฿200/ชม. นับเฉพาะชั่วโมง<b>นอกเวลางานหลัก 09:00–18:00</b> (เช่น Aiya 09:00–23:00 = นับ 18:00–23:00 = 5 ชม.) · กรอก “เวลาเข้า–ออก” ตามจริง + ใส่ชื่อสถานที่ · ค่าเดินทาง ฿200 ให้อัตโนมัติ
+        ⚡ <b>งานพิเศษ</b> — กรอกเวลาจริง + ชื่อสถานที่ · <b>วันปกติ:</b> นอก 09:00–18:00 คิด ฿200/ชม. (09–18 = งานหลัก ไม่นับ) · <b>วันพุธ/นักขัต:</b> 09–18 ฿150 + นอกนั้น ฿200 · ค่าเดินทาง ฿200 เมื่อเลิกหลัง 23:00
       </div>
 
       <!-- แถวปุ่ม: ติ๊กงานพิเศษ (ซ้าย เล็ก) + บันทึก -->
@@ -1623,9 +1623,10 @@ function calcOT(rec) {
   } else if (type === 'holiday' || wedAsHoliday) {
     // วันนักขัตฤกษ์ + วันพุธรอบใหม่ — คิดเหมือนกัน
     if (rec.date >= WED_HOLIDAY_FROM) {
-      // กฎใหม่ (ตั้งแต่ 26 พ.ค. 69): 09:00–18:00 ×1.5 , 18:00+ ×2.0
-      t150 = Math.max(0, Math.min(outTime, 18) - Math.max(inTime, 9));
-      t200 = Math.max(0, outTime - Math.max(inTime, 18));
+      // กฎใหม่ (ตั้งแต่ 26 พ.ค. 69): ก่อน 09:00 ×2.0 , 09:00–18:00 ×1.5 , 18:00+ ×2.0
+      t150 = Math.max(0, Math.min(outTime, 18) - Math.max(inTime, 9));     // 09–18 ×1.5
+      t200 = Math.max(0, Math.min(outTime, 9) - inTime)                    // ก่อน 09:00 ×2.0
+           + Math.max(0, outTime - Math.max(inTime, 18));                  // 18:00+ ×2.0
     } else {
       // กฎเดิม (ก่อน 26 พ.ค.): 09:00–23:00 ×1.5 , หลัง 23:00 ×2.0 — ไม่แตะของเก่า
       t150 = Math.max(0, Math.min(outTime, 23) - Math.max(inTime, 9));
@@ -1961,9 +1962,12 @@ const APP = {
 
     const noteVal = (document.getElementById('fNote').value || '').trim();
     const isSpecial = document.getElementById('spToggle').classList.contains('on');
+    const _dt = getDayType(date);
+    const _holidayLike = (_dt === 'holiday') || (_dt === 'wednesday' && date >= '2026-05-26');
+    const _spNormal = isSpecial && !_holidayLike;   // ติ๊กวันปกติเท่านั้นที่ใช้ customOT เหมา
     const rec = { date, timeIn:tin, timeOut:tout,
-      customOT: isSpecial ? this.specialCustomOT(tin, tout) : 0,
-      specialTransport: isSpecial ? (+document.getElementById('fSpecial').value || 200) : document.getElementById('fSpecial').value,
+      customOT: _spNormal ? this.specialCustomOT(tin, tout) : 0,
+      specialTransport: _spNormal ? (+document.getElementById('fSpecial').value || 200) : document.getElementById('fSpecial').value,
       note: noteVal };
     const c = calcOT(rec);
     const typeLabel = {normal:'วันปกติ',wednesday:'วันหยุด',holiday:'วันหยุดนักขัตฤกษ์'}[c.type];
@@ -2030,11 +2034,16 @@ const APP = {
     const isSpecial = document.getElementById('spToggle').classList.contains('on');
     const placeNote = (document.getElementById('fNote').value || '').trim();
     if (isSpecial && !placeNote) { toast('ใส่ชื่อสถานที่/งาน ก่อนบันทึกงานพิเศษ', 'err'); return; }
-    const customOT = isSpecial ? this.specialCustomOT(tin, tout) : 0;
-    if (isSpecial && customOT <= 0) { toast('เวลาเข้า–ออกงานพิเศษไม่ถูกต้อง', 'err'); return; }
-    // งานพิเศษ: ค่าเดินทาง ฿200 เสมอ (ถ้าไม่กรอกเอง)
-    let specialTransport = +document.getElementById('fSpecial').value || 0;
-    if (isSpecial && specialTransport === 0) specialTransport = 200;
+    // งานพิเศษ: วันพุธ(≥26พ.ค.)/นักขัต = ปล่อยสูตรวันหยุดคิด 150/200 เอง (customOT=0) ค่าเดินทางจาก auto (เลิกหลัง 23)
+    //           วันปกติ = OT เหมา (เฉพาะนอก 09:00–18:00) × 200 + ค่าเดินทาง 200
+    const _dt = getDayType(date);
+    const _holidayLike = (_dt === 'holiday') || (_dt === 'wednesday' && date >= '2026-05-26');
+    let customOT = 0, specialTransport = +document.getElementById('fSpecial').value || 0;
+    if (isSpecial && !_holidayLike) {
+      customOT = this.specialCustomOT(tin, tout);
+      if (customOT <= 0) { toast('งานพิเศษวันปกติต้องมีชั่วโมงนอก 09:00–18:00', 'err'); return; }
+      if (specialTransport === 0) specialTransport = 200;
+    }
 
     const rec = {
       id: Date.now(), date, timeIn: tin, timeOut: tout,

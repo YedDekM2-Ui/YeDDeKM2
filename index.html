@@ -2316,7 +2316,7 @@ function renderList() {
           </div>
           ${(c.tr > 0 || c.custom > 0 || c.special > 0) ? `<div class="rec-pills">
             ${c.tr > 0 ? `<span class="pill tr">🚗 ${fmtBaht(c.tr)}</span>` : ''}
-            ${c.custom > 0 ? `<span class="pill ct">⚡ ${(rec.note && rec.note.trim()) ? rec.note.trim() : 'Custom'} ${fmtBaht(c.custom)}</span>` : ''}
+            ${c.custom > 0 ? `<span class="pill ct">⚡ ${(rec.note && rec.note.trim()) ? rec.note.trim() : 'Custom'} ${c.customHours.toFixed(1)}ชม · ${fmtBaht(c.custom)}</span>` : ''}
             ${c.special > 0 ? `<span class="pill sp">🚐 พิเศษ ${fmtBaht(c.special)}</span>` : ''}
           </div>` : ''}
           <div class="rec-actions">
@@ -2372,7 +2372,7 @@ function renderDaily() {
         if (c.t150 > 0) breakdown.push(`OT×1.5 ${c.t150.toFixed(2)}ชม`);
         if (c.t200 > 0) breakdown.push(`OT×2 ${c.t200.toFixed(2)}ชม`);
         if (c.tr > 0) breakdown.push(`🚗 ${fmtBaht(c.tr)}`);
-        if (c.custom > 0) breakdown.push(`${(r.note && r.note.trim()) ? r.note.trim() : 'Custom'} ${fmtBaht(c.custom)}`);
+        if (c.custom > 0) breakdown.push(`${(r.note && r.note.trim()) ? r.note.trim() : 'Custom'} ${c.customHours.toFixed(1)}ชม · ${fmtBaht(c.custom)}`);
 
         html += `<div class="daily-item">
           <div class="di-left">
@@ -2491,7 +2491,9 @@ function renderMonthly() {
     // นับวันที่มี Custom OT แยกตามชื่อหมายเหตุ
     if (c.custom > 0) {
       const name = (r.note && r.note.trim()) ? r.note.trim() : 'Custom';
-      customNotes[name] = (customNotes[name] || 0) + 1;
+      if (!customNotes[name]) customNotes[name] = { count:0, hours:0 };
+      customNotes[name].count++;
+      customNotes[name].hours += c.customHours;
     }
   });
 
@@ -2515,10 +2517,10 @@ function renderMonthly() {
   const totalIncome=grossSalary+totalOT+totalTrAll;
   const netAfterSoc=totalIncome-SOCIAL_SEC;
   const secondPmt=netAfterSoc-FIRST_PMT;
-  // ประกอบ label ของ Custom: แสดง "ชื่อ×จำนวนครั้ง" เสมอ
-  // เช่น "Aiya×2", "Custom×1", "Aiya×2, Bonus×1"
+  // ประกอบ label ของ Custom: แสดง "ชื่อ ชั่วโมง×จำนวนครั้ง" ต่อสถานที่
+  // เช่น "Aiya 20.0ชม.×2", "Garrison 8.5ชม.×1"
   const customLabel = Object.keys(customNotes).length === 0 ? 'Custom'
-    : Object.entries(customNotes).map(([n,c]) => `${n}×${c}`).join(', ');
+    : Object.entries(customNotes).map(([n,info]) => `${n} ${info.hours.toFixed(1)}ชม.×${info.count}`).join(', ');
 
   const maxOTVal=Math.max(tot100,tot150,tot200,totCustom,1);
   const otItems=[
@@ -3013,9 +3015,10 @@ function renderDashboard() {
       // เก็บ custom
       if (c.custom > 0) {
         const name = (r.note && r.note.trim()) ? r.note.trim() : 'Custom';
-        if (!allCustoms[name]) allCustoms[name] = { count:0, total:0 };
+        if (!allCustoms[name]) allCustoms[name] = { count:0, total:0, hours:0 };
         allCustoms[name].count++;
         allCustoms[name].total += c.custom;
+        allCustoms[name].hours += c.customHours;
       }
     });
     const gross = SALARY + ALLOW + ot + tr + sp;
@@ -3215,7 +3218,7 @@ function renderDashboard() {
       ${dashHead('zap','orange','รายการ OT พิเศษสะสม')}
       <div class="dash-inner">
         ${Object.entries(allCustoms).sort((a,b)=>b[1].total-a[1].total).map(([name, info]) => `
-          <div class="dtype-row"><div class="dtype-left"><span class="dash-custom-tag">${name}</span><span class="dash-custom-count">×${info.count}</span></div><div class="dtype-right">${fmtBaht(info.total)}</div></div>
+          <div class="dtype-row"><div class="dtype-left"><span class="dash-custom-tag">${name}</span><span class="dash-custom-count">×${info.count}</span></div><div class="dtype-right"><span class="leg-hr">${info.hours.toFixed(1)} ชม.</span> · ${fmtBaht(info.total)}</div></div>
         `).join('')}
       </div>
     </div>` : ''}

@@ -186,10 +186,10 @@
 [data-theme="slate"] {
   --bg-top:    #2A3340;
   --bg-bottom: #2A3340;
-  --accent:    #5FE3C7;
-  --accent-2:  #7BEBD3;
-  --accent-soft: rgba(95,227,199,.18);
-  --accent-ink: #5FE3C7;
+  --accent:    #45B6A6;
+  --accent-2:  #5FC7B7;
+  --accent-soft: rgba(69,182,166,.20);
+  --accent-ink: #6FD3C4;
   --card: #2A3340;
   --card-border: rgba(255,255,255,0);
   --n50: #2F3947; --n100: #3A4554; --n200: #525E6F;
@@ -217,6 +217,44 @@
 [data-theme="float"] .icon-btn { background:rgba(255,255,255,.92); border-color:transparent; }
 /* Sunrise: ใช้ glass สำหรับปุ่ม */
 [data-theme="sunrise"] .icon-btn { background:rgba(255,255,255,.85); border-color:transparent; }
+
+/* Theme: Royal — กรมท่า + ทอง บนพื้นเทาฟ้า (จาก IMG_9794) หรูแบบ premium */
+[data-theme="royal"] {
+  --bg-top:    #EDF1F7;
+  --bg-bottom: #D8DFE9;
+  --accent:    #2C496F;
+  --accent-2:  #3E6390;
+  --accent-soft: #DEE6F1;
+  --accent-ink: #213A58;
+  --gold:      #B8965F;
+  --gold-2:    #CDA86A;
+  --card: rgba(255,255,255,.92);
+  --card-border: rgba(255,255,255,.95);
+  --n50:#F4F6FA; --n100:#E6EBF2; --n200:#C7D0DE; --n300:#9AA7BC; --n400:#6E7C92; --n600:#3A4A63; --n800:#1B2840;
+  --neu-shadow:    0 14px 34px rgba(40,60,95,.16), 6px 6px 16px rgba(40,60,95,.07), -4px -4px 12px rgba(255,255,255,.7);
+  --neu-shadow-sm: 0 8px 18px rgba(40,60,95,.10), 3px 3px 8px rgba(40,60,95,.05);
+  --neu-inset:     inset 4px 4px 10px rgba(40,60,95,.14), inset -3px -3px 8px rgba(255,255,255,.7);
+}
+[data-theme="royal"] #topbar { background:rgba(237,241,247,.85); border-bottom-color:transparent; }
+[data-theme="royal"] #bottomNav { background:rgba(33,52,80,.94); border-color:rgba(255,255,255,.10); }
+[data-theme="royal"] .icon-btn { background:rgba(255,255,255,.9); border-color:transparent; color:var(--accent-ink); }
+/* การ์ด hero/highlight ใช้กรมท่า→ทอง ให้ดูพรีเมียม */
+[data-theme="royal"] .sum-tile.accent, [data-theme="royal"] .dash-hero {
+  background:linear-gradient(135deg,#2C496F 0%,#1F3654 55%,#B8965F 200%) !important;
+}
+
+/* ── Donut ring palettes — สลับโทนตามธีมทุกธีม (3 เฉดธีม + 1 ตัดสีอุ่น) ── */
+:root            { --ring-1:#1E8F84; --ring-2:#3FB6AD; --ring-3:#79CBD0; --ring-4:#E0A33E; }
+[data-theme="mint"]    { --ring-1:#1F8A66; --ring-2:#3DB48E; --ring-3:#86D3B6; --ring-4:#E0A33E; }
+[data-theme="lavender"]{ --ring-1:#6B52B5; --ring-2:#8B6FD8; --ring-3:#B6A2E9; --ring-4:#E0A33E; }
+[data-theme="pearl"]   { --ring-1:#2C4FE3; --ring-2:#4A6CF7; --ring-3:#8DA2F9; --ring-4:#E0A33E; }
+[data-theme="float"]   { --ring-1:#BE3D55; --ring-2:#E8657F; --ring-3:#F2A3B0; --ring-4:#E0A33E; }
+[data-theme="mix"]     { --ring-1:#9E5A2C; --ring-2:#C97844; --ring-3:#E0A878; --ring-4:#5E9B8A; }
+[data-theme="sunrise"] { --ring-1:#D85F2A; --ring-2:#FF8C5A; --ring-3:#FFB78E; --ring-4:#4A86C0; }
+[data-theme="cloud"]   { --ring-1:#2F5FD4; --ring-2:#5B8DEF; --ring-3:#9DB8F5; --ring-4:#E0A33E; }
+[data-theme="studio"]  { --ring-1:#9A3F26; --ring-2:#C5573A; --ring-3:#E0916F; --ring-4:#C9A35B; }
+[data-theme="slate"]   { --ring-1:#46B3A4; --ring-2:#6FD0C6; --ring-3:#93C7EA; --ring-4:#E0B86A; }
+[data-theme="royal"]   { --ring-1:#243A5E; --ring-2:#3E6390; --ring-3:#85A1C8; --ring-4:#B8965F; }
 
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 html { scroll-behavior:smooth; color-scheme:light only; -webkit-text-size-adjust:100%; }
@@ -623,6 +661,21 @@ body {
 .pay-table .hi td:first-child { border-radius:var(--r-xs) 0 0 var(--r-xs); color:var(--n800); font-weight:700; }
 .pay-table .hi td:last-child { border-radius:0 var(--r-xs) var(--r-xs) 0; color:var(--n800); font-size:15px; }
 
+/* ── ตารางหัวสีธีม (สไตล์ 9794 — หัวกรมท่า/ตามธีม) ── */
+.sum-table { width:100%; border-collapse:separate; border-spacing:0; }
+.sum-table th { background:var(--accent); color:#fff; font-size:11px; font-weight:700; padding:8px 10px; text-align:left; }
+.sum-table th:not(:first-child) { text-align:right; }
+.sum-table th:first-child { border-radius:8px 0 0 8px; }
+.sum-table th:last-child { border-radius:0 8px 8px 0; }
+.sum-table td { padding:8px 10px; font-size:12.5px; border-bottom:1px solid var(--accent-soft); color:var(--n600); }
+.sum-table td:not(:first-child) { text-align:right; font-weight:700; color:var(--n800); }
+.sum-table tr:last-child td { border-bottom:none; }
+.sum-table .tot td { background:var(--accent-soft); font-weight:800; color:var(--n800); }
+.sum-table .tot td:first-child { border-radius:8px 0 0 8px; }
+.sum-table .tot td:last-child { border-radius:0 8px 8px 0; }
+.sum-table .neg td:last-child { color:var(--err); }
+.sum-table .dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:7px; vertical-align:middle; }
+
 /* สัดส่วน OT แบบแถบเดียวต่อกัน (stacked) + legend */
 .ot-stack { display:flex; width:100%; height:14px; border-radius:99px; overflow:hidden; background:#EEF4F3; gap:2px; }
 .ot-seg { height:100%; transition:width .7s cubic-bezier(.22,1,.36,1); }
@@ -695,6 +748,36 @@ body {
 }
 .period-label { font-size:11px; color:var(--n400); margin:14px 4px 8px; font-weight:600; letter-spacing:.3px; text-transform:uppercase; }
 
+/* ── นาฬิกาวัน/เวลาปัจจุบัน (หน้ารายเดือน) ── */
+.monthly-clock {
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  margin:2px 2px 8px; padding:10px 14px; border-radius:var(--r-sm);
+  background:var(--card); border:1px solid var(--card-border);
+  box-shadow:var(--neu-shadow-sm); font-size:12.5px; font-weight:600; color:var(--n600);
+}
+.monthly-clock .mc-time { color:var(--accent-ink); font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:.3px; }
+.monthly-clock svg { width:15px; height:15px; color:var(--accent); flex-shrink:0; }
+
+/* ── สเต็ปเปอร์เลือกเดือน ‹ › (ปัดซ้าย-ขวาได้) ── */
+.month-stepper {
+  display:flex; align-items:center; gap:10px; margin-bottom:6px;
+  background:var(--card); border:1px solid var(--card-border); border-radius:99px;
+  padding:6px; box-shadow:var(--neu-shadow-sm); touch-action:pan-y;
+}
+.ms-arrow {
+  width:42px; height:42px; flex-shrink:0; border:none; border-radius:50%;
+  background:transparent; color:var(--accent); font-size:24px; font-weight:700;
+  cursor:pointer; font-family:var(--font); display:flex; align-items:center; justify-content:center;
+  box-shadow:var(--neu-inset); line-height:1;
+}
+.ms-arrow:active { transform:scale(.9); }
+.ms-mid { flex:1; text-align:center; min-width:0; }
+.ms-month { font-size:17px; font-weight:800; color:var(--n800); letter-spacing:-.2px; }
+.ms-month .ms-num { color:var(--n400); font-weight:600; font-size:13px; }
+.ms-status { font-size:10.5px; font-weight:600; margin-top:1px; }
+.ms-status.has { color:var(--success); }
+.ms-status.no { color:var(--n300); }
+
 .holiday-chips { display:flex; flex-wrap:wrap; gap:5px; max-height:100px; overflow-y:auto; }
 .hchip { font-size:10.5px; font-weight:600; padding:3px 9px; border-radius:10px; background:var(--rose); color:#9D1761; }
 
@@ -741,7 +824,7 @@ body {
 .mh-ss-tag { color:#10B981; font-weight:700; }
 [data-theme="slate"] .mh-row { box-shadow:inset 0 1px 4px rgba(0,0,0,.25); background:rgba(20,28,36,.5); }
 [data-theme="slate"] .mh-label { color:#F0F3F8; }
-[data-theme="slate"] .mh-net { color:#5FE3C7; }
+[data-theme="slate"] .mh-net { color:#6FD3C4; }
 [data-theme="slate"] .mh-ss { color:#A6B3C2; }
 .dash-trend {
   display:inline-flex; align-items:center; gap:4px;
@@ -894,35 +977,29 @@ body {
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
   #bottomNav { background:rgba(255,255,255,.55); backdrop-filter:saturate(180%) blur(24px); -webkit-backdrop-filter:saturate(180%) blur(24px); }
 }
+/* 5 ปุ่มแบนเท่ากัน — ตัวที่เลือก = pill สีเต็ม (ตาม mockup) */
 .nav-btn {
-  flex:1; padding:5px 2px 4px; background:none; border:none; cursor:pointer;
-  font-family:var(--font); font-size:8px; font-weight:500; color:var(--n400);
-  display:flex; flex-direction:column; align-items:center; gap:1px; transition:all .2s;
-  border-radius:99px;
+  flex:1; padding:8px 2px 6px; background:none; border:none; cursor:pointer;
+  font-family:var(--font); font-size:10px; font-weight:600; color:var(--n400);
+  display:flex; flex-direction:column; align-items:center; gap:3px; transition:all .2s;
+  border-radius:22px;
 }
 .nav-btn.on { color:#fff; background:var(--accent); box-shadow:0 4px 14px color-mix(in srgb, var(--accent) 40%, transparent); }
-.nav-icon { font-size:14px; line-height:1; display:flex; align-items:center; justify-content:center; }
-.nav-icon svg { width:14px; height:14px; display:block; }
-#nav-list .nav-icon svg { width:15px; height:15px; }
+.nav-icon { line-height:1; display:flex; align-items:center; justify-content:center; }
+.nav-icon svg { width:19px; height:19px; display:block; }
+#nav-list .nav-icon svg { width:20px; height:20px; }
 .nav-dot { display:none; }
-/* ปุ่มกลาง = พวงมาลัย ขยายใหญ่ขึ้นนิดๆ + ยกขึ้นเล็กน้อย */
-.nav-btn.nav-center { transform:translateY(-6px); }
-.nav-btn.nav-center .nav-icon {
-  width:34px; height:34px; border-radius:50%;
-  background:linear-gradient(135deg, var(--accent-2), var(--accent)); color:#fff;
-  box-shadow:0 5px 12px color-mix(in srgb, var(--accent) 40%, transparent), 0 0 0 3px var(--card);
-  margin-bottom:1px;
-}
-.nav-btn.nav-center .nav-icon svg { width:17px; height:17px; }
-.nav-btn.nav-center.on { background:none; box-shadow:none; color:var(--accent); }
+/* ธีม Royal: ปุ่มที่เลือก = pill ทอง บนแถบกรมท่า */
+[data-theme="royal"] .nav-btn { color:rgba(255,255,255,.62); }
+[data-theme="royal"] .nav-btn.on { background:linear-gradient(135deg,#CDA86A,#B8965F); color:#1B2840; box-shadow:0 4px 14px rgba(184,150,95,.4); }
 
 /* ── ธีมมืด (Slate): เส้นขอบสีขาวรอบรายการทุกวัน + เมนู ── */
 [data-theme="slate"] .rec { border-color:rgba(255,255,255,.65); border-left-width:4px; }
 [data-theme="slate"] .rec.wednesday { border-color:rgba(255,255,255,.65); border-left-color:var(--amberDk); }
 [data-theme="slate"] .rec.holiday   { border-color:rgba(255,255,255,.65); border-left-color:var(--roseDk); }
 [data-theme="slate"] .daily-item { border:1px solid rgba(255,255,255,.65); }
-[data-theme="slate"] #bottomNav { border-color:rgba(255,255,255,.45); }
-[data-theme="slate"] .nav-btn:not(.on) { border:1px solid rgba(255,255,255,.22); }
+[data-theme="slate"] #bottomNav { border-color:rgba(255,255,255,.18); }
+[data-theme="slate"] .nav-btn:not(.on) { color:#A6B3C2; }
 
 /* ── MISC ── */
 .last-sync-bar {
@@ -1050,7 +1127,7 @@ body {
 }
 .nav-btn:active, .dash-ychip:active, .sum-tile:active,
 .dash-bar-row:active, .mh-row:active { transform: scale(.975); }
-.nav-btn.nav-center:active { transform: translateY(-6px) scale(.95); }
+.nav-btn.on:active { transform: scale(.95); }
 
 /* quality floor — โฟกัสคีย์บอร์ดมองเห็นชัด (ไม่กระทบการคลิกเมาส์) */
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
@@ -1312,6 +1389,7 @@ input:focus:not(:focus-visible) { outline: none; }
 
   <!-- PAGE: MONTHLY -->
   <div id="page-monthly" class="page">
+    <div id="monthlyClock" class="monthly-clock"></div>
     <div class="period-label">เลือกปี</div>
     <div id="yearSelect" class="year-select"></div>
     <div class="period-label">เลือกเดือน</div>
@@ -1358,7 +1436,7 @@ input:focus:not(:focus-visible) { outline: none; }
   <button class="nav-btn" onclick="APP.tab('daily')" id="nav-daily">
     <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg></span><span>รายวัน</span><div class="nav-dot"></div>
   </button>
-  <button class="nav-btn nav-center on" onclick="APP.tab('add')" id="nav-add">
+  <button class="nav-btn on" onclick="APP.tab('add')" id="nav-add">
     <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.4"/><path d="M12 3.2v6.4M5.6 18.4l4.3-4.3M18.4 18.4l-4.3-4.3"/></svg></span><span>บันทึก</span><div class="nav-dot"></div>
   </button>
   <button class="nav-btn" onclick="APP.tab('monthly')" id="nav-monthly">
@@ -1664,8 +1742,8 @@ function deleteAll() {
 const APP = {
 
   cycleTheme() {
-    const themes = ['skyline','mint','lavender','pearl','cloud','studio','slate','float','mix','sunrise'];
-    const names = {skyline:'Skyline', mint:'Mint Sage', lavender:'Lavender', pearl:'Pearl', cloud:'Cloud', studio:'Studio', slate:'Slate', float:'Float', mix:'Mix', sunrise:'Sunrise'};
+    const themes = ['skyline','mint','lavender','pearl','cloud','studio','slate','float','mix','sunrise','royal'];
+    const names = {skyline:'Skyline', mint:'Mint Sage', lavender:'Lavender', pearl:'Pearl', cloud:'Cloud', studio:'Studio', slate:'Slate', float:'Float', mix:'Mix', sunrise:'Sunrise', royal:'Royal'};
     const cur = document.documentElement.getAttribute('data-theme') || 'skyline';
     const next = themes[(themes.indexOf(cur) + 1) % themes.length];
     document.documentElement.setAttribute('data-theme', next);
@@ -2182,12 +2260,28 @@ function toggleDailyPeriod(p) {
   renderDaily();
 }
 
+/* ── นาฬิกาวัน/เวลาปัจจุบัน (เฉพาะหน้ารายเดือน) ── */
+function updateMonthlyClock() {
+  const el = document.getElementById('monthlyClock');
+  if (!el) return;
+  const d = new Date();
+  const TH_M = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const TH_D = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+  const p2 = n => String(n).padStart(2,'0');
+  el.innerHTML =
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>` +
+    `<span>วัน${TH_D[d.getDay()]}ที่ ${d.getDate()} ${TH_M[d.getMonth()]} ${d.getFullYear()+543}</span>` +
+    `<span class="mc-time">${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}</span>`;
+}
+setInterval(() => { if (STATE.currentPage === 'monthly') updateMonthlyClock(); }, 1000);
+
 /* ── RENDER: MONTHLY ── */
 function renderMonthly() {
   const records = mergeAll();
   const ysEl = document.getElementById('yearSelect');
   const psEl = document.getElementById('periodSelect');
   const contEl = document.getElementById('monthlyContent');
+  updateMonthlyClock();
 
   // เดือนที่มีข้อมูลจริง (ใช้แค่ทำเครื่องหมาย ไม่ได้จำกัดการแสดง)
   const periodSet = new Set(records.map(r => getPeriod(r.date)));
@@ -2212,30 +2306,26 @@ function renderMonthly() {
   // ค่าเริ่มต้น: กางปีที่มีเดือนถูกเลือกอยู่ (เฉพาะครั้งแรกสุดที่ยังไม่เคยตั้งค่า)
   if (STATE.expandedYear === undefined) STATE.expandedYear = selYear;
 
-  // ── แถวปุ่มปี (พ.ศ. 2 หลัก) เรียงจากใหม่ไปเก่า — กดเพื่อกาง/ยุบเดือน ──
+  // ── แถวปุ่มปี (พ.ศ.) เรียงจากใหม่ไปเก่า — กดเพื่อเลือกปี ──
   const years = [];
   for (let y = maxYear; y >= minYear; y--) years.push(y);
-  ysEl.innerHTML = years.map(y => {
-    const isExpanded = (y === STATE.expandedYear);
-    const arrow = isExpanded ? ' ▾' : ' ▸';
-    return `<button class="year-btn ${y===selYear?'on':''}" onclick="toggleYear(${y})">${y}${arrow}</button>`;
-  }).join('');
+  ysEl.innerHTML = years.map(y =>
+    `<button class="year-btn ${y===selYear?'on':''}" onclick="selectYear(${y})">${y+543}</button>`
+  ).join('');
 
-  // ── แถวเดือน: แสดงเฉพาะ 1-12 ของ "ปีที่กางอยู่" เท่านั้น (ประหยัดพื้นที่) ──
-  if (STATE.expandedYear === null) {
-    psEl.innerHTML = '';
-  } else {
-    const monthBtns = [];
-    for (let m = 1; m <= 12; m++) {
-      const p = makePeriod(STATE.expandedYear, m);
-      const hasData = periodSet.has(p);
-      const isOn = (p === STATE.selectedPeriod);
-      monthBtns.push(
-        `<button class="period-btn ${isOn?'on':''} ${hasData?'':'empty'}" onclick="selectPeriod('${p}')">${periodLabelShort(p)}</button>`
-      );
-    }
-    psEl.innerHTML = monthBtns.join('');
-  }
+  // ── สเต็ปเปอร์เลือกเดือน ‹ มิถุนายน (6) › — ปัดซ้าย-ขวาได้ ──
+  const TH_MONTHS=['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const selMonth = parseInt(STATE.selectedPeriod.split('-')[1], 10);
+  const selHasData = periodSet.has(STATE.selectedPeriod);
+  psEl.innerHTML = `
+    <div class="month-stepper" ontouchstart="msTouchStart(event)" ontouchend="msTouchEnd(event)">
+      <button class="ms-arrow" onclick="stepMonth(-1)" aria-label="เดือนก่อนหน้า">‹</button>
+      <div class="ms-mid">
+        <div class="ms-month">${TH_MONTHS[selMonth]} <span class="ms-num">(${selMonth})</span></div>
+        <div class="ms-status ${selHasData?'has':'no'}">${selHasData?'● มีข้อมูล':'○ ยังไม่มีข้อมูล'}</div>
+      </div>
+      <button class="ms-arrow" onclick="stepMonth(1)" aria-label="เดือนถัดไป">›</button>
+    </div>`;
 
   // ── สรุปยอดของเดือนที่เลือก ──
   const recs = records.filter(r => getPeriod(r.date) === STATE.selectedPeriod);
@@ -2294,6 +2384,8 @@ function renderMonthly() {
     {label:'OT×2.0',val:tot200,cls:'c200',hrs:hr200>0?hr200.toFixed(2)+' ชม.':''},
     {label:customLabel,val:totCustom,cls:'ccustom',hrs:''},
   ].filter(x=>x.val>0);
+  const otRingMap={c100:'var(--ring-1)',c150:'var(--ring-2)',c200:'var(--ring-3)',ccustom:'var(--ring-4)'};
+  const otSegs=otItems.map(ot=>({name:ot.label,val:ot.val,ring:otRingMap[ot.cls],right:`${ot.hrs?ot.hrs+' · ':''}${fmtBaht(ot.val)}`}));
 
   contEl.innerHTML = `
     <div class="sum-grid">
@@ -2323,17 +2415,7 @@ function renderMonthly() {
     ${otItems.length ? `
     <div class="sec-title">สัดส่วน OT</div>
     <div class="card">
-      <div class="ot-stack">
-        ${otItems.map(ot=>`<div class="ot-seg ${ot.cls}" style="width:${(ot.val/totalOT*100).toFixed(2)}%"></div>`).join('')}
-      </div>
-      <div class="ot-legend">
-        ${otItems.map(ot=>`
-          <div class="ot-leg-item">
-            <span class="ot-leg-dot ${ot.cls}"></span>
-            <span class="ot-leg-name">${ot.label}</span>
-            <span class="ot-leg-val">${ot.hrs?`<span class="ot-leg-hr">${ot.hrs} : </span>`:''}<span class="ot-leg-money">${fmtBaht(ot.val)}</span></span>
-          </div>`).join('')}
-      </div>
+      ${buildDonut(otSegs, `${totalOTHours.toFixed(2)} ชม.`, 'OT รวม')}
     </div>` : ''}
 
     <div class="sec-title">จำนวนวันทำงาน</div>
@@ -2492,6 +2574,36 @@ function renderMonthlyHistory(list) {
       </div>
     `;
   }).join('');
+}
+
+/* ── DONUT: กราฟวงแหวน สีสลับตามโทนธีม (ใช้ทั้งหน้ารายเดือน + หน้าสรุป) ──
+   segs = [{name, val, ring, right}]  ring = สี/var (เช่น 'var(--ring-1)')
+   right = ข้อความฝั่งขวาของ legend (ถ้าไม่ส่ง = แสดง %) */
+function buildDonut(segs, centerVal, centerSub) {
+  const items = segs.filter(s => (+s.val) > 0);
+  const total = items.reduce((s, x) => s + (+x.val), 0) || 1;
+  let acc = 0;
+  const stops = items.map(s => {
+    const a = acc / total * 100, b = (acc + (+s.val)) / total * 100;
+    acc += (+s.val);
+    return `${s.ring} ${a.toFixed(2)}% ${b.toFixed(2)}%`;
+  });
+  const bg = items.length ? `conic-gradient(${stops.join(',')})` : 'var(--n100)';
+  const legend = items.map(s => `
+    <div class="dash-leg-item">
+      <span class="dash-leg-dot" style="background:${s.ring}"></span>
+      <span class="dash-leg-name">${s.name}</span>
+      <span class="dash-leg-pct">${s.right != null ? s.right : ((+s.val) / total * 100).toFixed(1) + '%'}</span>
+    </div>`).join('');
+  return `<div class="dash-donut-wrap">
+    <div class="dash-donut" style="background:${bg};">
+      <div class="dash-donut-hole">
+        <div class="dash-donut-val">${centerVal}</div>
+        <div class="dash-donut-sub">${centerSub}</div>
+      </div>
+    </div>
+    <div class="dash-donut-legend">${legend}</div>
+  </div>`;
 }
 
 /* ── ANALYSIS: กราฟเส้นแนวโน้ม (SVG โค้งนุ่ม) + ฟันธง/วิเคราะห์ ── */
@@ -2696,6 +2808,8 @@ function renderDashboard() {
   let totalNormalDays = 0, totalWedDays = 0, totalHolDays = 0;
   const periodTotals = [];
   const allCustoms = {};   // ชื่อ custom -> {count, total}
+  // OT แยกประเภทรวมทั้งช่วง (สำหรับ donut + ตารางรายละเอียด)
+  let dTot100=0, dTot150=0, dTot200=0, dTotCustom=0, dHr100=0, dHr150=0, dHr200=0;
 
   periods.forEach(p => {
     const recs = byPeriod[p];
@@ -2705,6 +2819,8 @@ function renderDashboard() {
       const c = calcOT(r);
       ot += c.otTotal; tr += c.tr; sp += c.special;
       otHr += c.t100 + c.t150 + c.t200;
+      dTot100+=c.b100; dTot150+=c.b150; dTot200+=c.b200; dTotCustom+=c.custom;
+      dHr100+=c.t100; dHr150+=c.t150; dHr200+=c.t200;
       // ชั่วโมงทำงานรวม (เวลาออก - เวลาเข้า)
       const [inH,inM] = (r.timeIn||'09:00').split(':').map(Number);
       const [outH,outM] = (r.timeOut||'18:00').split(':').map(Number);
@@ -2759,12 +2875,74 @@ function renderDashboard() {
   const pctOT    = totalForDonut > 0 ? (totalOTPaid / totalForDonut * 100) : 0;
   const pctTrans = totalForDonut > 0 ? (totalTransPaid / totalForDonut * 100) : 0;
 
-  // donut: conic-gradient css
-  const donutBg = `conic-gradient(
-    #16A34A 0% ${pctBase.toFixed(2)}%,
-    #E11D48 ${pctBase.toFixed(2)}% ${(pctBase+pctOT).toFixed(2)}%,
-    #2563EB ${(pctBase+pctOT).toFixed(2)}% 100%
-  )`;
+  // ── เวลาปัจจุบัน (= เวลาที่เปิดดู/แคปจอ ขณะนั้น) ──
+  const _now = new Date();
+  const TH_M = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const nowStr = `${_now.getDate()} ${TH_M[_now.getMonth()]} ${_now.getFullYear()+543} เวลา ${String(_now.getHours()).padStart(2,'0')}:${String(_now.getMinutes()).padStart(2,'0')} น.`;
+  const np = periods.length;
+
+  // ── สัดส่วน OT แยกประเภท (donut) ──
+  const dTotOT = dTot100 + dTot150 + dTot200 + dTotCustom;
+  const dHrOT  = dHr100 + dHr150 + dHr200;
+  const otTypeSegs = [
+    {name:'OT×1.0', val:dTot100, ring:'var(--ring-1)', right:`${dHr100.toFixed(2)} ชม. · ${fmtBaht(dTot100)}`},
+    {name:'OT×1.5', val:dTot150, ring:'var(--ring-2)', right:`${dHr150.toFixed(2)} ชม. · ${fmtBaht(dTot150)}`},
+    {name:'OT×2.0', val:dTot200, ring:'var(--ring-3)', right:`${dHr200.toFixed(2)} ชม. · ${fmtBaht(dTot200)}`},
+    {name:'OT Custom', val:dTotCustom, ring:'var(--ring-4)', right:fmtBaht(dTotCustom)},
+  ];
+
+  // ── ข้อมูล/อัปเดต (section 1) ──
+  const infoSec = `
+    <div class="dash-sec">
+      ${dashHead('history','blue','ช่วงข้อมูล & อัปเดตล่าสุด')}
+      <div class="dash-inner">
+        <div class="dtype-row"><div class="dtype-left">ช่วงที่เลือก</div><div class="dtype-right">${yf==='all'?'รวมทุกปี':'ปี '+(yf+543)}</div></div>
+        <div class="dtype-row"><div class="dtype-left">จำนวนรอบจ่าย</div><div class="dtype-right">${np} รอบ</div></div>
+        <div class="dtype-row"><div class="dtype-left">จำนวนวันทำงาน</div><div class="dtype-right">${totalDays} วัน</div></div>
+        <div class="dtype-row" style="border-bottom:none"><div class="dtype-left">อัปเดตล่าสุด</div><div class="dtype-right" style="font-size:11.5px">${nowStr}</div></div>
+      </div>
+    </div>`;
+
+  // ── สัดส่วน OT แยกประเภท (section 3: donut + ตาราง) ──
+  const otDonutSec = dTotOT > 0 ? `
+    <div class="dash-sec">
+      ${dashHead('zap','orange','สัดส่วน OT (แยกประเภท)')}
+      <div class="dash-inner">
+        ${buildDonut(otTypeSegs, `${totalOTHours.toFixed(1)} ชม.`, 'OT รวม')}
+        <table class="sum-table" style="margin-top:14px">
+          <tr><th>ประเภท OT</th><th>ชั่วโมง</th><th>จำนวนเงิน</th></tr>
+          ${dTot100>0?`<tr><td><span class="dot" style="background:var(--ring-1)"></span>OT×1.0</td><td>${dHr100.toFixed(2)}</td><td>${fmtBaht(dTot100)}</td></tr>`:''}
+          ${dTot150>0?`<tr><td><span class="dot" style="background:var(--ring-2)"></span>OT×1.5</td><td>${dHr150.toFixed(2)}</td><td>${fmtBaht(dTot150)}</td></tr>`:''}
+          ${dTot200>0?`<tr><td><span class="dot" style="background:var(--ring-3)"></span>OT×2.0</td><td>${dHr200.toFixed(2)}</td><td>${fmtBaht(dTot200)}</td></tr>`:''}
+          ${dTotCustom>0?`<tr><td><span class="dot" style="background:var(--ring-4)"></span>OT Custom</td><td>-</td><td>${fmtBaht(dTotCustom)}</td></tr>`:''}
+          <tr class="tot"><td>รวม</td><td>${dHrOT.toFixed(2)}</td><td>${fmtBaht(dTotOT)}</td></tr>
+        </table>
+      </div>
+    </div>` : '';
+
+  // ── รายละเอียดรายได้รวม (section 5: ตาราง) ──
+  const incRows = [
+    ['เงินเดือนรวม', SALARY*np],
+    ['เบี้ยขยันรวม', ALLOW*np],
+    [`OT×1.0 (${dHr100.toFixed(2)} ชม.)`, dTot100],
+    [`OT×1.5 (${dHr150.toFixed(2)} ชม.)`, dTot150],
+    [`OT×2.0 (${dHr200.toFixed(2)} ชม.)`, dTot200],
+    ['OT Custom', dTotCustom],
+    ['ค่าเดินทางรวม', totalTransPaid],
+  ].filter(r => r[1] > 0).map(r => `<tr><td>${r[0]}</td><td>${fmtBaht(r[1])}</td></tr>`).join('');
+  const incomeSec = `
+    <div class="dash-sec">
+      ${dashHead('bars','green','รายละเอียดรายได้ (รวม)')}
+      <div class="dash-inner">
+        <table class="sum-table">
+          <tr><th>รายการ</th><th>จำนวนเงิน</th></tr>
+          ${incRows}
+          <tr class="tot"><td>รวมทั้งหมด</td><td>${fmtBaht(totalGross)}</td></tr>
+          <tr class="neg"><td>หัก ปกส. (${np} รอบ)</td><td>-${fmtBaht(SOC*np)}</td></tr>
+          <tr class="tot"><td>คงเหลือสุทธิ</td><td>${fmtBaht(totalNet)}</td></tr>
+        </table>
+      </div>
+    </div>`;
 
   let html = yearBar + `
     <!-- HERO -->
@@ -2777,6 +2955,8 @@ function renderDashboard() {
       </div>
       ${heroSpark(periodTotals.map(p => p.net))}
     </div>
+
+    ${infoSec}
 
     <!-- วิเคราะห์ & ฟันธง + กราฟเส้นแนวโน้ม (ใหม่) -->
     ${dashAnalysisHTML(periodTotals, totalOTPaid, totalGross, periodLabel)}
@@ -2829,25 +3009,21 @@ function renderDashboard() {
       </div>
     </div>
 
+    ${otDonutSec}
+
     <!-- สัดส่วนรายได้ -->
     <div class="dash-sec">
       ${dashHead('pie','orange','สัดส่วนรายได้')}
       <div class="dash-inner">
-        <div class="dash-donut-wrap">
-          <div class="dash-donut" style="background:${donutBg};">
-            <div class="dash-donut-hole">
-              <div class="dash-donut-val">${fmtBaht(totalForDonut)}</div>
-              <div class="dash-donut-sub">รวม</div>
-            </div>
-          </div>
-          <div class="dash-donut-legend">
-            <div class="dash-leg-item"><span class="dash-leg-dot" style="background:#16A34A"></span><span class="dash-leg-name">ฐาน (เงินเดือน+เบี้ย)</span><span class="dash-leg-pct">${pctBase.toFixed(1)}%</span></div>
-            <div class="dash-leg-item"><span class="dash-leg-dot" style="background:#E11D48"></span><span class="dash-leg-name">OT</span><span class="dash-leg-pct">${pctOT.toFixed(1)}%</span></div>
-            <div class="dash-leg-item"><span class="dash-leg-dot" style="background:#2563EB"></span><span class="dash-leg-name">ค่าเดินทาง</span><span class="dash-leg-pct">${pctTrans.toFixed(1)}%</span></div>
-          </div>
-        </div>
+        ${buildDonut([
+          {name:'ฐาน (เงินเดือน+เบี้ย)', val:baseAll, ring:'var(--ring-1)'},
+          {name:'OT', val:totalOTPaid, ring:'var(--ring-2)'},
+          {name:'ค่าเดินทาง', val:totalTransPaid, ring:'var(--ring-4)'},
+        ], fmtBaht(totalForDonut), 'รวม')}
       </div>
     </div>
+
+    ${incomeSec}
 
     <!-- สถิติย่อย (รวม OT ชั่วโมงทั้งหมดของปีที่เลือก) -->
     <div class="sum-grid" style="grid-template-columns:1fr 1fr;gap:10px">
@@ -2886,6 +3062,34 @@ function renderDashboard() {
 
 /* ── HELPERS ── */
 function selectPeriod(p) { STATE.selectedPeriod = p; renderMonthly(); }
+// เลือกปี: คงเดือนเดิมไว้ ย้ายไปปีที่กด
+function selectYear(y) {
+  const m = parseInt((STATE.selectedPeriod||'').split('-')[1], 10) || (new Date().getMonth()+1);
+  STATE.selectedPeriod = makePeriod(y, m);
+  STATE.expandedYear = y;
+  renderMonthly();
+}
+// เลื่อนเดือน ±1 (ข้ามปีอัตโนมัติ)
+function stepMonth(delta) {
+  const parts = (STATE.selectedPeriod||'').split('-');
+  let y = parseInt(parts[0],10), m = parseInt(parts[1],10);
+  if (isNaN(y)||isNaN(m)) { const d=new Date(); y=d.getFullYear(); m=d.getMonth()+1; }
+  m += delta;
+  if (m < 1) { m = 12; y--; }
+  else if (m > 12) { m = 1; y++; }
+  STATE.selectedPeriod = makePeriod(y, m);
+  STATE.expandedYear = y;
+  renderMonthly();
+}
+// ปัดนิ้วบนสเต็ปเปอร์: ซ้าย=เดือนถัดไป, ขวา=เดือนก่อนหน้า
+let _msTouchX = null;
+function msTouchStart(e) { _msTouchX = e.changedTouches[0].clientX; }
+function msTouchEnd(e) {
+  if (_msTouchX == null) return;
+  const dx = e.changedTouches[0].clientX - _msTouchX;
+  _msTouchX = null;
+  if (Math.abs(dx) > 40) stepMonth(dx < 0 ? 1 : -1);
+}
 // กดปี: ถ้ากางปีนั้นอยู่แล้วให้ยุบ, ถ้ายัง/ปีอื่นให้กางปีนั้น
 function toggleYear(year) {
   STATE.expandedYear = (STATE.expandedYear === year) ? null : year;

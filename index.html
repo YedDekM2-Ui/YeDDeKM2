@@ -911,6 +911,18 @@ body {
   font-size:10px; font-weight:700; width:42px; text-align:right; flex-shrink:0;
 }
 
+/* กราฟแท่งแนวนอน "สัดส่วนรายได้" (แทน donut) — สีฝัง hex แคปไม่หาย */
+.inc-total { font-size:12px; color:var(--n400); font-weight:600; margin-bottom:13px; }
+.inc-total b { color:var(--n800); font-weight:800; font-size:14.5px; }
+.inc-bars { display:flex; flex-direction:column; gap:15px; }
+.inc-bar-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; font-size:12.5px; gap:8px; }
+.inc-bar-name { display:flex; align-items:center; gap:7px; color:var(--n600); font-weight:600; min-width:0; }
+.inc-bar-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.inc-bar-val { color:var(--n800); font-weight:800; white-space:nowrap; flex-shrink:0; }
+.inc-bar-pct { color:var(--n400); font-weight:700; }
+.inc-bar-track { height:13px; border-radius:99px; overflow:hidden; box-shadow:var(--neu-inset); }
+.inc-bar-fill { height:100%; border-radius:99px; transition:width .6s cubic-bezier(.22,1,.36,1); }
+
 /* Custom tag */
 .dash-custom-tag {
   display:inline-block; padding:4px 12px; border-radius:99px;
@@ -2647,6 +2659,30 @@ function buildDonut(segs, centerVal, centerSub) {
   </div>`;
 }
 
+/* ── BARS: กราฟแท่งแนวนอน (แทน donut ในการ์ดสัดส่วนรายได้) ──
+   segs = [{name, val, ring}]  สีฝังเป็น hex จริงตอนวาด → แคปทั้งหน้าสีไม่หายทุกธีม */
+function buildBars(segs, totalLabel) {
+  const items = segs.filter(s => (+s.val) > 0);
+  const total = items.reduce((s, x) => s + (+x.val), 0) || 1;
+  const cs = getComputedStyle(document.documentElement);
+  const resolve = c => {
+    const m = /var\((--[\w-]+)\)/.exec(c || '');
+    return m ? (cs.getPropertyValue(m[1]).trim() || '#cccccc') : (c || '#cccccc');
+  };
+  const track = resolve('var(--n100)');
+  const rows = items.map(s => {
+    const pct = (+s.val) / total * 100, col = resolve(s.ring);
+    return `<div class="inc-bar-row">
+      <div class="inc-bar-top">
+        <span class="inc-bar-name"><span class="inc-bar-dot" style="background:${col}"></span>${s.name}</span>
+        <span class="inc-bar-val">${fmtBaht(s.val)} · <span class="inc-bar-pct">${pct.toFixed(1)}%</span></span>
+      </div>
+      <div class="inc-bar-track" style="background:${track}"><div class="inc-bar-fill" style="width:${pct.toFixed(1)}%;background:${col}"></div></div>
+    </div>`;
+  }).join('');
+  return `${totalLabel != null ? `<div class="inc-total">รวมทั้งหมด <b>${totalLabel}</b></div>` : ''}<div class="inc-bars">${rows}</div>`;
+}
+
 /* ── ANALYSIS: กราฟเส้นแนวโน้ม (SVG โค้งนุ่ม) + ฟันธง/วิเคราะห์ ── */
 // series = [{label, value}] — สีทั้งหมดอิงตัวแปรธีม (var) จะไม่หายในธีมไหน
 function dashLineChart(series) {
@@ -3046,13 +3082,13 @@ function renderDashboard() {
 
     <!-- สัดส่วนรายได้ -->
     <div class="dash-sec">
-      ${dashHead('pie','orange','สัดส่วนรายได้')}
+      ${dashHead('bars','orange','สัดส่วนรายได้')}
       <div class="dash-inner">
-        ${buildDonut([
+        ${buildBars([
           {name:'ฐาน (เงินเดือน+เบี้ย)', val:baseAll, ring:'var(--ring-1)'},
           {name:'OT', val:totalOTPaid, ring:'var(--ring-2)'},
           {name:'ค่าเดินทาง', val:totalTransPaid, ring:'var(--ring-4)'},
-        ], fmtBaht(totalForDonut), 'รวม')}
+        ], fmtBaht(totalForDonut))}
       </div>
     </div>
 

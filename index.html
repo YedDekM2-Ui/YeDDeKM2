@@ -972,9 +972,8 @@ body {
   box-shadow:var(--neu-inset);
 }
 [data-theme="slate"] .dash-inner { background:rgba(20,28,36,.45); }
-/* การ์ด "สัดส่วน OT (แยกประเภท)" — ตัดแผงจมชั้นใน + ย่อวงแหวน ให้ legend กว้างพอ บรรทัดเดียวเท่าหน้ารายเดือน */
-.ot-flat { padding:4px 2px 2px; background:transparent; box-shadow:none; }
-[data-theme="slate"] .ot-flat { background:transparent; }
+/* การ์ด "สัดส่วน OT (แยกประเภท)" — คงแผงจมเงาวงแหวน (inherit จาก .dash-inner) แต่ลดขอบข้าง + ย่อวงแหวน ให้ legend บรรทัดเดียวเท่าหน้ารายเดือน */
+.ot-flat { padding:14px 8px; }
 .ot-flat .dash-donut-wrap { gap:12px; }
 .ot-flat .dash-donut-svgwrap, .ot-flat .donut-svg { width:100px; height:100px; }
 .dash-sec-body { overflow:hidden; transition:max-height .28s ease, opacity .2s ease; }

@@ -1626,10 +1626,11 @@ function calcOT(rec) {
     t200 = Math.max(0, Math.min(outTime, 9) - inTime) + Math.max(0, outTime - Math.max(inTime, 23));
   }
 
-  if (outTime >= 23) transport = TRANS;
-
   const custom  = parseFloat(rec.customOT)         || 0;
   const special = parseFloat(rec.specialTransport) || 0;
+  // ค่าเดินทาง ฿200: งานปกติ = เลิกหลัง 23:00 (กฎเดิม ไม่แตะของเก่า)
+  // งานพิเศษติ๊ก (custom>0) = ใช้ค่าที่เก็บใน special ไม่ auto กันบวกซ้ำ
+  if (custom <= 0 && outTime >= 23) transport = TRANS;
   // ── งานพิเศษ (OT เหมา ฿200/ชม.) ──
   // customOT>0 = วันงานพิเศษ → ข้ามการคิด OT ขั้นบันได (กันคิดซ้ำกับเวลากะพิเศษ)
   // ชั่วโมงพิเศษ = customOT / เรท OT200  (ของเก่า=ก้อนเงิน÷200, ของใหม่=ชม.×200÷200=ชม.จริง)
@@ -1955,7 +1956,7 @@ const APP = {
     const isSpecial = document.getElementById('spToggle').classList.contains('on');
     const rec = { date, timeIn:tin, timeOut:tout,
       customOT: isSpecial ? this.specialCustomOT(tin, tout) : 0,
-      specialTransport: document.getElementById('fSpecial').value,
+      specialTransport: isSpecial ? (+document.getElementById('fSpecial').value || 200) : document.getElementById('fSpecial').value,
       note: noteVal };
     const c = calcOT(rec);
     const typeLabel = {normal:'วันปกติ',wednesday:'วันหยุด',holiday:'วันหยุดนักขัตฤกษ์'}[c.type];
@@ -1970,6 +1971,7 @@ const APP = {
     if (c.t150 > 0) details.push(`OT×1.5 ${fmtHr(c.t150)} = ${fmtBaht(c.b150)}`);
     if (c.t200 > 0) details.push(`OT×2 ${fmtHr(c.t200)} = ${fmtBaht(c.b200)}`);
     if (c.tr > 0) details.push(`🚗 ${fmtBaht(c.tr)}`);
+    if (c.special > 0) details.push(`🚗 ${fmtBaht(c.special)}`);
     if (c.custom > 0) details.push(`⚡ ${noteVal || 'Custom'} ${c.customHours.toFixed(1)} ชม.×200 = ${fmtBaht(c.custom)}`);
     document.getElementById('pvDetail').textContent = details.join('  ·  ');
     document.getElementById('previewBox').style.display = 'block';
@@ -1996,7 +1998,7 @@ const APP = {
     const OT200 = +(STATE.config && STATE.config.OT200_RATE) || 200;
     let inT = toDecimal(tin), outT = toDecimal(tout);
     if (outT <= inT) outT += 24;
-    const hrs = Math.max(0, outT - Math.max(inT, 18));
+    const hrs = Math.max(0, outT - inT);   // เหมาทั้งกะตามเวลาเข้า–ออกจริง
     return Math.round(hrs * OT200);
   },
 
@@ -2018,12 +2020,15 @@ const APP = {
     const placeNote = (document.getElementById('fNote').value || '').trim();
     if (isSpecial && !placeNote) { toast('ใส่ชื่อสถานที่/งาน ก่อนบันทึกงานพิเศษ', 'err'); return; }
     const customOT = isSpecial ? this.specialCustomOT(tin, tout) : 0;
-    if (isSpecial && customOT <= 0) { toast('เวลากะพิเศษต้องเลย 18:00 ถึงจะคิด OT', 'err'); return; }
+    if (isSpecial && customOT <= 0) { toast('เวลาเข้า–ออกงานพิเศษไม่ถูกต้อง', 'err'); return; }
+    // งานพิเศษ: ค่าเดินทาง ฿200 เสมอ (ถ้าไม่กรอกเอง)
+    let specialTransport = +document.getElementById('fSpecial').value || 0;
+    if (isSpecial && specialTransport === 0) specialTransport = 200;
 
     const rec = {
       id: Date.now(), date, timeIn: tin, timeOut: tout,
       customOT,
-      specialTransport: +document.getElementById('fSpecial').value || 0,
+      specialTransport,
       note: placeNote
     };
 

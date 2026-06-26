@@ -867,15 +867,15 @@ body {
 }
 .dash-donut-hole {
   position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-  width:74px; height:74px; border-radius:50%; background:var(--card);
+  width:66px; height:66px; border-radius:50%; background:var(--card);
   display:flex; flex-direction:column; align-items:center; justify-content:center;
-  box-shadow:var(--neu-inset);
+  box-shadow:var(--neu-inset); padding:4px; text-align:center;
 }
-.dash-donut-val { font-size:13px; font-weight:800; color:var(--n800); letter-spacing:-.2px; }
-.dash-donut-sub { font-size:9px; color:var(--n400); margin-top:1px; }
+.dash-donut-val { font-size:11px; font-weight:800; color:var(--n800); letter-spacing:-.2px; line-height:1.1; }
+.dash-donut-sub { font-size:8px; color:var(--n400); margin-top:1px; }
 /* วงแหวน SVG (สีฝังจริง — แคปทั้งหน้าแล้วสีไม่หาย) */
-.dash-donut-svgwrap { position:relative; width:120px; height:120px; flex-shrink:0; }
-.donut-svg { width:120px; height:120px; display:block; }
+.dash-donut-svgwrap { position:relative; width:112px; height:112px; flex-shrink:0; }
+.donut-svg { width:112px; height:112px; display:block; overflow:visible; }
 .dash-donut-legend { display:flex; flex-direction:column; gap:9px; flex:1; min-width:0; }
 .dash-leg-item { display:flex; align-items:center; gap:8px; font-size:12px; }
 .dash-leg-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
@@ -2611,7 +2611,7 @@ function buildDonut(segs, centerVal, centerSub) {
   };
   const trackCol = resolve('var(--n100)');
   // วาดวงแหวนเป็น SVG (stroke-dasharray) ฝังสีจริง — แคปยังไงก็อยู่ครบ
-  const R = 54, CIRC = 2 * Math.PI * R, SW = 18;
+  const R = 46, CIRC = 2 * Math.PI * R, SW = 14;
   let off = 0;
   const arcs = items.map(s => {
     const len = (+s.val) / total * CIRC;

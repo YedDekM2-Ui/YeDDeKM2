@@ -781,6 +781,14 @@ body {
 .ms-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:7px; vertical-align:middle; }
 .ms-dot.has { background:var(--success); }
 .ms-dot.no { background:var(--n300); }
+/* ปี + เดือน บรรทัดเดียวกัน */
+.ym-row { display:flex; gap:8px; align-items:stretch; margin-bottom:6px; }
+.ym-row #yearSelect { flex:0 0 36%; }
+.ym-row #periodSelect { flex:1 1 auto; min-width:0; }
+.ym-row .month-stepper { width:100%; margin-bottom:0; gap:4px; padding:5px; }
+.ym-row .ms-arrow { width:34px; height:34px; font-size:20px; }
+.ym-row .ms-month { font-size:15px; }
+.ym-row .ms-month .ms-num { font-size:11.5px; }
 
 .holiday-chips { display:flex; flex-wrap:wrap; gap:5px; max-height:100px; overflow-y:auto; }
 .hchip { font-size:10.5px; font-weight:600; padding:3px 9px; border-radius:10px; background:var(--rose); color:#9D1761; }
@@ -1394,10 +1402,11 @@ input:focus:not(:focus-visible) { outline: none; }
   <!-- PAGE: MONTHLY -->
   <div id="page-monthly" class="page">
     <div id="monthlyClock" class="monthly-clock"></div>
-    <div class="period-label">เลือกปี</div>
-    <div id="yearSelect" class="year-select"></div>
-    <div class="period-label">เลือกเดือน</div>
-    <div id="periodSelect" class="period-select"></div>
+    <div class="period-label">เลือกปีและเดือน</div>
+    <div class="ym-row">
+      <div id="yearSelect"></div>
+      <div id="periodSelect"></div>
+    </div>
     <div id="monthlyContent">
       <div class="loading-state">
         <div class="loading-dots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
@@ -2312,7 +2321,7 @@ function renderMonthly() {
 
   // ── สเต็ปเปอร์เลือกปี (พ.ศ.) ‹ 2568 › — เลื่อน/ปัดได้ ──
   ysEl.innerHTML = `
-    <div class="month-stepper" style="flex:1" ontouchstart="ysTouchStart(event)" ontouchend="ysTouchEnd(event)">
+    <div class="month-stepper" ontouchstart="ysTouchStart(event)" ontouchend="ysTouchEnd(event)">
       <button class="ms-arrow" onclick="stepYear(-1)" aria-label="ปีก่อนหน้า">‹</button>
       <div class="ms-mid"><div class="ms-month ms-accent">${selYear+543}</div></div>
       <button class="ms-arrow" onclick="stepYear(1)" aria-label="ปีถัดไป">›</button>

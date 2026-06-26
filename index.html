@@ -1622,8 +1622,15 @@ function calcOT(rec) {
     t150 = outTime - inTime;
   } else if (type === 'holiday' || wedAsHoliday) {
     // วันนักขัตฤกษ์ + วันพุธรอบใหม่ — คิดเหมือนกัน
-    t150 = Math.max(0, Math.min(outTime, 23) - Math.max(inTime, 9));
-    t200 = Math.max(0, Math.min(outTime, 9) - inTime) + Math.max(0, outTime - Math.max(inTime, 23));
+    if (rec.date >= WED_HOLIDAY_FROM) {
+      // กฎใหม่ (ตั้งแต่ 26 พ.ค. 69): 09:00–18:00 ×1.5 , 18:00+ ×2.0
+      t150 = Math.max(0, Math.min(outTime, 18) - Math.max(inTime, 9));
+      t200 = Math.max(0, outTime - Math.max(inTime, 18));
+    } else {
+      // กฎเดิม (ก่อน 26 พ.ค.): 09:00–23:00 ×1.5 , หลัง 23:00 ×2.0 — ไม่แตะของเก่า
+      t150 = Math.max(0, Math.min(outTime, 23) - Math.max(inTime, 9));
+      t200 = Math.max(0, Math.min(outTime, 9) - inTime) + Math.max(0, outTime - Math.max(inTime, 23));
+    }
   }
 
   const custom  = parseFloat(rec.customOT)         || 0;

@@ -1649,31 +1649,21 @@ function calcOT(rec) {
   const type = getDayType(rec.date);
   let t100 = 0, t150 = 0, t200 = 0, transport = 0;
 
-  // กฎใหม่: วันพุธตั้งแต่ 26 พ.ค. 2026 (รอบ มิ.ย. 69) เป็นต้นไป
-  // คิดเหมือนวันนักขัตฤกษ์ (×1.5 ช่วงปกติ + ×2.0 ช่วงดึก/เช้ามืด)
-  // วันพุธก่อนหน้านั้นยังคิดแบบเดิม (×1.5 ทั้งวัน ไม่มี ×2.0)
-  const WED_HOLIDAY_FROM = '2026-05-26';   // วันพุธเริ่มคิดเป็นวันนักขัต (พรีเมียม)
-  const NEW_SPLIT_FROM   = '2026-06-26';   // วันเริ่มกฎใหม่ (ตัด ×2.0 ที่ 18:00) = รอบ ก.ค. · ก่อนหน้าใช้กฎเก่า (ตัดที่ 23:00) ให้ มิ.ย. ตรงที่ส่งบอส
+  // วันพุธตั้งแต่ 26 พ.ค. 2026 (รอบ มิ.ย.) เป็นต้นไป คิดเหมือนวันนักขัต · วันพุธก่อนหน้า = ×1.5 ทั้งวัน
+  const WED_HOLIDAY_FROM = '2026-05-26';
   const wedAsHoliday = (type === 'wednesday' && rec.date >= WED_HOLIDAY_FROM);
 
   if (type === 'normal') {
+    // วันธรรมดา: ก่อน 09:00 ×1.5 · 18:00–23:00 ×1.0 · หลัง 23:00 ×1.5
     t100 = Math.max(0, Math.min(outTime, 23) - Math.max(inTime, 18));
     t150 = Math.max(0, Math.min(outTime, 9) - inTime) + Math.max(0, outTime - Math.max(inTime, 23));
   } else if (type === 'wednesday' && !wedAsHoliday) {
-    // วันพุธเก่า (ก่อน 26 พ.ค. 69) — คงเดิม
+    // วันพุธเก่า (ก่อน 26 พ.ค. 69) — ×1.5 ทั้งวัน
     t150 = outTime - inTime;
   } else if (type === 'holiday' || wedAsHoliday) {
-    // วันนักขัตฤกษ์ + วันพุธรอบใหม่ — คิดเหมือนกัน
-    if (rec.date >= NEW_SPLIT_FROM) {
-      // กฎใหม่ (ตั้งแต่ 26 มิ.ย. 69 = รอบ ก.ค.): ก่อน 09:00 ×2.0 , 09:00–18:00 ×1.5 , 18:00+ ×2.0
-      t150 = Math.max(0, Math.min(outTime, 18) - Math.max(inTime, 9));     // 09–18 ×1.5
-      t200 = Math.max(0, Math.min(outTime, 9) - inTime)                    // ก่อน 09:00 ×2.0
-           + Math.max(0, outTime - Math.max(inTime, 18));                  // 18:00+ ×2.0
-    } else {
-      // กฎเดิม (ก่อน 26 มิ.ย.): 09:00–23:00 ×1.5 , หลัง 23:00 ×2.0 — ให้ มิ.ย. ตรงที่ส่งบอส
-      t150 = Math.max(0, Math.min(outTime, 23) - Math.max(inTime, 9));
-      t200 = Math.max(0, Math.min(outTime, 9) - inTime) + Math.max(0, outTime - Math.max(inTime, 23));
-    }
+    // วันพุธ/นักขัต (ไม่ติ๊ก): ก่อน 09:00 ×2.0 · 09:00–23:00 ×1.5 · หลัง 23:00 ×2.0
+    t150 = Math.max(0, Math.min(outTime, 23) - Math.max(inTime, 9));
+    t200 = Math.max(0, Math.min(outTime, 9) - inTime) + Math.max(0, outTime - Math.max(inTime, 23));
   }
 
   const custom  = parseFloat(rec.customOT)         || 0;

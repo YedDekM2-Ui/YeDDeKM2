@@ -467,21 +467,28 @@ body {
 .row1 { margin-bottom:10px; }
 
 /* ── PREVIEW ── */
+/* พรีวิวใบเสร็จ — ล็อกสี hex ตายตัว (พื้นสว่าง+ตัวอักษรเข้ม) ทุกธีมเหมือนกัน กันสีหายในธีมมืด */
 #previewBox {
-  background:linear-gradient(135deg, var(--mint), #fff);
-  border:1.5px solid var(--accent-soft); border-radius:var(--r-sm);
+  background:linear-gradient(135deg, #EAF6F1, #FFFFFF);
+  border:1.5px solid #CDE5DC; border-radius:var(--r-sm);
   padding:12px 14px; margin:10px 0; display:none;
   animation:fadeIn .2s ease;
 }
-.pv-row { display:flex; justify-content:space-between; font-size:13px; }
-.pv-type { font-weight:700; }
-.pv-type.normal { color:var(--accent); }
-.pv-type.wednesday { color:var(--amberDk); }
-.pv-type.holiday { color:var(--roseDk); }
-.pv-nums { display:flex; gap:10px; }
-.pv-ot { color:var(--accent); font-weight:600; }
-.pv-total { color:var(--n800); font-weight:800; }
-.pv-detail { font-size:11px; color:var(--n400); margin-top:5px; display:flex; gap:8px; flex-wrap:wrap; }
+.pv-row { display:flex; justify-content:space-between; align-items:center; font-size:13px; }
+.pv-type { font-weight:800; padding:2px 10px; border-radius:99px; font-size:12px; }
+.pv-type.normal    { color:#0F7A4F; background:#D6F3EC; }
+.pv-type.wednesday { color:#9A5B00; background:#FCEBD2; }
+.pv-type.holiday   { color:#A8254A; background:#FBDDE4; }
+.pv-nums { display:flex; flex-direction:column; align-items:flex-end; }
+.pv-ot { color:#6B7280; font-weight:700; font-size:11px; }
+.pv-total { color:#111827; font-weight:800; font-size:15px; }
+.pv-detail { margin-top:9px; padding-top:8px; border-top:1px dashed #CDE5DC; display:flex; flex-direction:column; gap:6px; }
+.pv-ln { display:flex; align-items:center; gap:8px; font-size:12.5px; }
+.pv-ln-t { color:#566; font-weight:700; flex:0 0 40%; }
+.pv-ln-c { color:#6B7280; font-weight:600; flex:1; text-align:right; white-space:nowrap; }
+.pv-ln-c b { font-weight:800; }
+.pv-ln-m { color:#1f2937; font-weight:800; flex:0 0 66px; text-align:right; }
+.pv-ln-none { color:#6B7280; font-size:12px; font-weight:600; }
 
 /* ── EDIT MODE BANNER ── */
 #editBanner {
@@ -538,6 +545,7 @@ body {
 }
 /* ตัวเลือกเรทเหมาหลัง 18:00 (กระทันหัน 200 / นัดล่วงหน้า 150) */
 .sp-rate { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:2px 0 8px; }
+.sp-rate.forced { grid-template-columns:1fr; }   /* วันพุธ/นักขัต = เหลือปุ่ม 200 เต็มแถว */
 .sp-rate-btn {
   padding:8px 6px; border-radius:var(--r-sm); border:none; cursor:pointer;
   font-family:var(--font); font-size:14px; font-weight:800; color:var(--n400);
@@ -1628,11 +1636,39 @@ function specialOT(tin, tout, date, rate) {
   const before9 = Math.max(0, Math.min(o, 9) - i);           // เช้ามืดก่อน 09:00
   const work918 = Math.max(0, Math.min(o, 18) - Math.max(i, 9)); // 09:00–18:00
   const after18 = Math.max(0, o - Math.max(i, 18));           // 18:00 เป็นต้นไป (รวมข้ามคืน) = เรทเหมา
-  let money, hours;
   // วันพุธ/นักขัต: 18:00+ เป็น ฿200 เสมอ (เลือก 150 ไม่ได้) · วันปกติ: 18:00+ = เรทที่เลือก (150/200)
-  if (holidayLike) { money = before9*OT200 + work918*OT150 + after18*OT200;  hours = before9 + work918 + after18; }
-  else             { money = before9*OT150 + after18*evRate;                 hours = before9 + after18; }
-  return { money: Math.round(money), hours };
+  const seg = (label, hr, r) => ({ label, hr, rate: r, money: Math.round(hr * r) });
+  let segs;
+  if (holidayLike) segs = [seg('ก่อน 09:00', before9, OT200), seg('09:00–18:00', work918, OT150), seg('18:00+', after18, OT200)];
+  else             segs = [seg('ก่อน 09:00', before9, OT150), seg('18:00+', after18, evRate)];
+  segs = segs.filter(s => s.hr > 0);
+  const money = segs.reduce((s, x) => s + x.money, 0);
+  const hours = segs.reduce((s, x) => s + x.hr, 0);
+  return { money: Math.round(money), hours, segs };
+}
+
+/* ── แยกช่วง OT งานปกติ (ไม่ติ๊ก) ตามชนิดวัน — ใช้แสดงใบเสร็จ + ให้ calcOT ใช้ (แหล่งเดียว) ── */
+function dayOTBands(date, tin, tout) {
+  const C = STATE.config || DEFAULT_CFG;
+  const R100 = parseFloat(C.OT100_RATE) || 100, R150 = parseFloat(C.OT150_RATE) || 150, R200 = parseFloat(C.OT200_RATE) || 200;
+  let i = toDecimal(tin), o = toDecimal(tout); if (o <= i) o += 24;
+  const type = getDayType(date);
+  const wedAsHol = (type === 'wednesday' && date >= '2026-05-26');
+  const seg = (label, hr, r) => ({ label, hr, rate: r, money: Math.round(hr * r) });
+  const before9 = Math.max(0, Math.min(o, 9) - i);
+  const after23 = Math.max(0, o - Math.max(i, 23));
+  let segs;
+  if (type === 'normal') {
+    segs = [seg('ก่อน 09:00', before9, R150), seg('18:00–23:00', Math.max(0, Math.min(o,23) - Math.max(i,18)), R100), seg('หลัง 23:00', after23, R150)];
+  } else if (type === 'wednesday' && !wedAsHol) {
+    segs = [seg('ทั้งกะ (พุธเก่า)', o - i, R150)];
+  } else { // holiday / วันพุธรอบใหม่
+    segs = [seg('ก่อน 09:00', before9, R200), seg('09:00–23:00', Math.max(0, Math.min(o,23) - Math.max(i,9)), R150), seg('หลัง 23:00', after23, R200)];
+  }
+  segs = segs.filter(s => s.hr > 0);
+  let t100 = 0, t150 = 0, t200 = 0;
+  segs.forEach(s => { if (s.rate === R100) t100 += s.hr; else if (s.rate === R150) t150 += s.hr; else t200 += s.hr; });
+  return { t100, t150, t200, segs };
 }
 
 function calcOT(rec) {
@@ -1647,24 +1683,9 @@ function calcOT(rec) {
   if (outTime <= inTime) outTime += 24;
 
   const type = getDayType(rec.date);
-  let t100 = 0, t150 = 0, t200 = 0, transport = 0;
-
-  // วันพุธตั้งแต่ 26 พ.ค. 2026 (รอบ มิ.ย.) เป็นต้นไป คิดเหมือนวันนักขัต · วันพุธก่อนหน้า = ×1.5 ทั้งวัน
-  const WED_HOLIDAY_FROM = '2026-05-26';
-  const wedAsHoliday = (type === 'wednesday' && rec.date >= WED_HOLIDAY_FROM);
-
-  if (type === 'normal') {
-    // วันธรรมดา: ก่อน 09:00 ×1.5 · 18:00–23:00 ×1.0 · หลัง 23:00 ×1.5
-    t100 = Math.max(0, Math.min(outTime, 23) - Math.max(inTime, 18));
-    t150 = Math.max(0, Math.min(outTime, 9) - inTime) + Math.max(0, outTime - Math.max(inTime, 23));
-  } else if (type === 'wednesday' && !wedAsHoliday) {
-    // วันพุธเก่า (ก่อน 26 พ.ค. 69) — ×1.5 ทั้งวัน
-    t150 = outTime - inTime;
-  } else if (type === 'holiday' || wedAsHoliday) {
-    // วันพุธ/นักขัต (ไม่ติ๊ก): ก่อน 09:00 ×2.0 · 09:00–23:00 ×1.5 · หลัง 23:00 ×2.0
-    t150 = Math.max(0, Math.min(outTime, 23) - Math.max(inTime, 9));
-    t200 = Math.max(0, Math.min(outTime, 9) - inTime) + Math.max(0, outTime - Math.max(inTime, 23));
-  }
+  // OT งานปกติตามชนิดวัน — ใช้ dayOTBands เป็นแหล่งคำนวณเดียว (ตรงกับใบเสร็จพรีวิว)
+  const _b = dayOTBands(rec.date, rec.timeIn, rec.timeOut);
+  let t100 = _b.t100, t150 = _b.t150, t200 = _b.t200, transport = 0;
 
   const custom  = parseFloat(rec.customOT)         || 0;
   const special = parseFloat(rec.specialTransport) || 0;
@@ -2001,6 +2022,7 @@ const APP = {
 
     const noteVal = (document.getElementById('fNote').value || '').trim();
     const isSpecial = document.getElementById('spToggle').classList.contains('on');
+    if (isSpecial) this._refreshRateUI();
     let spMoney = 0, spTrans = document.getElementById('fSpecial').value;
     if (isSpecial) {
       spMoney = specialOT(tin, tout, date, this._spRate()).money;
@@ -2013,17 +2035,21 @@ const APP = {
 
     document.getElementById('pvType').textContent = typeLabel;
     document.getElementById('pvType').className = 'pv-type ' + c.type;
-    document.getElementById('pvOT').textContent = c.otTotal > 0 ? `OT ${fmtBaht(c.otTotal)}` : '';
+    document.getElementById('pvOT').textContent = isSpecial ? `⚡ เหมา${noteVal ? ' · ' + noteVal : ''}` : 'งานปกติ';
     document.getElementById('pvTot').textContent = `รวม ${fmtBaht(c.total)}`;
 
-    const details = [];
-    if (c.t100 > 0) details.push(`OT×1 ${fmtHr(c.t100)} = ${fmtBaht(c.b100)}`);
-    if (c.t150 > 0) details.push(`OT×1.5 ${fmtHr(c.t150)} = ${fmtBaht(c.b150)}`);
-    if (c.t200 > 0) details.push(`OT×2 ${fmtHr(c.t200)} = ${fmtBaht(c.b200)}`);
-    if (c.tr > 0) details.push(`🚗 ${fmtBaht(c.tr)}`);
-    if (c.special > 0) details.push(`🚗 ${fmtBaht(c.special)}`);
-    if (c.custom > 0) details.push(`⚡ ${noteVal || 'Custom'} ${c.customHours.toFixed(1)} ชม. = ${fmtBaht(c.custom)}`);
-    document.getElementById('pvDetail').textContent = details.join('  ·  ');
+    // ── ใบเสร็จกางบรรทัด: ช่วงเวลา × เรท = เงิน (สี hex ตายตัว — กันหายในธีมมืด) ──
+    const segs = isSpecial ? specialOT(tin, tout, date, this._spRate()).segs : dayOTBands(date, tin, tout).segs;
+    const rateCol = r => r >= 200 ? '#C0395A' : (r >= 150 ? '#C77A12' : '#1A8C62');  // 200 แดง · 150 ส้ม · 100 เขียว
+    let lines = segs.map(s => `<div class="pv-ln">
+        <span class="pv-ln-t">${s.label}</span>
+        <span class="pv-ln-c">${+s.hr.toFixed(2)} ชม × <b style="color:${rateCol(s.rate)}">${s.rate}</b></span>
+        <span class="pv-ln-m">${fmtBaht(s.money)}</span>
+      </div>`).join('');
+    const trAll = (c.tr || 0) + (c.special || 0);
+    if (trAll > 0) lines += `<div class="pv-ln"><span class="pv-ln-t">🚗 ค่าเดินทาง</span><span class="pv-ln-c"></span><span class="pv-ln-m">${fmtBaht(trAll)}</span></div>`;
+    if (!lines) lines = `<div class="pv-ln pv-ln-none">ไม่มี OT (งานปกติ 09:00–18:00)</div>`;
+    document.getElementById('pvDetail').innerHTML = lines;
     document.getElementById('previewBox').style.display = 'block';
   },
 
@@ -2034,6 +2060,7 @@ const APP = {
     btn.setAttribute('aria-pressed', on ? 'true' : 'false');
     document.getElementById('spHint').style.display = on ? 'block' : 'none';
     document.getElementById('spRate').style.display = on ? 'grid' : 'none';
+    if (on) this._refreshRateUI();
     const lbl = document.getElementById('lblNote');
     const note = document.getElementById('fNote');
     if (on) { lbl.textContent = 'สถานที่ (จำเป็น)'; note.placeholder = 'เซเรนิตี้'; }
@@ -2051,6 +2078,25 @@ const APP = {
   _spRate() {
     const b = document.querySelector('#spRate .sp-rate-btn.on');
     return b ? +b.dataset.rate : 200;
+  },
+  // วันพุธ/นักขัต → ซ่อนปุ่ม ฿150 (บังคับ ฿200) · วันปกติ → โชว์ทั้งสอง
+  _refreshRateUI() {
+    const date = document.getElementById('fDate').value;
+    const type = date ? getDayType(date) : 'normal';
+    const premium = (type === 'holiday') || (type === 'wednesday' && date >= '2026-05-26');
+    const wrap = document.getElementById('spRate');
+    const b150 = wrap.querySelector('[data-rate="150"]');
+    const b200 = wrap.querySelector('[data-rate="200"]');
+    if (premium) {
+      b150.style.display = 'none';
+      b150.classList.remove('on'); b200.classList.add('on');
+      b200.querySelector('small').textContent = 'พุธ/นักขัต บังคับ';
+      wrap.classList.add('forced');
+    } else {
+      b150.style.display = '';
+      b200.querySelector('small').textContent = 'กระทันหัน';
+      wrap.classList.remove('forced');
+    }
   },
   setSpRate(r) {
     document.querySelectorAll('#spRate .sp-rate-btn').forEach(b => b.classList.toggle('on', +b.dataset.rate === r));

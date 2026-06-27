@@ -536,6 +536,16 @@ body {
   background:var(--accent-soft); border-radius:var(--r-sm);
   padding:9px 12px; margin:2px 0 10px;
 }
+/* ตัวเลือกเรทเหมาหลัง 18:00 (กระทันหัน 200 / นัดล่วงหน้า 150) */
+.sp-rate { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:2px 0 8px; }
+.sp-rate-btn {
+  padding:8px 6px; border-radius:var(--r-sm); border:none; cursor:pointer;
+  font-family:var(--font); font-size:14px; font-weight:800; color:var(--n400);
+  background:var(--card); box-shadow:var(--neu-inset); line-height:1.15;
+  display:flex; flex-direction:column; align-items:center; gap:1px; transition:all .15s;
+}
+.sp-rate-btn small { font-size:10px; font-weight:600; opacity:.85; }
+.sp-rate-btn.on { background:linear-gradient(135deg, var(--accent-2), var(--accent)); color:#fff; box-shadow:var(--neu-shadow-sm); }
 
 /* ── TOAST ── */
 #toast {
@@ -1377,12 +1387,18 @@ input:focus:not(:focus-visible) { outline: none; }
         </div>
       </div>
 
+      <!-- เลือกเรทเหมาหลัง 18:00 (โชว์เมื่อติ๊ก) -->
+      <div id="spRate" class="sp-rate" style="display:none">
+        <button type="button" class="sp-rate-btn on" data-rate="200" onclick="APP.setSpRate(200)">฿200/ชม.<small>กระทันหัน</small></button>
+        <button type="button" class="sp-rate-btn" data-rate="150" onclick="APP.setSpRate(150)">฿150/ชม.<small>นัดล่วงหน้า</small></button>
+      </div>
+
       <!-- คำอธิบายงานพิเศษ (โชว์เมื่อติ๊ก) -->
       <div id="spHint" class="sp-hint" style="display:none">
         ⚡ <b>งานเหมา</b> (ใส่เวลาจริง+สถานที่)<br>
-        <b>ปกติ:</b> ก่อน 9โมง <b>×150</b> · 9–18 ไม่นับ · 6pm+ <b>×200</b><br>
-        <b>พุธ/นักขัต:</b> ก่อน 9โมง <b>×200</b> · 9–18 <b>×150</b> · 6pm+ <b>×200</b><br>
-        เดินทาง +฿200 (เลิก 5ทุ่ม–9โมงเช้า)
+        <b>ปกติ:</b> ก่อน 9โมง <b>×150</b> · 9–18 ไม่นับ<br>
+        <b>พุธ/นักขัต:</b> ก่อน 9โมง <b>×200</b> · 9–18 <b>×150</b><br>
+        <b>หลัง 6pm</b> = เรทที่เลือกด้านบน · เดินทาง +฿200 (เลิก 5ทุ่ม–9โมง)
       </div>
 
       <!-- แถวปุ่ม: ติ๊กงานพิเศษ (ซ้าย เล็ก) + บันทึก -->
@@ -1600,20 +1616,21 @@ function getDayType(dateStr) {
    เช้ามืดก่อน 09:00: วันปกติ ×150 · วันพุธ(≥26พ.ค.)/นักขัต ×200
    09:00–18:00: วันปกติ = งานหลัก(ไม่นับ) · วันพุธ/นักขัต ×150
    18:00+ (รวมข้ามคืน): ×200 ทุกวัน */
-function specialOT(tin, tout, date) {
+function specialOT(tin, tout, date, rate) {
   const C = STATE.config || DEFAULT_CFG;
   const OT150 = parseFloat(C.OT150_RATE) || 150;
   const OT200 = parseFloat(C.OT200_RATE) || 200;
+  const evRate = (+rate === 150) ? OT150 : OT200;   // เรทหลัง 18:00: ฿150 นัดล่วงหน้า / ฿200 กระทันหัน
   let i = toDecimal(tin), o = toDecimal(tout);
   if (o <= i) o += 24;
   const type = getDayType(date);
   const holidayLike = (type === 'holiday') || (type === 'wednesday' && date >= '2026-05-26');
   const before9 = Math.max(0, Math.min(o, 9) - i);           // เช้ามืดก่อน 09:00
   const work918 = Math.max(0, Math.min(o, 18) - Math.max(i, 9)); // 09:00–18:00
-  const after18 = Math.max(0, o - Math.max(i, 18));           // 18:00 เป็นต้นไป (รวมข้ามคืน)
+  const after18 = Math.max(0, o - Math.max(i, 18));           // 18:00 เป็นต้นไป (รวมข้ามคืน) = เรทเหมา
   let money, hours;
-  if (holidayLike) { money = before9*OT200 + work918*OT150 + after18*OT200; hours = before9 + work918 + after18; }
-  else             { money = before9*OT150 + after18*OT200;                  hours = before9 + after18; }
+  if (holidayLike) { money = before9*OT200 + work918*OT150 + after18*evRate; hours = before9 + work918 + after18; }
+  else             { money = before9*OT150 + after18*evRate;                 hours = before9 + after18; }
   return { money: Math.round(money), hours };
 }
 
@@ -1662,12 +1679,17 @@ function calcOT(rec) {
   // ค่าเดินทาง ฿200: งานปกติ = เลิกหลัง 23:00 (กฎเดิม ไม่แตะของเก่า)
   // งานพิเศษติ๊ก (custom>0) = ใช้ค่าที่เก็บใน special ไม่ auto กันบวกซ้ำ
   if (custom <= 0 && outTime >= 23) transport = TRANS;
-  // ── งานเหมา (ติ๊ก) — customOT>0 → ข้ามขั้นบันได, เงิน=customOT ที่เก็บไว้ ──
-  // ชั่วโมง: ของใหม่ (≥26 มิ.ย. 69) คิดจากเวลาจริง+ชนิดวัน (เรทผสม) · ของเก่า=ก้อนเงิน÷200
+  // ── งานเหมา ──
   let customHours = 0;
   if (custom > 0) {
-    t100 = 0; t150 = 0; t200 = 0;
-    customHours = (rec.date >= '2026-06-26') ? specialOT(rec.timeIn, rec.timeOut, rec.date).hours : (custom / OT200);
+    if (rec.date >= '2026-06-26') {
+      // แบบใหม่: customOT คิดจากเวลาจริง+ชนิดวัน (เรทผสม) แล้ว → ข้ามขั้นบันได กันคิดซ้ำ
+      t100 = 0; t150 = 0; t200 = 0;
+      customHours = specialOT(rec.timeIn, rec.timeOut, rec.date).hours;
+    } else {
+      // ของเก่า (ก้อนเงินก่อนมีปุ่มเหมา): เป็น "งานเสริม" บวกเพิ่มจาก OT เวลาปกติ — ไม่ล้างขั้นบันได
+      customHours = custom / OT200;
+    }
   }
   const b100 = t100 * OT100;
   const b150 = t150 * OT150;
@@ -1989,7 +2011,7 @@ const APP = {
     const isSpecial = document.getElementById('spToggle').classList.contains('on');
     let spMoney = 0, spTrans = document.getElementById('fSpecial').value;
     if (isSpecial) {
-      spMoney = specialOT(tin, tout, date).money;
+      spMoney = specialOT(tin, tout, date, this._spRate()).money;
       const _to = toDecimal(tout);
       spTrans = (+document.getElementById('fSpecial').value) || ((_to >= 23 || _to <= 9) ? 200 : 0);
     }
@@ -2019,14 +2041,27 @@ const APP = {
     btn.classList.toggle('on', on);
     btn.setAttribute('aria-pressed', on ? 'true' : 'false');
     document.getElementById('spHint').style.display = on ? 'block' : 'none';
+    document.getElementById('spRate').style.display = on ? 'grid' : 'none';
     const lbl = document.getElementById('lblNote');
     const note = document.getElementById('fNote');
     if (on) { lbl.textContent = 'สถานที่ (จำเป็น)'; note.placeholder = 'เซเรนิตี้'; }
-    else    { lbl.textContent = 'สถานที่ / หมายเหตุ'; note.placeholder = 'เซเรนิตี้'; }
+    else    { lbl.textContent = 'สถานที่ / หมายเหตุ'; note.placeholder = 'เซเรนิตี้';
+      // ล้างฟอร์ม → เรทกลับ ฿200 (กระทันหัน) เป็นค่าเริ่มต้น
+      document.querySelectorAll('#spRate .sp-rate-btn').forEach(b => b.classList.toggle('on', +b.dataset.rate === 200));
+    }
   },
   toggleSpecial() {
     const on = !document.getElementById('spToggle').classList.contains('on');
     this.applySpecialUI(on);
+    this.updatePreview();
+  },
+  // เรทเหมาหลัง 18:00 ที่เลือก (200 กระทันหัน / 150 นัดล่วงหน้า)
+  _spRate() {
+    const b = document.querySelector('#spRate .sp-rate-btn.on');
+    return b ? +b.dataset.rate : 200;
+  },
+  setSpRate(r) {
+    document.querySelectorAll('#spRate .sp-rate-btn').forEach(b => b.classList.toggle('on', +b.dataset.rate === r));
     this.updatePreview();
   },
 
@@ -2050,7 +2085,7 @@ const APP = {
     // งานเหมา: คิดเงินตามชนิดวัน (เช้า×150/200, 09-18 ฐาน/×150, 18:00+ ×200) · ค่าเดินทาง 200 เมื่อเลิกช่วง 23:00–09:00
     let customOT = 0, specialTransport = +document.getElementById('fSpecial').value || 0;
     if (isSpecial) {
-      customOT = specialOT(tin, tout, date).money;
+      customOT = specialOT(tin, tout, date, this._spRate()).money;
       if (customOT <= 0) { toast('งานเหมาต้องมีชั่วโมงที่คิด OT (นอกเวลางานหลัก)', 'err'); return; }
       const _to = toDecimal(tout);
       if (specialTransport === 0 && (_to >= 23 || _to <= 9)) specialTransport = 200;

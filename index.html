@@ -1793,7 +1793,7 @@ function periodLabelShort(p) {
 function periodYear(p) { return parseInt(p.split('-')[0]); }
 // สร้าง period string จากปี ค.ศ. + เดือน
 function makePeriod(year, month) { return `${year}-${String(month).padStart(2,'0')}`; }
-async function fetchWithTimeout(url, options = {}, timeout = 15000) {
+async function fetchWithTimeout(url, options = {}, timeout = 30000) {
   const ctrl = new AbortController();
   const id = setTimeout(() => ctrl.abort(), timeout);
   try {
@@ -1913,12 +1913,20 @@ const APP = {
 
     try {
       // โหลด config + ข้อมูลจริงจาก Sheets (อ่านอย่างเดียว — ไม่เขียนอะไรกลับ)
-      const [cfgRes, dataRes] = await Promise.all([
+      // ⚠️ allSettled: ถ้าตัวใดตัวหนึ่งพัง อีกตัวยังใช้ได้ (เดิมใช้ Promise.all → config ช้าตัวเดียว ตกเป็น Offline ทั้งยวง)
+      const [cfgSet, dataSet] = await Promise.allSettled([
         fetchWithTimeout(CONFIG.GAS_URL, { method:'POST', body:JSON.stringify({action:'getConfig'}) }),
         fetchWithTimeout(CONFIG.GAS_URL)
       ]);
-      const cfgJson = await cfgRes.json();
-      const dataJson = await dataRes.json();
+      const readJson = async s => {
+        if (s.status !== 'fulfilled') return null;
+        try { return await s.value.json(); } catch(e) { return null; }
+      };
+      const cfgJson  = (await readJson(cfgSet))  || {};
+      const dataJson = await readJson(dataSet);
+
+      // ข้อมูลรายการคือตัวหลัก — ถ้าดึงไม่ได้ถือว่าโหลดไม่สำเร็จ
+      if (!Array.isArray(dataJson)) throw new Error('load records failed');
 
       if (cfgJson.success) {
         STATE.holidays = cfgJson.data.holidays || [];

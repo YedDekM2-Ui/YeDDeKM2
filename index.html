@@ -1586,6 +1586,11 @@ function loadLocal() {
       STATE.localRecs = data.localRecs || [];
       STATE.holidays  = data.holidays  || [];
       STATE.wedSub    = data.wedSub    || [];
+      // แคชข้อมูลจาก Sheets — เปิดแอปมาเห็นข้อมูลทันทีไม่ต้องรอเน็ต (ซิงค์เสร็จค่อยทับ)
+      if (Array.isArray(data.sheetRecords)) STATE.sheetRecords = data.sheetRecords;
+      if (data.config)  STATE.config = { ...DEFAULT_CFG, ...data.config };
+      if (data.lastSync) STATE.lastSync = new Date(data.lastSync);
+      STATE.fromCache = STATE.sheetRecords.length > 0;
     }
   } catch(e) { STATE.localRecs = []; }
 }
@@ -1595,6 +1600,9 @@ function saveLocal() {
       localRecs: STATE.localRecs,
       holidays:  STATE.holidays,
       wedSub:    STATE.wedSub,
+      sheetRecords: STATE.sheetRecords,
+      config:   STATE.config,
+      lastSync: STATE.lastSync ? STATE.lastSync.toISOString() : null,
       _v: CONFIG.VERSION
     }));
   } catch(e) {}
@@ -1861,6 +1869,7 @@ function deleteRec(date) {
     } catch(e) {
       STATE.sheetRecords = STATE.sheetRecords.filter(r => r.date !== date);
     }
+    saveLocal();   // อัปเดตแคชด้วย ไม่งั้นเปิดใหม่รายการที่ลบจะโผล่กลับมา
     renderList(); renderDaily(); renderMonthly();
     toast('ลบแล้ว ✓', 'ok');
   };
@@ -1882,6 +1891,7 @@ function deleteAll() {
       });
     } catch(e) {}
     STATE.sheetRecords = [];
+    saveLocal();   // ล้างแคชด้วย
     renderList(); renderDaily(); renderMonthly();
     toast('ลบทั้งหมดแล้ว ✓', 'ok');
   };
@@ -1910,17 +1920,25 @@ const APP = {
     const btn = document.getElementById('syncBtn');
     btn.classList.add('busy');
     setGauge(periodProgressPct(), 'loading');
+    const diag = [];
+    const t0 = Date.now();
 
     try {
       // โหลด config + ข้อมูลจริงจาก Sheets (อ่านอย่างเดียว — ไม่เขียนอะไรกลับ)
       // ⚠️ allSettled: ถ้าตัวใดตัวหนึ่งพัง อีกตัวยังใช้ได้ (เดิมใช้ Promise.all → config ช้าตัวเดียว ตกเป็น Offline ทั้งยวง)
+      // 🔍 diag: จดว่าแต่ละคำขอจบยังไง/กี่ ms — เวลาขึ้น Offline จะได้รู้ว่าพังตรงไหน (โชว์ในแถบซิงค์)
+      const timed = async (tag, p) => {
+        const s = Date.now();
+        try { const r = await p; diag.push(`${tag} ${r.status} ${Date.now()-s}ms`); return r; }
+        catch(e) { diag.push(`${tag} ✗${e.name || 'ERR'} ${Date.now()-s}ms`); throw e; }
+      };
       const [cfgSet, dataSet] = await Promise.allSettled([
-        fetchWithTimeout(CONFIG.GAS_URL, { method:'POST', body:JSON.stringify({action:'getConfig'}) }),
-        fetchWithTimeout(CONFIG.GAS_URL)
+        timed('cfg', fetchWithTimeout(CONFIG.GAS_URL, { method:'POST', body:JSON.stringify({action:'getConfig'}) })),
+        timed('rec', fetchWithTimeout(CONFIG.GAS_URL))
       ]);
       const readJson = async s => {
         if (s.status !== 'fulfilled') return null;
-        try { return await s.value.json(); } catch(e) { return null; }
+        try { return await s.value.json(); } catch(e) { diag.push('อ่าน JSON ไม่ได้'); return null; }
       };
       const cfgJson  = (await readJson(cfgSet))  || {};
       const dataJson = await readJson(dataSet);
@@ -1950,13 +1968,16 @@ const APP = {
         saveLocal();
       }
 
-      STATE.lastSync = new Date(); STATE.syncOK = true;
+      STATE.lastSync = new Date(); STATE.syncOK = true; STATE.fromCache = false;
+      STATE.syncDiag = diag.join(' · ') + ` · รวม ${Date.now()-t0}ms`;
+      saveLocal();   // เก็บแคชข้อมูล Sheets ไว้เปิดครั้งหน้าไม่ต้องรอเน็ต
       setGauge(periodProgressPct(), 'online', STATE.sheetRecords.length);
       this._afterSync();
       if (showToast) toast(`โหลดจาก Sheets ${STATE.sheetRecords.length} รายการ ✓`, 'ok');
 
     } catch(e) {
       STATE.syncOK = false;
+      STATE.syncDiag = diag.join(' · ') + ` · รวม ${Date.now()-t0}ms · ${e.name || 'Error'}: ${e.message}`;
       setGauge(periodProgressPct(), 'offline');
       this._afterSync();
       if (showToast) toast('โหลดไม่ได้ ใช้ข้อมูลที่มีอยู่', 'err');
@@ -1975,11 +1996,16 @@ const APP = {
 
   _updateLastSyncBar() {
     const el = document.getElementById('lastSyncBar');
-    if (!STATE.lastSync) { el.textContent = '—'; return; }
-    const t = STATE.lastSync.toLocaleTimeString('th-TH');
+    if (!STATE.lastSync && !STATE.syncDiag) { el.textContent = '—'; return; }
+    const t   = STATE.lastSync ? STATE.lastSync.toLocaleTimeString('th-TH') : '—';
     const cls = STATE.syncOK ? 'sync-ok' : 'sync-warn';
-    el.innerHTML = `<span class="${cls}">● ซิงค์ล่าสุด: ${t}</span>&nbsp;
-      ${STATE.sheetRecords.length} รายการใน Sheets | Local ${STATE.localRecs.length} รายการ`;
+    const head = STATE.syncOK ? `● ซิงค์ล่าสุด: ${t}`
+               : (STATE.lastSync ? `● ใช้ข้อมูลที่เก็บไว้ (ซิงค์ล่าสุด ${t})` : '● ยังซิงค์ไม่สำเร็จ');
+    // ต่อท้ายด้วยผลตรวจ (โผล่เฉพาะตอนซิงค์ไม่ผ่าน) — ไว้บอกว่าพังตรงไหนโดยไม่ต้องเปิด devtools
+    const dg = (!STATE.syncOK && STATE.syncDiag)
+      ? `<br><span style="opacity:.75;font-size:11px">${STATE.syncDiag}</span>` : '';
+    el.innerHTML = `<span class="${cls}">${head}</span>&nbsp;
+      ${STATE.sheetRecords.length} รายการใน Sheets | Local ${STATE.localRecs.length} รายการ${dg}`;
   },
 
   tab(name) {
@@ -3530,13 +3556,14 @@ function submitChangePin() {
 
   // แสดง PIN lock ก่อนใช้งาน
   showPinLock();
-  // เริ่มต้นเกจที่ offline แต่ % ตามวันในรอบจ่ายปัจจุบัน
-  setGauge(periodProgressPct(), 'offline');
-
   loadLocal();
+  // มีข้อมูลในแคชแล้ว → ขึ้น "Loading" พร้อมข้อมูลจริงเลย (ไม่ต้องโชว์ Offline ทั้งที่มีของ)
+  setGauge(periodProgressPct(), STATE.fromCache ? 'loading' : 'offline', STATE.sheetRecords.length);
+  APP._updateLastSyncBar();
+
   document.getElementById('fDate').value = todayStr();
   renderList(); renderDaily(); renderMonthly(); renderDashboard();
-  await APP.sync(false);
+  APP.sync(false);   // ซิงค์เบื้องหลัง — ไม่บล็อกการเปิดแอป
 
   ['fDate','fIn','fOut'].forEach(id => {
     document.getElementById(id).addEventListener('change', () => APP.updatePreview());

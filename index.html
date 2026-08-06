@@ -1801,11 +1801,38 @@ function periodLabelShort(p) {
 function periodYear(p) { return parseInt(p.split('-')[0]); }
 // สร้าง period string จากปี ค.ศ. + เดือน
 function makePeriod(year, month) { return `${year}-${String(month).padStart(2,'0')}`; }
+/* ── กุญแจเข้า Sheets ──
+   URL ของ Apps Script อยู่ในซอร์สหน้านี้ (หน้าเว็บสาธารณะ) ใครก็เห็น
+   ถ้าไม่มีกุญแจ ใครก็ยิงคำสั่งลบข้อมูลทั้งหมดได้ → ฝั่ง GAS บังคับกุญแจทุกคำขอ
+   กุญแจเก็บในเครื่องนี้เท่านั้น (localStorage) ไม่ได้อยู่ในโค้ดที่อัปขึ้น GitHub */
+const KEY_LS = 'tt_appkey';
+function getAppKey() { try { return localStorage.getItem(KEY_LS) || ''; } catch(e) { return ''; } }
+function setAppKey(k) { try { localStorage.setItem(KEY_LS, String(k || '').trim()); } catch(e) {} }
+function askAppKey(msg) {
+  const cur = getAppKey();
+  const k = prompt(msg || 'ใส่กุญแจเข้า Sheets (ถามครั้งเดียวต่อเครื่อง)', cur);
+  if (k === null) return false;
+  setAppKey(k);
+  return true;
+}
+
 async function fetchWithTimeout(url, options = {}, timeout = 30000) {
+  // แนบกุญแจให้ทุกคำขออัตโนมัติ — GET ต่อท้าย ?k= · POST ใส่ในตัว JSON
+  const key = getAppKey();
+  let u = url, opts = options;
+  if (!options.method || String(options.method).toUpperCase() === 'GET') {
+    u = url + (url.indexOf('?') === -1 ? '?' : '&') + 'k=' + encodeURIComponent(key);
+  } else if (typeof options.body === 'string' && options.body.charAt(0) === '{') {
+    try {
+      const b = JSON.parse(options.body);
+      b.key = key;
+      opts = { ...options, body: JSON.stringify(b) };
+    } catch(e) {}
+  }
   const ctrl = new AbortController();
   const id = setTimeout(() => ctrl.abort(), timeout);
   try {
-    const res = await fetch(url, { ...options, signal: ctrl.signal });
+    const res = await fetch(u, { ...opts, signal: ctrl.signal });
     clearTimeout(id); return res;
   } catch(e) { clearTimeout(id); throw e; }
 }
@@ -1942,6 +1969,23 @@ const APP = {
       };
       const cfgJson  = (await readJson(cfgSet))  || {};
       const dataJson = await readJson(dataSet);
+
+      // กุญแจผิด/ยังไม่ได้ใส่ → ถามแล้วซิงค์ใหม่ทันที (ถามซ้ำได้ไม่จำกัด แต่ลองใหม่แค่รอบเดียวต่อการซิงค์)
+      const unauth = o => o && o.code === 401;
+      if (unauth(dataJson) || unauth(cfgJson)) {
+        diag.push('401 กุญแจไม่ถูกต้อง');
+        if (!this._keyRetry) {
+          this._keyRetry = true;
+          btn.classList.remove('busy');
+          if (askAppKey(getAppKey() ? 'กุญแจไม่ถูกต้อง — ใส่ใหม่' : 'ใส่กุญแจเข้า Sheets (ถามครั้งเดียวต่อเครื่อง)')) {
+            const r = await this.sync(showToast);
+            this._keyRetry = false;
+            return r;
+          }
+          this._keyRetry = false;
+        }
+        throw new Error('unauthorized');
+      }
 
       // ข้อมูลรายการคือตัวหลัก — ถ้าดึงไม่ได้ถือว่าโหลดไม่สำเร็จ
       if (!Array.isArray(dataJson)) throw new Error('load records failed');

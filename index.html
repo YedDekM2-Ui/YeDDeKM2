@@ -1566,7 +1566,7 @@ const DEFAULT_CFG = {
 let STATE = {
   holidays: [], wedSub: [], config: { ...DEFAULT_CFG },
   sheetRecords: [], localRecs: [],
-  lastSync: null, syncOK: false,
+  lastSync: null, syncOK: false, needKey: false,
   currentPage: 'add', selectedPeriod: null,
   expandedYear: undefined,  // ปีที่กางเดือนอยู่ (undefined=ยังไม่ตั้งค่า, null=ยุบหมด)
   collapsedDailyPeriods: {}, // หน้ารายวัน: เดือนไหนถูกพับเก็บอยู่ (กดตัวเลขซ้ำเพื่อสลับ)
@@ -1806,14 +1806,93 @@ function makePeriod(year, month) { return `${year}-${String(month).padStart(2,'0
    ถ้าไม่มีกุญแจ ใครก็ยิงคำสั่งลบข้อมูลทั้งหมดได้ → ฝั่ง GAS บังคับกุญแจทุกคำขอ
    กุญแจเก็บในเครื่องนี้เท่านั้น (localStorage) ไม่ได้อยู่ในโค้ดที่อัปขึ้น GitHub */
 const KEY_LS = 'tt_appkey';
-function getAppKey() { try { return localStorage.getItem(KEY_LS) || ''; } catch(e) { return ''; } }
-function setAppKey(k) { try { localStorage.setItem(KEY_LS, String(k || '').trim()); } catch(e) {} }
+let KEY_MEM = '';   // สำรองไว้ในหน่วยความจำ — Safari โหมดส่วนตัวเขียน localStorage ไม่ได้ อย่างน้อยรอบนี้ยังใช้ได้
+function getAppKey() {
+  try { const v = localStorage.getItem(KEY_LS); if (v) return v; } catch(e) {}
+  return KEY_MEM;
+}
+function setAppKey(k) {
+  const clean = String(k || '').trim();
+  KEY_MEM = clean;
+  try { localStorage.setItem(KEY_LS, clean); } catch(e) {}
+}
+
+/* รับกุญแจจาก URL (`?k=...` หรือ `#k=...`) แล้วลบทิ้งจากแถบที่อยู่
+   มีไว้เพื่อ: Safari กับแอปที่ปักหน้าจอโฮม **เก็บ localStorage คนละที่กัน**
+   ใส่กุญแจในแอปแล้ว Safari ยังไม่รู้จัก → บุ๊กมาร์กลิงก์ที่มี ?k= ไว้อันเดียว เปิดที่ไหนก็ติดกุญแจให้เอง */
+function adoptKeyFromURL() {
+  try {
+    const qs = new URLSearchParams(location.search);
+    let k = qs.get('k');
+    if (!k && location.hash) k = new URLSearchParams(location.hash.replace(/^#/, '')).get('k');
+    if (!k) return false;
+    setAppKey(k);
+    qs.delete('k');
+    const rest = qs.toString();
+    history.replaceState(null, '', location.pathname + (rest ? '?' + rest : ''));
+    return true;
+  } catch(e) { return false; }
+}
+
+/* ถามกุญแจด้วย "แผ่นในหน้าเว็บ" ไม่ใช้ prompt()
+   ⚠️ ต้นเหตุที่ Safari ไม่โหลดชีตเลย: prompt() ที่ไม่ได้เกิดจากการกดของผู้ใช้ (ซิงค์อัตโนมัติตอนเปิดแอป)
+   โดน Safari บนไอโฟนกลืนเงียบๆ คืนค่า null ทันที → ใส่กุญแจไม่ได้ → 401 → หน้าว่างโดยไม่บอกอะไรเลย
+   แผ่นนี้เป็น DOM ธรรมดา ไม่มีทางโดนบล็อก และคืนค่าเป็น Promise */
+let _keyAsking = null;
 function askAppKey(msg) {
-  const cur = getAppKey();
-  const k = prompt(msg || 'ใส่กุญแจเข้า Sheets (ถามครั้งเดียวต่อเครื่อง)', cur);
-  if (k === null) return false;
-  setAppKey(k);
-  return true;
+  if (_keyAsking) return _keyAsking;     // ถามอยู่แล้ว อย่าซ้อน
+  _keyAsking = new Promise(resolve => {
+    let el = document.getElementById('keySheet');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'keySheet';
+      el.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(15,20,30,.72);' +
+        'display:flex;align-items:center;justify-content:center;padding:20px;' +
+        '-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)';
+      el.innerHTML =
+        '<div style="background:var(--card,#fff);color:var(--ink,#222);border-radius:18px;padding:22px;' +
+             'width:100%;max-width:360px;box-shadow:0 18px 50px rgba(0,0,0,.3);font-family:inherit">' +
+          '<div style="font-size:17px;font-weight:700;margin-bottom:6px">🔑 ใส่กุญแจเข้า Sheets</div>' +
+          '<div id="keySheetMsg" style="font-size:13px;opacity:.7;line-height:1.5;margin-bottom:14px"></div>' +
+          '<input id="keySheetInput" type="text" inputmode="text" autocapitalize="off" autocorrect="off" ' +
+                 'spellcheck="false" placeholder="xxxxx-xxxxx-xxxxx-xxxxx" ' +
+                 'style="width:100%;box-sizing:border-box;padding:13px 14px;font-size:16px;' +
+                        'border:1.5px solid rgba(128,128,128,.35);border-radius:12px;background:transparent;' +
+                        'color:inherit;letter-spacing:.5px">' +
+          '<div style="display:flex;gap:10px;margin-top:16px">' +
+            '<button id="keySheetCancel" style="flex:1;padding:12px;border:0;border-radius:12px;font-size:15px;' +
+                    'background:rgba(128,128,128,.18);color:inherit">ไว้ก่อน</button>' +
+            '<button id="keySheetOk" style="flex:1.4;padding:12px;border:0;border-radius:12px;font-size:15px;' +
+                    'font-weight:700;background:var(--accent,#4a7dff);color:#fff">บันทึกกุญแจ</button>' +
+          '</div>' +
+          '<div style="font-size:11px;opacity:.55;margin-top:12px;line-height:1.5">' +
+            'กุญแจเก็บไว้ในเครื่องนี้เท่านั้น · Safari กับแอปบนหน้าจอโฮมต้องใส่แยกกัน</div>' +
+        '</div>';
+      document.body.appendChild(el);
+    }
+    const inp = el.querySelector('#keySheetInput');
+    el.querySelector('#keySheetMsg').textContent = msg || 'ใส่ครั้งเดียวต่อเครื่อง แล้วจำไว้ให้';
+    inp.value = getAppKey();
+    el.style.display = 'flex';
+    setTimeout(() => { try { inp.focus(); } catch(e) {} }, 60);
+
+    const done = ok => {
+      el.style.display = 'none';
+      el.querySelector('#keySheetOk').onclick = null;
+      el.querySelector('#keySheetCancel').onclick = null;
+      _keyAsking = null;
+      resolve(ok);
+    };
+    el.querySelector('#keySheetOk').onclick = () => {
+      const v = inp.value.trim();
+      if (!v) { inp.focus(); return; }
+      setAppKey(v);
+      done(true);
+    };
+    el.querySelector('#keySheetCancel').onclick = () => done(false);
+    inp.onkeydown = e => { if (e.key === 'Enter') el.querySelector('#keySheetOk').click(); };
+  });
+  return _keyAsking;
 }
 
 async function fetchWithTimeout(url, options = {}, timeout = 30000) {
@@ -1974,10 +2053,14 @@ const APP = {
       const unauth = o => o && o.code === 401;
       if (unauth(dataJson) || unauth(cfgJson)) {
         diag.push('401 กุญแจไม่ถูกต้อง');
+        STATE.needKey = true;
         if (!this._keyRetry) {
           this._keyRetry = true;
           btn.classList.remove('busy');
-          if (askAppKey(getAppKey() ? 'กุญแจไม่ถูกต้อง — ใส่ใหม่' : 'ใส่กุญแจเข้า Sheets (ถามครั้งเดียวต่อเครื่อง)')) {
+          const ok = await askAppKey(getAppKey()
+            ? 'กุญแจไม่ถูกต้อง — ใส่ใหม่อีกครั้ง'
+            : 'เครื่อง/เบราว์เซอร์นี้ยังไม่มีกุญแจ (Safari กับแอปบนหน้าจอโฮมเก็บแยกกัน)');
+          if (ok) {
             const r = await this.sync(showToast);
             this._keyRetry = false;
             return r;
@@ -1986,6 +2069,7 @@ const APP = {
         }
         throw new Error('unauthorized');
       }
+      STATE.needKey = false;
 
       // ข้อมูลรายการคือตัวหลัก — ถ้าดึงไม่ได้ถือว่าโหลดไม่สำเร็จ
       if (!Array.isArray(dataJson)) throw new Error('load records failed');
@@ -2031,6 +2115,11 @@ const APP = {
     this._updateLastSyncBar();
   },
 
+  /** เปลี่ยน/ใส่กุญแจเองจากปุ่ม (เกิดจากการกดของผู้ใช้ → ไม่มีทางโดนเบราว์เซอร์กลืน) */
+  async reKey() {
+    if (await askAppKey('ใส่กุญแจเข้า Sheets')) this.sync(true);
+  },
+
   _afterSync() {
     renderHolidayChips(); renderConfigCard();
     renderList(); renderDaily(); renderMonthly();
@@ -2048,8 +2137,12 @@ const APP = {
     // ต่อท้ายด้วยผลตรวจ (โผล่เฉพาะตอนซิงค์ไม่ผ่าน) — ไว้บอกว่าพังตรงไหนโดยไม่ต้องเปิด devtools
     const dg = (!STATE.syncOK && STATE.syncDiag)
       ? `<br><span style="opacity:.75;font-size:11px">${STATE.syncDiag}</span>` : '';
+    // ไม่มีกุญแจ = โหลดไม่ได้ทั้งหมด ต้องบอกให้ชัดพร้อมปุ่มกด ไม่ใช่ขึ้น Offline เฉยๆ
+    const nk = STATE.needKey
+      ? `<br><button onclick="APP.reKey()" style="margin-top:6px;padding:7px 14px;border:0;border-radius:9px;
+           font-size:12px;font-weight:700;background:var(--accent,#4a7dff);color:#fff">🔑 ใส่กุญแจเข้า Sheets</button>` : '';
     el.innerHTML = `<span class="${cls}">${head}</span>&nbsp;
-      ${STATE.sheetRecords.length} รายการใน Sheets | Local ${STATE.localRecs.length} รายการ${dg}`;
+      ${STATE.sheetRecords.length} รายการใน Sheets | Local ${STATE.localRecs.length} รายการ${dg}${nk}`;
   },
 
   tab(name) {
@@ -3592,6 +3685,9 @@ function submitChangePin() {
 
 /* ── BOOT ── */
 (async function init() {
+  // กุญแจจาก URL ต้องรับก่อนทุกอย่าง (บุ๊กมาร์ก ?k=... เปิดใน Safari แล้วติดกุญแจให้เลย)
+  adoptKeyFromURL();
+
   // โหลดธีมที่บันทึกไว้ (ถ้ามี)
   try {
     const savedTheme = localStorage.getItem('tt_theme');

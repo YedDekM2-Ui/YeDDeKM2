@@ -1395,18 +1395,12 @@ input:focus:not(:focus-visible) { outline: none; }
         </div>
       </div>
 
-      <!-- เลือกเรทเหมาหลัง 18:00 (โชว์เมื่อติ๊ก) -->
-      <div id="spRate" class="sp-rate" style="display:none">
-        <button type="button" class="sp-rate-btn on" data-rate="200" onclick="APP.setSpRate(200)">฿200/ชม.<small>กระทันหัน</small></button>
-        <button type="button" class="sp-rate-btn" data-rate="150" onclick="APP.setSpRate(150)">฿150/ชม.<small>นัดล่วงหน้า</small></button>
-      </div>
-
       <!-- คำอธิบายงานพิเศษ (โชว์เมื่อติ๊ก) -->
       <div id="spHint" class="sp-hint" style="display:none">
         ⚡ <b>งานเหมา</b> (ใส่เวลาจริง+สถานที่)<br>
         <b>ปกติ:</b> ก่อน 9โมง <b>×150</b> · 9–18 ไม่นับ<br>
         <b>พุธ/นักขัต:</b> ก่อน 9โมง <b>×200</b> · 9–18 <b>×150</b><br>
-        <b>หลัง 6pm:</b> วันปกติ = เรทที่เลือก · พุธ/นักขัต = <b>×200 เสมอ</b> · เดินทาง +฿200 (เลิก 5ทุ่ม–9โมง)
+        <b>หลัง 6pm:</b> <b>×200</b> ทุกวัน · เดินทาง +฿200 (เลิก 5ทุ่ม–9โมง)
       </div>
 
       <!-- แถวปุ่ม: ติ๊กงานพิเศษ (ซ้าย เล็ก) + บันทึก -->
@@ -2237,49 +2231,19 @@ const APP = {
     btn.classList.toggle('on', on);
     btn.setAttribute('aria-pressed', on ? 'true' : 'false');
     document.getElementById('spHint').style.display = on ? 'block' : 'none';
-    document.getElementById('spRate').style.display = on ? 'grid' : 'none';
-    if (on) this._refreshRateUI();
     const lbl = document.getElementById('lblNote');
     const note = document.getElementById('fNote');
     if (on) { lbl.textContent = 'สถานที่ (จำเป็น)'; note.placeholder = 'เซเรนิตี้'; }
-    else    { lbl.textContent = 'สถานที่ / หมายเหตุ'; note.placeholder = 'เซเรนิตี้';
-      // ล้างฟอร์ม → เรทกลับ ฿200 (กระทันหัน) เป็นค่าเริ่มต้น
-      document.querySelectorAll('#spRate .sp-rate-btn').forEach(b => b.classList.toggle('on', +b.dataset.rate === 200));
-    }
+    else    { lbl.textContent = 'สถานที่ / หมายเหตุ'; note.placeholder = 'เซเรนิตี้'; }
   },
   toggleSpecial() {
     const on = !document.getElementById('spToggle').classList.contains('on');
     this.applySpecialUI(on);
     this.updatePreview();
   },
-  // เรทเหมาหลัง 18:00 ที่เลือก (200 กระทันหัน / 150 นัดล่วงหน้า)
-  _spRate() {
-    const b = document.querySelector('#spRate .sp-rate-btn.on');
-    return b ? +b.dataset.rate : 200;
-  },
-  // วันพุธ/นักขัต → ซ่อนปุ่ม ฿150 (บังคับ ฿200) · วันปกติ → โชว์ทั้งสอง
-  _refreshRateUI() {
-    const date = document.getElementById('fDate').value;
-    const type = date ? getDayType(date) : 'normal';
-    const premium = (type === 'holiday') || (type === 'wednesday' && date >= '2026-05-26');
-    const wrap = document.getElementById('spRate');
-    const b150 = wrap.querySelector('[data-rate="150"]');
-    const b200 = wrap.querySelector('[data-rate="200"]');
-    if (premium) {
-      b150.style.display = 'none';
-      b150.classList.remove('on'); b200.classList.add('on');
-      b200.querySelector('small').textContent = 'พุธ/นักขัต บังคับ';
-      wrap.classList.add('forced');
-    } else {
-      b150.style.display = '';
-      b200.querySelector('small').textContent = 'กระทันหัน';
-      wrap.classList.remove('forced');
-    }
-  },
-  setSpRate(r) {
-    document.querySelectorAll('#spRate .sp-rate-btn').forEach(b => b.classList.toggle('on', +b.dataset.rate === r));
-    this.updatePreview();
-  },
+  // เรทเหมาหลัง 18:00 = ฿200 อย่างเดียว (เจ้าของสั่งตัดปุ่ม ฿150 ออก 21 ต.ค. 69)
+  _spRate() { return 200; },
+  _refreshRateUI() {},
 
   async save() {
     const date = document.getElementById('fDate').value;

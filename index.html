@@ -1701,12 +1701,19 @@ function calcOT(rec) {
   // งานพิเศษติ๊ก (custom>0) = ใช้ค่าที่เก็บใน special ไม่ auto กันบวกซ้ำ
   if (custom <= 0 && outTime >= 23) transport = TRANS;
   // ── งานเหมา ──
-  let customHours = 0;
+  let customHours = 0, customMoney = custom;
   if (custom > 0) {
     if (rec.date >= '2026-06-26') {
       // แบบใหม่: customOT คิดจากเวลาจริง+ชนิดวัน (เรทผสม) แล้ว → ข้ามขั้นบันได กันคิดซ้ำ
+      // เจ้าของสั่ง: "เหมา" = เฉพาะหลัง 18:00 · งานก่อน 18:00 ลงเป็น OT×1.5/×2 แยกบรรทัด ห้ามรวมก้อน
+      // (ยอดรวมเท่าเดิม: ส่วนก่อน 18:00 ไม่ขึ้นกับเรท 150/200 ที่เลือก ที่เหลือ = ค่าเหมา)
       t100 = 0; t150 = 0; t200 = 0;
-      customHours = specialOT(rec.timeIn, rec.timeOut, rec.date).hours;
+      const sp = specialOT(rec.timeIn, rec.timeOut, rec.date);
+      sp.segs.forEach(s => {
+        if (s.label === '18:00+') { customHours += s.hr; return; }
+        customMoney -= s.money;
+        if (s.rate >= OT200) t200 += s.hr; else t150 += s.hr;
+      });
     } else {
       // ของเก่า (ก้อนเงินก่อนมีปุ่มเหมา): เป็น "งานเสริม" บวกเพิ่มจาก OT เวลาปกติ — ไม่ล้างขั้นบันได
       customHours = custom / OT200;
@@ -1715,14 +1722,14 @@ function calcOT(rec) {
   const b100 = t100 * OT100;
   const b150 = t150 * OT150;
   const b200 = t200 * OT200;
-  const otTotal = b100 + b150 + b200 + custom;
+  const otTotal = b100 + b150 + b200 + customMoney;
 
   return {
     type,
     t100, t150, t200,
     b100, b150, b200,
     tr: transport,
-    custom,
+    custom: customMoney,
     customHours,
     special,
     otTotal,

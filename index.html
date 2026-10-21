@@ -1268,6 +1268,75 @@ input:focus:not(:focus-visible) { outline: none; }
 .dash-hero .st-val.xl{ font-size:38px; letter-spacing:-1px; line-height:1.05; }
 .dash-hero .st-label{ font-size:12.5px; opacity:.92; }
 .hero-spark{ width:100%; height:44px; display:block; margin-top:14px; }
+
+/* ══ DASHBOARD v2 (21 ต.ค. 69) — HUD สไตล์เกม: ตัวเลขใหญ่ · แถบพลัง · กระดานงวด ══ */
+.hud-chips { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px; }
+.hud-chip { background:rgba(0,0,0,.18); border-radius:12px; padding:8px 6px; text-align:center; }
+.hud-chip b { display:block; font-size:16px; font-weight:800; color:#fff; line-height:1.2; }
+.hud-chip span { font-size:10px; color:rgba(255,255,255,.78); }
+.hud-upd { margin-top:8px; font-size:10px; color:rgba(255,255,255,.6); text-align:right; }
+.d2-sub { font-size:11px; color:var(--n400); margin:-2px 0 10px; line-height:1.5; }
+.d2-chart { width:100%; height:auto; display:block; overflow:visible; }
+.d2-chart .bar { fill:var(--ring-3); }
+.d2-chart .bar.best { fill:var(--ring-1); }
+.d2-chart .bar.last { fill:var(--accent); }
+.d2-chart .avgl { stroke:var(--n400); stroke-width:1.5; stroke-dasharray:4 4; }
+.d2-chart .avgt { fill:var(--n600); font-size:10px; font-weight:700; }
+.d2-chart .xl { fill:var(--n400); font-size:9.5px; }
+.d2-chart .vl { fill:var(--n800); font-size:10px; font-weight:800; }
+.d2-chart .hit { fill:transparent; cursor:pointer; }
+.d2-chart .hit:hover + .bar, .d2-chart .bar.sel { opacity:.75; }
+.d2-key { display:flex; gap:12px; flex-wrap:wrap; font-size:10.5px; color:var(--n600); margin-top:8px; }
+.d2-key i { display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:5px; vertical-align:-1px; }
+/* แถบซ้อน (สัดส่วน) — ช่องห่าง 2px ระหว่างชิ้น */
+.d2-stack { display:flex; gap:2px; height:22px; border-radius:8px; overflow:hidden; margin:4px 0 12px; }
+.d2-stack div { height:100%; min-width:3px; }
+.d2-stack div:first-child { border-radius:8px 0 0 8px; } .d2-stack div:last-child { border-radius:0 8px 8px 0; }
+.d2-leg { display:grid; grid-template-columns:auto 1fr auto; gap:8px 10px; align-items:center; font-size:12px; }
+.d2-leg .sw { width:12px; height:12px; border-radius:4px; }
+.d2-leg .nm { color:var(--n800); font-weight:700; }
+.d2-leg .nm small { color:var(--n400); font-weight:500; margin-left:4px; }
+.d2-leg .v { color:var(--n800); font-weight:800; text-align:right; white-space:nowrap; }
+.d2-leg .v small { color:var(--n400); font-weight:600; margin-left:4px; }
+/* ปกส. กระดาน 180 ช่อง */
+.ss2-top { display:flex; align-items:flex-end; justify-content:space-between; gap:10px; }
+.ss2-big { font-size:38px; font-weight:900; color:var(--n800); line-height:1; letter-spacing:-1px; }
+.ss2-big small { font-size:15px; color:var(--n400); font-weight:700; letter-spacing:0; }
+.ss2-pct { font-size:12px; font-weight:800; color:var(--accent-ink); background:var(--accent-soft); padding:4px 10px; border-radius:999px; }
+.ss2-xp { position:relative; height:14px; border-radius:999px; background:var(--n100); margin:12px 0 4px; overflow:hidden; box-shadow:var(--neu-inset); }
+.ss2-xp div { height:100%; border-radius:999px; background:linear-gradient(90deg,var(--accent-2),var(--accent)); position:relative; }
+.ss2-xp div::after { content:''; position:absolute; inset:0; background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent); animation:ss2shine 2.6s infinite; }
+@keyframes ss2shine { from { transform:translateX(-100%); } to { transform:translateX(100%); } }
+.ss2-marks { display:flex; justify-content:space-between; font-size:9.5px; color:var(--n400); margin-bottom:12px; }
+.ss2-board { display:grid; grid-template-columns:22px repeat(12,1fr); gap:3px; align-items:center; }
+.ss2-board .yl { font-size:9px; color:var(--n400); text-align:right; padding-right:3px; font-weight:700; }
+.ss2-board .yl.ms { color:var(--accent-ink); }
+.ss2-c { aspect-ratio:1; border-radius:4px; background:var(--n100); box-shadow:inset 0 0 0 1px rgba(0,0,0,.04); }
+.ss2-c.on { background:linear-gradient(135deg,var(--accent-2),var(--accent)); box-shadow:none; }
+.ss2-c.nx { background:transparent; box-shadow:inset 0 0 0 2px var(--accent); animation:ss2pulse 1.4s ease-in-out infinite; }
+.ss2-c.goal { background:transparent; box-shadow:inset 0 0 0 1.5px var(--ring-4); display:flex; align-items:center; justify-content:center; font-size:8px; }
+@keyframes ss2pulse { 50% { opacity:.35; } }
+.ss2-foot { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; }
+.ss2-foot div { background:var(--card); border-radius:12px; padding:9px 10px; box-shadow:var(--neu-shadow-sm); }
+.ss2-foot b { display:block; font-size:15px; font-weight:800; color:var(--n800); }
+.ss2-foot span { font-size:10.5px; color:var(--n400); }
+/* อันดับลูกค้างานเหมา */
+.lb-row { display:grid; grid-template-columns:26px 1fr auto; gap:8px; align-items:center; padding:7px 0; border-bottom:1px solid var(--n100); }
+.lb-row:last-child { border-bottom:none; }
+.lb-rk { font-size:16px; text-align:center; font-weight:800; color:var(--n400); }
+.lb-nm { font-size:12.5px; font-weight:800; color:var(--n800); }
+.lb-nm small { color:var(--n400); font-weight:600; margin-left:4px; }
+.lb-bar { height:6px; border-radius:999px; background:var(--n100); margin-top:5px; overflow:hidden; }
+.lb-bar div { height:100%; border-radius:999px; background:var(--ring-4); }
+.lb-v { font-size:12.5px; font-weight:800; color:var(--n800); text-align:right; }
+.lb-v small { display:block; font-size:10px; color:var(--n400); font-weight:600; }
+.rate3 { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.rate3 div { text-align:center; background:var(--card); border-radius:14px; padding:10px 4px; box-shadow:var(--neu-shadow-sm); }
+.rate3 b { display:block; font-size:16px; font-weight:900; color:var(--n800); }
+.rate3 span { font-size:10.5px; color:var(--n400); }
+#d2Tip { position:fixed; z-index:9999; pointer-events:none; background:var(--n800); color:#fff; font-size:11.5px; line-height:1.45; padding:7px 10px; border-radius:10px; box-shadow:var(--shadow); opacity:0; transition:opacity .12s; max-width:220px; }
+#d2Tip.show { opacity:1; }
+@media (prefers-reduced-motion: reduce) { .ss2-xp div::after, .ss2-c.nx { animation:none; } }
 </style>
 </head>
 <body>
@@ -2090,6 +2159,7 @@ const APP = {
         if (typeof s.SS_TOTAL_PERIODS === 'number') SS_TOTAL_PERIODS = s.SS_TOTAL_PERIODS;
         if (typeof s.SS_PAID_PERIODS  === 'number') SS_PAID_PERIODS  = s.SS_PAID_PERIODS;
         if (typeof s.SS_TOTAL_PAID    === 'number') SS_TOTAL_PAID    = s.SS_TOTAL_PAID;
+        if (s.SS_LAST_LOGGED) SS_LAST_LOGGED = String(s.SS_LAST_LOGGED);
       }
       if (Array.isArray(dataJson)) {
         STATE.sheetRecords = dataJson.filter(r => r.date && r.timeIn && r.timeOut);
@@ -2837,6 +2907,7 @@ let MONTHLY_HISTORY = [];
 let SS_TOTAL_PERIODS = 180;
 let SS_PAID_PERIODS = 0;
 let SS_TOTAL_PAID = 0;
+let SS_LAST_LOGGED = '';
 
 // คำนวณวันทำงานนับจาก WORK_START_DATE ถึงวันนี้
 function daysWorking() {
@@ -3124,6 +3195,140 @@ function dashMonthListHTML(pts) {
   return `<div class="dash-sec">${dashHead('days','green','รายเดือน')}<div class="dash-inner"><div class="dm-list">${rows}</div></div></div>`;
 }
 
+/* ══ DASHBOARD v2 helpers (21 ต.ค. 69) ══ */
+// ทูลทิปกดดู (มือถือ = แตะ · คอม = ชี้) — ทุกอย่างที่มี data-tip
+function d2TipInit() {
+  if (window._d2TipOn) return; window._d2TipOn = true;
+  const tip = document.createElement('div'); tip.id = 'd2Tip'; document.body.appendChild(tip);
+  const show = (t, x, y) => {
+    tip.innerHTML = t.getAttribute('data-tip'); tip.classList.add('show');
+    const w = tip.offsetWidth, h = tip.offsetHeight;
+    tip.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, x - w / 2)) + 'px';
+    tip.style.top = Math.max(8, y - h - 12) + 'px';
+  };
+  const hide = () => tip.classList.remove('show');
+  document.addEventListener('click', e => {
+    const t = e.target.closest && e.target.closest('[data-tip]');
+    if (t) show(t, e.clientX, e.clientY); else hide();
+  });
+  document.addEventListener('mouseover', e => {
+    const t = e.target.closest && e.target.closest('[data-tip]');
+    if (t) show(t, e.clientX, e.clientY);
+  });
+  document.addEventListener('mouseout', e => { if (e.target.closest && e.target.closest('[data-tip]')) hide(); });
+  window.addEventListener('scroll', hide, { passive: true });
+}
+
+// กราฟแท่งรายได้สุทธิต่อรอบ + เส้นเฉลี่ย (แกนเดียว · เริ่มที่ 0)
+function d2TrendBars(pts) {
+  if (!pts || pts.length < 2)
+    return '<div class="d2-sub" style="text-align:center;padding:18px 0">ต้องมีอย่างน้อย 2 รอบถึงจะเห็นแนวโน้ม</div>';
+  const W = 340, H = 168, padL = 4, padR = 4, padT = 20, padB = 22;
+  const n = pts.length, vals = pts.map(p => p.net);
+  const max = Math.max(...vals) * 1.08 || 1;
+  const avg = vals.reduce((a, b) => a + b, 0) / n;
+  const slot = (W - padL - padR) / n, bw = Math.max(6, Math.min(26, slot - 6));
+  const Y = v => padT + (1 - v / max) * (H - padT - padB);
+  const base = H - padB;
+  let iBest = 0; vals.forEach((v, i) => { if (v > vals[iBest]) iBest = i; });
+  const step = n <= 8 ? 1 : Math.ceil(n / 7);
+  let out = '';
+  pts.forEach((p, i) => {
+    const x = padL + i * slot + (slot - bw) / 2, y = Y(p.net), h = base - y, r = Math.min(4, bw / 2, h);
+    const cls = i === n - 1 ? 'last' : (i === iBest ? 'best' : '');
+    const tip = `<b>${periodLabel(p.period)}</b><br>สุทธิ ${fmtBaht(p.net)}<br>${p.days} วัน · OT ${p.otHr.toFixed(1)} ชม. · ${fmtBaht(p.ot)}`;
+    out += `<rect class="hit" x="${(padL + i * slot).toFixed(1)}" y="${padT - 14}" width="${slot.toFixed(1)}" height="${(base - padT + 14).toFixed(1)}" data-tip="${tip.replace(/"/g, '&quot;')}"/>`;
+    out += `<path class="bar ${cls}" d="M${x.toFixed(1)} ${base} V${(y + r).toFixed(1)} Q${x.toFixed(1)} ${y.toFixed(1)} ${(x + r).toFixed(1)} ${y.toFixed(1)} H${(x + bw - r).toFixed(1)} Q${(x + bw).toFixed(1)} ${y.toFixed(1)} ${(x + bw).toFixed(1)} ${(y + r).toFixed(1)} V${base} Z" pointer-events="none"/>`;
+    if (i === iBest || i === n - 1)
+      out += `<text class="vl" x="${(x + bw / 2).toFixed(1)}" y="${(y - 5).toFixed(1)}" text-anchor="middle" pointer-events="none">${Math.round(p.net / 1000)}k</text>`;
+    if (i % step === 0 || i === n - 1)
+      out += `<text class="xl" x="${(x + bw / 2).toFixed(1)}" y="${H - 6}" text-anchor="middle">${periodShortTH(p.period)}</text>`;
+  });
+  const ya = Y(avg);
+  out += `<line class="avgl" x1="${padL}" x2="${W - padR}" y1="${ya.toFixed(1)}" y2="${ya.toFixed(1)}" pointer-events="none"/>`;
+  out += `<text class="avgt" x="${padL + 2}" y="${(ya - 5).toFixed(1)}" pointer-events="none">เฉลี่ย ${fmtBaht(avg)}</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" class="d2-chart" role="img" aria-label="รายได้สุทธิต่อรอบ">${out}</svg>
+    <div class="d2-key"><span><i style="background:var(--accent)"></i>รอบล่าสุด</span><span><i style="background:var(--ring-1)"></i>รอบที่ดีที่สุด</span><span><i style="background:var(--ring-3)"></i>รอบอื่น</span><span>แตะแท่งเพื่อดูตัวเลข</span></div>`;
+}
+
+// แถบซ้อน + ตารางคำอธิบาย  segs=[{name, note, val, col, right}]
+function d2Stack(segs) {
+  const items = segs.filter(s => s.val > 0);
+  const tot = items.reduce((a, s) => a + s.val, 0) || 1;
+  const bar = items.map(s => `<div style="width:${(s.val / tot * 100).toFixed(2)}%;background:${s.col}" data-tip="<b>${s.name}</b><br>${fmtBaht(s.val)} · ${(s.val / tot * 100).toFixed(1)}%"></div>`).join('');
+  const leg = items.map(s => `<span class="sw" style="background:${s.col}"></span>
+    <span class="nm">${s.name}${s.note ? `<small>${s.note}</small>` : ''}</span>
+    <span class="v">${s.right != null ? s.right : fmtBaht(s.val)}<small>${(s.val / tot * 100).toFixed(0)}%</small></span>`).join('');
+  return `<div class="d2-stack">${bar}</div><div class="d2-leg">${leg}</div>`;
+}
+
+// ปกส. ม.33 — กระดาน 180 ช่อง (15 ปี × 12 เดือน) ช่องที่ติดไฟ = งวดที่ส่งแล้ว
+function d2SocialSec() {
+  const total = SS_TOTAL_PERIODS || 180, paid = Math.min(SS_PAID_PERIODS || 0, total), left = total - paid;
+  const pct = paid / total * 100;
+  const yrs = Math.ceil(total / 12);
+  // งวดสุดท้ายตกเดือนไหน: นับจากงวดล่าสุดที่บันทึก (SS_LAST_LOGGED = yyyy-MM) ไปอีก left เดือน
+  const TH_M = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const lm = /^(\d{4})-(\d{2})/.exec(String(SS_LAST_LOGGED || ''));
+  let doneTxt = '', nextTxt = '';
+  if (lm) {
+    const y0 = +lm[1], m0 = +lm[2] - 1;
+    const end = new Date(y0, m0 + left, 1), nx = new Date(y0, m0 + 1, 1);
+    doneTxt = `${TH_M[end.getMonth()]} ${end.getFullYear() + 543}`;
+    nextTxt = `1 ${TH_M[nx.getMonth()]} ${nx.getFullYear() + 543}`;
+  }
+  let cells = '';
+  for (let y = 0; y < yrs; y++) {
+    const ms = (y + 1) % 5 === 0;
+    cells += `<div class="yl ${ms ? 'ms' : ''}">${y + 1}</div>`;
+    for (let m = 0; m < 12; m++) {
+      const k = y * 12 + m;            // งวดที่ k+1
+      if (k >= total) { cells += '<div></div>'; continue; }
+      const cls = k < paid ? 'on' : (k === paid ? 'nx' : (k === total - 1 ? 'goal' : ''));
+      const tip = `งวดที่ ${k + 1}/${total}` + (k < paid ? ' · ส่งแล้ว' : (k === paid ? ` · งวดหน้า${nextTxt ? ' (' + nextTxt + ')' : ''}` : (k === total - 1 ? ' · งวดสุดท้าย ได้สิทธิ์บำนาญ' : '')));
+      cells += `<div class="ss2-c ${cls}" data-tip="${tip}">${cls === 'goal' ? '🏆' : ''}</div>`;
+    }
+  }
+  const yLeft = Math.floor(left / 12), mLeft = left % 12;
+  return `<div class="dash-sec">
+    ${dashHead('ss', 'blue', 'ปกส. ม.33 — ทางไปบำนาญ')}
+    <div class="dash-inner">
+      <div class="ss2-top">
+        <div class="ss2-big">${paid}<small> / ${total} งวด</small></div>
+        <div class="ss2-pct">${pct.toFixed(1)}%</div>
+      </div>
+      <div class="ss2-xp"><div style="width:${pct.toFixed(2)}%"></div></div>
+      <div class="ss2-marks"><span>เริ่ม</span><span>5 ปี</span><span>10 ปี</span><span>🏆 15 ปี</span></div>
+      <div class="ss2-board">${cells}</div>
+      <div class="d2-sub" style="margin:10px 0 0">1 แถว = 1 ปี · ช่องสีเต็ม = งวดที่ส่งแล้ว · ช่องกะพริบ = งวดหน้า${nextTxt ? ' (' + nextTxt + ')' : ''}</div>
+      <div class="ss2-foot">
+        <div><b>${left} งวด</b><span>เหลืออีก ≈ ${yLeft ? yLeft + ' ปี ' : ''}${mLeft ? mLeft + ' เดือน' : ''}</span></div>
+        <div><b>${doneTxt || '—'}</b><span>ส่งครบ ได้สิทธิ์บำนาญ</span></div>
+        <div><b>${fmtBaht(SS_TOTAL_PAID)}</b><span>ยอดที่ส่งสะสม</span></div>
+        <div><b>${fmtBaht(left * (+(STATE.config || DEFAULT_CFG).SOCIAL_SEC || 850))}</b><span>ต้องส่งอีก (เรทปัจจุบัน)</span></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// อันดับงานเหมา (ลูกค้าที่ทำเงินมากสุด)
+function d2Leaderboard(allCustoms) {
+  const rows = Object.entries(allCustoms).sort((a, b) => b[1].total - a[1].total);
+  if (!rows.length) return '';
+  const top = rows[0][1].total || 1, medal = ['🥇', '🥈', '🥉'];
+  return `<div class="dash-sec">
+    ${dashHead('zap', 'orange', 'งานเหมา — ลูกค้าที่จ่ายเยอะสุด')}
+    <div class="dash-inner">
+      <div class="d2-sub">นับเฉพาะส่วนเหมาหลัง 18:00 · ช่วงก่อนเวลาไปอยู่ใน OT×1.5/×2 แล้ว</div>
+      ${rows.map(([name, info], i) => `<div class="lb-row">
+        <div class="lb-rk">${medal[i] || (i + 1)}</div>
+        <div><div class="lb-nm">${name}<small>${info.count} งาน · ${info.hours.toFixed(1)} ชม.</small></div><div class="lb-bar"><div style="width:${(info.total / top * 100).toFixed(1)}%"></div></div></div>
+        <div class="lb-v">${fmtBaht(info.total)}<small>≈ ${fmtBaht(info.total / info.count)}/งาน</small></div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
 /* ── RENDER: DASHBOARD (สรุปภาพรวมทั้งหมด) ── */
 function renderDashboard() {
   const records = mergeAll();
@@ -3330,7 +3535,7 @@ function renderDashboard() {
     [`OT×1.0 (${dHr100.toFixed(2)} ชม.)`, dTot100],
     [`OT×1.5 (${dHr150.toFixed(2)} ชม.)`, dTot150],
     [`OT×2.0 (${dHr200.toFixed(2)} ชม.)`, dTot200],
-    ['OT Custom', dTotCustom],
+    [`งานเหมา หลัง 18:00 (${dHrCustom.toFixed(2)} ชม.)`, dTotCustom],
     ['ค่าเดินทางรวม', totalTransPaid],
   ].filter(r => r[1] > 0).map(r => `<tr><td>${r[0]}</td><td>${fmtBaht(r[1])}</td></tr>`).join('');
   const incomeSec = `
@@ -3347,37 +3552,104 @@ function renderDashboard() {
       </div>
     </div>`;
 
+  // ── v2 (21 ต.ค. 69): HUD สไตล์เกม — ตัวเลขใหญ่ก่อน กราฟตามมา คำอธิบายสั้นใต้หัวข้อ ──
+  d2TipInit();
+  const avgNet = totalNet / np, avgOT = totalOTPaid / np, avgDays = totalDays / np;
+  const hrCell = (h, m) => `${h.toFixed(1)} ชม. · ${fmtBaht(m)}`;
   let html = yearBar + `
     <!-- HERO -->
     <div class="card sum-tile accent full dash-hero" style="margin-bottom:14px">
       <div class="st-label">รายได้สุทธิสะสม${yf==='all'?'ทั้งหมด':' ปี '+(yf+543)}</div>
       <div class="st-val xl">${fmtBaht(totalNet)}</div>
       <div class="dash-hero-meta">
-        <span>${periods.length} รอบ · ${totalDays} วัน · OT ${totalOTHours.toFixed(1)} ชม.</span>
-        ${periodTotals.length >= 2 ? `<span class="dash-trend" style="background:rgba(0,0,0,.5); color:${trendUp?'#34D399':'#FB7185'};"><span style="font-size:9px;">${trendArrow}</span> ${Math.abs(trendPct).toFixed(1)}%</span>` : ''}
+        <span>หลังหัก ปกส. แล้ว</span>
+        ${periodTotals.length >= 2 ? `<span class="dash-trend" style="background:rgba(0,0,0,.5); color:${trendUp?'#34D399':'#FB7185'};"><span style="font-size:9px;">${trendArrow}</span> ${Math.abs(trendPct).toFixed(1)}% จากรอบก่อน</span>` : ''}
       </div>
       ${heroSpark(periodTotals.map(p => p.net))}
+      <div class="hud-chips">
+        <div class="hud-chip"><b>${np}</b><span>รอบจ่าย</span></div>
+        <div class="hud-chip"><b>${totalDays}</b><span>วันทำงาน</span></div>
+        <div class="hud-chip"><b>${totalOTHours.toFixed(0)}</b><span>ชม. OT</span></div>
+      </div>
+      <div class="hud-upd">ข้อมูล ณ ${nowStr}</div>
     </div>
 
-    ${infoSec}
-
-    <!-- วิเคราะห์ & ฟันธง + กราฟเส้นแนวโน้ม (ใหม่) -->
     ${dashAnalysisHTML(periodTotals, totalOTPaid, totalGross, periodLabel)}
+
+    <!-- แนวโน้ม: แท่งต่อรอบ + เส้นเฉลี่ย -->
     <div class="dash-sec">
-      ${dashHead('avg','green','แนวโน้มรายได้สุทธิ/รอบ')}
+      ${dashHead('bars','green','รายได้สุทธิแต่ละรอบ')}
       <div class="dash-inner">
-        ${dashLineChart(periodTotals.map(p => ({ label: periodShortTH(p.period), value: p.net })))}
+        <div class="d2-sub">เส้นประ = ค่าเฉลี่ย · แท่งสูงกว่าเส้น = รอบนั้นดีกว่าปกติ</div>
+        ${d2TrendBars(periodTotals)}
       </div>
     </div>
 
-    <!-- รายเดือน: net · วัน · OT รวม (ใหม่→เก่า) -->
-    ${dashMonthListHTML(periodTotals)}
-
-    <!-- การ์ดลอย: ทำงานมาแล้ว + ปกส. -->
-    <div class="dash-stack">
-      ${renderWorkDaysCard()}
-      ${renderSocialSecCard()}
+    <!-- รายได้เฉลี่ย -->
+    <div class="dash-sec">
+      ${dashHead('avg','green','รายได้เฉลี่ย')}
+      <div class="dash-inner">
+        <div class="rate3">
+          <div><b>${fmtBaht(Math.round(avgPerDay))}</b><span>ต่อวัน</span></div>
+          <div><b>${fmtBaht(Math.round(avgPerHour))}</b><span>ต่อชั่วโมง</span></div>
+          <div><b>${fmtBaht(Math.round(avgPerMin*100)/100)}</b><span>ต่อนาที</span></div>
+        </div>
+        <div class="rate3" style="margin-top:8px">
+          <div><b>${fmtBaht(Math.round(avgNet))}</b><span>สุทธิ/รอบ</span></div>
+          <div><b>${fmtBaht(Math.round(avgOT))}</b><span>OT/รอบ</span></div>
+          <div><b>${avgDays.toFixed(1)}</b><span>วันทำงาน/รอบ</span></div>
+        </div>
+        <div class="d2-sub" style="margin:10px 0 0">ต่อชั่วโมง/นาที คิดจากเวลาเข้า–ออกจริงทุกวัน (รวมเงินเดือน+OT+ค่าเดินทาง หลังหัก ปกส.)</div>
+      </div>
     </div>
+
+    ${d2SocialSec()}
+
+    <!-- OT แยกประเภท -->
+    ${dTotOT > 0 ? `<div class="dash-sec">
+      ${dashHead('zap','orange','OT มาจากไหน')}
+      <div class="dash-inner">
+        <div class="d2-sub">รวม ${fmtBaht(dTotOT)} · ${dHrOT.toFixed(1)} ชม. · แตะแถบเพื่อดู %</div>
+        ${d2Stack([
+          {name:'OT×1.0', note:'฿100', val:dTot100, col:'var(--ring-3)', right:hrCell(dHr100, dTot100)},
+          {name:'OT×1.5', note:'฿150', val:dTot150, col:'var(--ring-2)', right:hrCell(dHr150, dTot150)},
+          {name:'OT×2.0', note:'฿200', val:dTot200, col:'var(--ring-1)', right:hrCell(dHr200, dTot200)},
+          {name:'งานเหมา', note:'หลัง 18:00', val:dTotCustom, col:'var(--ring-4)', right:hrCell(dHrCustom, dTotCustom)},
+        ])}
+      </div>
+    </div>` : ''}
+
+    <!-- สัดส่วนรายได้ -->
+    <div class="dash-sec">
+      ${dashHead('pie','orange','เงินมาจากไหน')}
+      <div class="dash-inner">
+        <div class="d2-sub">รวมก่อนหัก ปกส. ${fmtBaht(totalForDonut)}</div>
+        ${d2Stack([
+          {name:'เงินเดือน+เบี้ยขยัน', val:baseAll, col:'var(--ring-1)'},
+          {name:'OT', val:totalOTPaid, col:'var(--ring-2)'},
+          {name:'ค่าเดินทาง', val:totalTransPaid, col:'var(--ring-4)'},
+        ])}
+      </div>
+    </div>
+
+    ${incomeSec}
+
+    ${d2Leaderboard(allCustoms)}
+
+    <!-- วันทำงาน -->
+    <div class="dash-sec">
+      ${dashHead('days','green','วันทำงาน')}
+      <div class="dash-inner">
+        ${d2Stack([
+          {name:'วันปกติ', val:totalNormalDays, col:'var(--ring-3)', right:totalNormalDays+' วัน'},
+          {name:'วันพุธ/วันหยุด', val:totalWedDays, col:'var(--ring-2)', right:totalWedDays+' วัน'},
+          {name:'นักขัตฤกษ์', val:totalHolDays, col:'var(--ring-4)', right:totalHolDays+' วัน'},
+        ])}
+      </div>
+    </div>
+    <div class="dash-stack">${renderWorkDaysCard()}</div>
+
+    ${dashMonthListHTML(periodTotals)}
 
     <!-- รายได้ย้อนหลัง (หุบ-กางได้) -->
     <div class="dash-sec">
@@ -3388,75 +3660,6 @@ function renderDashboard() {
             ${histFiltered.length ? renderMonthlyHistory(histFiltered) : '<div style="text-align:center;color:var(--n400);font-size:12px;padding:8px;">ยังไม่มีข้อมูลย้อนหลัง</div>'}
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- รายได้เฉลี่ย -->
-    <div class="dash-sec">
-      ${dashHead('avg','green','รายได้เฉลี่ย')}
-      <div class="dash-inner">
-        <div class="dash-avg-row">
-          <div class="dash-avg-item">
-            <div class="dash-avg-icon" style="background:rgba(22,163,74,.14);color:#16A34A;">${DASH_ICONS.avg}</div>
-            <div class="dash-avg-text"><div class="dash-avg-label">ต่อนาที</div><div class="dash-avg-val">${fmtBaht(Math.round(avgPerMin*100)/100)}</div></div>
-          </div>
-          <div class="dash-avg-item">
-            <div class="dash-avg-icon" style="background:rgba(225,29,72,.14);color:#E11D48;">${DASH_ICONS.history}</div>
-            <div class="dash-avg-text"><div class="dash-avg-label">ต่อชั่วโมง</div><div class="dash-avg-val">${fmtBaht(Math.round(avgPerHour))}</div></div>
-          </div>
-          <div class="dash-avg-item">
-            <div class="dash-avg-icon" style="background:rgba(37,99,235,.14);color:#2563EB;">${DASH_ICONS.work}</div>
-            <div class="dash-avg-text"><div class="dash-avg-label">ต่อวัน</div><div class="dash-avg-val">${fmtBaht(Math.round(avgPerDay))}</div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    ${otDonutSec}
-
-    <!-- สัดส่วนรายได้ -->
-    <div class="dash-sec">
-      ${dashHead('bars','orange','สัดส่วนรายได้')}
-      <div class="dash-inner">
-        ${buildBars([
-          {name:'ฐาน (เงินเดือน+เบี้ย)', val:baseAll, ring:'var(--ring-1)'},
-          {name:'OT', val:totalOTPaid, ring:'var(--ring-2)'},
-          {name:'ค่าเดินทาง', val:totalTransPaid, ring:'var(--ring-4)'},
-        ], fmtBaht(totalForDonut))}
-      </div>
-    </div>
-
-    ${incomeSec}
-
-    <!-- สถิติย่อย (รวม OT ชั่วโมงทั้งหมดของปีที่เลือก) -->
-    <div class="sum-grid" style="grid-template-columns:1fr 1fr;gap:10px">
-      <div class="sum-tile" style="padding:14px 12px"><div class="st-label">OT สะสม (เงิน)</div><div class="st-val" style="font-size:17px">${fmtBaht(totalOTPaid)}</div></div>
-      <div class="sum-tile" style="padding:14px 12px"><div class="st-label">OT รวม (ชม.)${yf==='all'?'':' · '+(yf+543)}</div><div class="st-val" style="font-size:17px">${totalOTHours.toFixed(1)} ชม.</div></div>
-      <div class="sum-tile" style="padding:14px 12px"><div class="st-label">เฉลี่ย/รอบ</div><div class="st-val" style="font-size:17px">${fmtBaht(Math.round(avg))}</div></div>
-      <div class="sum-tile" style="padding:14px 12px"><div class="st-label">จำนวนรอบ</div><div class="st-val" style="font-size:17px">${periods.length}</div></div>
-    </div>
-
-    <!-- (กราฟแท่ง "ภาพรวม" ลบออก — ซ้ำกับกราฟเส้นแนวโน้ม + รายการรายเดือน) -->
-
-    <!-- รายการ OT พิเศษสะสม -->
-    ${Object.keys(allCustoms).length > 0 ? `
-    <div class="dash-sec">
-      ${dashHead('zap','orange','รายการ OT พิเศษสะสม')}
-      <div class="dash-inner">
-        ${Object.entries(allCustoms).sort((a,b)=>b[1].total-a[1].total).map(([name, info]) => `
-          <div class="dtype-row"><div class="dtype-left"><span class="dash-custom-tag">${name}</span><span class="dash-custom-count">×${info.count}</span></div><div class="dtype-right"><span class="leg-hr">${info.hours.toFixed(1)} ชม.</span> · ${fmtBaht(info.total)}</div></div>
-        `).join('')}
-      </div>
-    </div>` : ''}
-
-    <!-- รวมวันทำงาน -->
-    <div class="dash-sec">
-      ${dashHead('days','green','รวมวันทำงาน')}
-      <div class="dash-inner">
-        <div class="dtype-row"><span class="day-pill normal">วันปกติ</span><div class="dtype-right">${totalNormalDays} วัน</div></div>
-        <div class="dtype-row"><span class="day-pill wed">วันพุธ หยุด</span><div class="dtype-right">${totalWedDays} วัน</div></div>
-        <div class="dtype-row"><span class="day-pill holiday">วันหยุดนักขัตฤกษ์</span><div class="dtype-right">${totalHolDays} วัน</div></div>
-        <div class="dtype-row" style="border-bottom:none"><span class="day-pill total">รวมทั้งหมด</span><div class="dtype-right">${totalDays} วัน</div></div>
       </div>
     </div>
   `;

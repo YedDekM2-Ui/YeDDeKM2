@@ -1262,7 +1262,9 @@ input:focus:not(:focus-visible) { outline: none; }
 .dm-right{text-align:right;}
 .dm-net{font-weight:800;font-size:15px;color:var(--n800);font-variant-numeric:tabular-nums;}
 .dm-chg{font-size:11px;font-weight:800;margin-top:1px;}
-.dm-chg.up{color:#10B981;}.dm-chg.down{color:#EF4444;}
+/* เขียว/แดงเข้ม = อ่านออกบนพื้นสว่างทุกธีม (เดิม #10B981 คอนทราสต์ 2.0–2.5 มองแทบไม่เห็น) · slate พื้นมืดใช้สีสว่าง */
+.dm-chg.up{color:#047857;}.dm-chg.down{color:#B91C1C;}
+[data-theme="slate"] .dm-chg.up{color:#34D399;}[data-theme="slate"] .dm-chg.down{color:#F87171;}
 /* hero รายได้สุทธิ — ดีไซน์ premium + sparkline (พื้น accent ของธีม) */
 .dash-hero{ border-radius:26px; box-shadow:0 20px 44px color-mix(in srgb, var(--accent) 30%, transparent); }
 .dash-hero .st-val.xl{ font-size:38px; letter-spacing:-1px; line-height:1.05; }
@@ -1337,6 +1339,31 @@ input:focus:not(:focus-visible) { outline: none; }
 #d2Tip { position:fixed; z-index:9999; pointer-events:none; background:var(--n800); color:#fff; font-size:11.5px; line-height:1.45; padding:7px 10px; border-radius:10px; box-shadow:var(--shadow); opacity:0; transition:opacity .12s; max-width:220px; }
 #d2Tip.show { opacity:1; }
 @media (prefers-reduced-motion: reduce) { .ss2-xp div::after, .ss2-c.nx { animation:none; } }
+
+/* ── ตารางเรท (การ์ด config) ── */
+.rt-title { font-size:12px; font-weight:700; color:var(--n600); margin:2px 0 6px; }
+.rt-table { width:100%; table-layout:fixed; border-collapse:collapse; margin-bottom:12px; font-size:12px; }
+.rt-table th { font-size:10.5px; font-weight:600; color:var(--n400); text-align:right; padding:0 4px 4px; }
+.rt-table td { padding:6px 4px; text-align:right; border-top:1px solid var(--n100); color:var(--n800); white-space:nowrap; }
+.rt-table td b { font-weight:700; }
+.rt-table td i { font-style:normal; font-size:10.5px; color:var(--n400); margin-left:4px; }
+.rt-table th:first-child, .rt-table td.rt-time { width:38%; }
+.rt-table td.rt-time { text-align:left; color:var(--n600); font-weight:600; }
+.rt-table td.rt-off { color:var(--n300); }
+.rt-note { font-size:12px; color:var(--n600); margin-bottom:12px; }
+.rt-edit { display:grid; grid-template-columns:1fr 1fr; gap:8px 10px; margin-bottom:8px; }
+.rt-edit label { display:flex; flex-direction:column; gap:4px; font-size:11px; font-weight:600; color:var(--n600); }
+.rt-edit input { width:100%; padding:9px 10px; font-size:15px; font-weight:700; font-family:var(--font); color:var(--n800);
+  background:transparent; border:none; border-radius:var(--r-xs); box-shadow:var(--neu-inset); -webkit-appearance:none; }
+.rt-warn { font-size:11px; color:var(--err); margin-bottom:8px; }
+.rt-btns { display:flex; gap:8px; margin-bottom:12px; }
+.rt-btn { flex:1; padding:10px; font-size:13px; font-weight:700; font-family:var(--font); cursor:pointer;
+  border:none; border-radius:var(--r-sm); background:var(--accent-soft); color:var(--accent-ink); }
+.rt-btn.rt-save { background:var(--accent); color:#fff; }
+.rt-btn:disabled { opacity:.6; }
+.rt-base { display:grid; grid-template-columns:1fr auto 1fr auto; gap:6px 10px; font-size:11px; color:var(--n400);
+  padding-top:10px; border-top:1px solid var(--n100); }
+.rt-base b { font-size:12px; color:var(--n800); text-align:right; }
 </style>
 </head>
 <body>
@@ -1504,7 +1531,7 @@ input:focus:not(:focus-visible) { outline: none; }
     </div>
 
     <div class="card">
-      <div class="card-head">ค่าตั้ง (Config)</div>
+      <div class="card-head">ตารางเรท OT</div>
       <div id="cfgContent" style="font-size:12px;color:var(--n400)">กำลังโหลด...</div>
     </div>
 
@@ -2531,23 +2558,79 @@ function renderHolidayChips() {
   }
 }
 
-/* ── RENDER: CONFIG ── */
+/* ── RENDER: CONFIG = ตารางเรท ──
+   otRules() = กติกาเดียวกับ dayOTBands/specialOT เขียนเป็นตาราง (tests/ot.test.js เทียบให้ว่าพูดตรงกัน)
+   tier: 0=ไม่คิด(งานหลัก) · 1=×1.0 · 15=×1.5 · 2=×2.0 · แต่ละแถว [ช่วงเวลา, วันธรรมดา, วันพุธ/นักขัต] */
+function otRules(C) {
+  C = C || STATE.config || DEFAULT_CFG;
+  const R = { 0: 0, 1: +C.OT100_RATE || 100, 15: +C.OT150_RATE || 150, 2: +C.OT200_RATE || 200 };
+  const row = (label, a, b) => ({ label, tn: a, th: b, normal: R[a], holiday: R[b] });
+  return {
+    normal: [row('ก่อน 09:00', 15, 2), row('09:00–18:00', 0, 15), row('18:00–23:00', 1, 15), row('หลัง 23:00', 15, 2)],
+    special: [row('ก่อน 09:00', 15, 2), row('09:00–18:00', 0, 15), row('18:00 เป็นต้นไป', 2, 2)],
+    transport: +C.TRANSPORT || 200
+  };
+}
+const RATE_FIELDS = [['OT100_RATE','OT ×1.0'], ['OT150_RATE','OT ×1.5'], ['OT200_RATE','OT ×2.0'], ['TRANSPORT','ค่าเดินทาง']];
 function renderConfigCard() {
-  const C = STATE.config;
-  const rows = [
-    ['เงินเดือน', fmtBaht(C.SALARY)], ['เบี้ยขยัน', fmtBaht(C.ALLOWANCE)],
-    ['ปกส.', fmtBaht(C.SOCIAL_SEC)], ['งวดแรก', fmtBaht(C.FIRST_PAYMENT)],
-    ['ค่าเดินทาง (ก่อน-หลังเวลา)', fmtBaht(C.TRANSPORT)], ['OT×1.0 ต่อชม', fmtBaht(C.OT100_RATE)],
-    ['OT×1.5 ต่อชม', fmtBaht(C.OT150_RATE)], ['OT×2.0 ต่อชม', fmtBaht(C.OT200_RATE)],
-    ['OT เริ่มที่', C.OT100_START + ':00 น.'],
-  ];
-  document.getElementById('cfgContent').innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;">
-      ${rows.map(([k,v]) => `
-        <span style="color:var(--n400);font-size:11px;">${k}</span>
-        <span style="font-weight:700;font-size:12px;text-align:right;">${v}</span>
-      `).join('')}
+  const el = document.getElementById('cfgContent');
+  if (!el) return;
+  const C = STATE.config, R = otRules(C);
+  const TIER = { 1: '×1.0', 15: '×1.5', 2: '×2.0' };
+  const cell = (t, v) => t ? `<td><b>${fmtBaht(v)}</b><i>${TIER[t]}</i></td>` : '<td class="rt-off">—</td>';
+  const table = (title, rows) => `
+    <div class="rt-title">${title}</div>
+    <table class="rt-table">
+      <tr><th></th><th>วันธรรมดา</th><th>พุธ / นักขัต</th></tr>
+      ${rows.map(r => `<tr><td class="rt-time">${r.label}</td>${cell(r.tn, r.normal)}${cell(r.th, r.holiday)}</tr>`).join('')}
+    </table>`;
+  const editing = !!STATE.rateEdit;
+  el.innerHTML = `
+    ${table('งานปกติ', R.normal)}
+    ${table('งานเหมา ⚡', R.special)}
+    <div class="rt-note">ค่าเดินทาง <b>${fmtBaht(R.transport)}</b> · เลิกงานช่วง 23:00–09:00</div>
+    ${editing ? `
+      <div class="rt-edit">
+        ${RATE_FIELDS.map(([k, n]) => `<label>${n}<input type="number" inputmode="decimal" id="rt_${k}" value="${+C[k] || ''}"></label>`).join('')}
+      </div>
+      <div class="rt-warn">เปลี่ยนเรทแล้ว ยอดทุกเดือนย้อนหลังจะคิดใหม่ด้วยเรทนี้</div>
+      <div class="rt-btns">
+        <button class="rt-btn" onclick="rateEdit(false)">ยกเลิก</button>
+        <button class="rt-btn rt-save" id="rtSave" onclick="rateSave()">บันทึกเรท</button>
+      </div>` : `
+      <div class="rt-btns"><button class="rt-btn" onclick="rateEdit(true)">แก้เรท</button></div>`}
+    <div class="rt-base">
+      <span>เงินเดือน</span><b>${fmtBaht(C.SALARY)}</b>
+      <span>เบี้ยขยัน</span><b>${fmtBaht(C.ALLOWANCE)}</b>
+      <span>ปกส.</span><b>${fmtBaht(C.SOCIAL_SEC)}</b>
+      <span>งวดแรก</span><b>${fmtBaht(C.FIRST_PAYMENT)}</b>
     </div>`;
+}
+function rateEdit(on) { STATE.rateEdit = on; renderConfigCard(); }
+async function rateSave() {
+  const rates = {}, C = STATE.config;
+  for (const [k, n] of RATE_FIELDS) {
+    const v = parseFloat(document.getElementById('rt_' + k).value);
+    if (!(v > 0 && v <= 10000)) { toast(n + ' ไม่ถูกต้อง', 'err'); return; }
+    if (v !== +C[k]) rates[k] = v;
+  }
+  if (!Object.keys(rates).length) { rateEdit(false); return; }
+  const btn = document.getElementById('rtSave');
+  if (btn) { btn.disabled = true; btn.textContent = 'กำลังบันทึก…'; }
+  try {
+    const res = await fetchWithTimeout(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'setRates', rates }) });
+    const j = await res.json();
+    if (!j.success) throw new Error(j.message || 'บันทึกไม่สำเร็จ');
+    STATE.config = { ...STATE.config, ...(j.data || rates) };
+    STATE.rateEdit = false;
+    saveLocal();
+    APP._afterSync();
+    if (STATE.currentPage === 'dashboard') renderDashboard();
+    toast('บันทึกเรทแล้ว ✓', 'ok');
+  } catch(e) {
+    toast('บันทึกไม่ได้: ' + (e.message || 'เน็ตมีปัญหา'), 'err');
+    if (btn) { btn.disabled = false; btn.textContent = 'บันทึกเรท'; }
+  }
 }
 
 /* ── RENDER: LIST ── */
@@ -3563,7 +3646,7 @@ function renderDashboard() {
       <div class="st-val xl">${fmtBaht(totalNet)}</div>
       <div class="dash-hero-meta">
         <span>หลังหัก ปกส. แล้ว</span>
-        ${periodTotals.length >= 2 ? `<span class="dash-trend" style="background:rgba(0,0,0,.5); color:${trendUp?'#34D399':'#FB7185'};"><span style="font-size:9px;">${trendArrow}</span> ${Math.abs(trendPct).toFixed(1)}% จากรอบก่อน</span>` : ''}
+        ${periodTotals.length >= 2 ? `<span class="dash-trend" style="background:#fff; color:${trendUp?'#047857':'#B91C1C'};"><span style="font-size:9px;">${trendArrow}</span> ${Math.abs(trendPct).toFixed(1)}% จากรอบก่อน</span>` : ''}
       </div>
       ${heroSpark(periodTotals.map(p => p.net))}
       <div class="hud-chips">
